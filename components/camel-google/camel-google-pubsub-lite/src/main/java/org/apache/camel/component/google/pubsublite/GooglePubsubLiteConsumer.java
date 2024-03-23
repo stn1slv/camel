@@ -79,8 +79,7 @@ public class GooglePubsubLiteConsumer extends DefaultConsumer {
         synchronized (subscribers) {
             if (!subscribers.isEmpty()) {
                 localLog.info("Stopping subscribers for {}/{}", endpoint.getProjectId(), endpoint.getDestinationName());
-                //TBD implement stop
-                // subscribers.forEach(AbstractApiService::stopAsync);
+                subscribers.forEach(Subscriber::stopAsync);
             }
         }
 
