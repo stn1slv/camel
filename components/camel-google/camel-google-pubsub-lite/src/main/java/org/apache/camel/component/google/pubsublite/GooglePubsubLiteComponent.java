@@ -157,7 +157,9 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
                 .setName(TopicName.of(googlePubsubLiteEndpoint.getDestinationName()))
                 .build();
         PublisherSettings publisherSettings = PublisherSettings.newBuilder().setTopicPath(topicPath).build();
-        return Publisher.create(publisherSettings);
+        Publisher publisher = Publisher.create(publisherSettings);
+        publisher.startAsync().awaitRunning();
+        return publisher;
     }
 
     public Subscriber getSubscriber(
