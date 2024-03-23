@@ -156,7 +156,9 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
                 .setLocation(location)
                 .setName(TopicName.of(googlePubsubLiteEndpoint.getDestinationName()))
                 .build();
-        PublisherSettings publisherSettings = PublisherSettings.newBuilder().setTopicPath(topicPath).build();
+        PublisherSettings publisherSettings = PublisherSettings.newBuilder().setTopicPath(topicPath)
+                .setCredentialsProvider(getCredentialsProvider(googlePubsubLiteEndpoint))
+                .build();
         Publisher publisher = Publisher.create(publisherSettings);
         publisher.startAsync().awaitRunning();
         return publisher;
@@ -194,6 +196,7 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
                 .setReceiver(messageReceiver)
                 // Flow control settings are set at the partition level.
                 .setPerPartitionFlowControlSettings(flowControlSettings)
+                .setCredentialsProvider(getCredentialsProvider(googlePubsubLiteEndpoint))
                 .build();
 
         return Subscriber.create(subscriberSettings);
