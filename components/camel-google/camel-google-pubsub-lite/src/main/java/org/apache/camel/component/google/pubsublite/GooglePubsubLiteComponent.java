@@ -50,11 +50,13 @@ import org.slf4j.LoggerFactory;
 public class GooglePubsubLiteComponent extends DefaultComponent {
     private static final Logger LOG = LoggerFactory.getLogger(GooglePubsubLiteComponent.class);
 
+    //TBD check
     @Metadata(
               label = "common",
               description = "Endpoint to use with local Pub/Sub emulator.")
     private String endpoint; //TBD
 
+    //TBD check
     @Metadata(label = "common",
               description = "Use Credentials when interacting with PubSub service (no authentication is required when using emulator).",
               defaultValue = "true")
@@ -80,6 +82,7 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
               description = "How many milliseconds should a producer be allowed to terminate.")
     private int publisherTerminationTimeout = 60000;
 
+    //TBD check
     @Metadata(
               label = "consumer",
               description = "Comma-separated list of additional retryable error codes for synchronous pull. By default the PubSub client library retries ABORTED, UNAVAILABLE, UNKNOWN")
@@ -144,13 +147,7 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
 
     private Publisher buildPublisher(String topicName, GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
             throws IOException {
-        CloudRegionOrZone location;
-        if (googlePubsubLiteEndpoint.getRegional()) {
-            location = CloudRegionOrZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()));
-        } else {
-            location = CloudRegionOrZone
-                    .of(CloudZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()), googlePubsubLiteEndpoint.getZone()));
-        }
+        CloudRegionOrZone location = getCloudRegionOrZone(googlePubsubLiteEndpoint);
         TopicPath topicPath = TopicPath.newBuilder()
                 .setProject(ProjectNumber.of(googlePubsubLiteEndpoint.getProjectId()))
                 .setLocation(location)
@@ -168,13 +165,7 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
             String subscriptionName, MessageReceiver messageReceiver, GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
             throws IOException {
 
-        CloudRegionOrZone location;
-        if (googlePubsubLiteEndpoint.getRegional()) {
-            location = CloudRegionOrZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()));
-        } else {
-            location = CloudRegionOrZone
-                    .of(CloudZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()), googlePubsubLiteEndpoint.getZone()));
-        }
+        CloudRegionOrZone location = getCloudRegionOrZone(googlePubsubLiteEndpoint);
 
         SubscriptionPath subscriptionPath = SubscriptionPath.newBuilder()
                 .setLocation(location)
@@ -241,6 +232,17 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
         }
 
         return credentialsProvider;
+    }
+
+    private CloudRegionOrZone getCloudRegionOrZone(GooglePubsubLiteEndpoint googlePubsubLiteEndpoint) {
+        CloudRegionOrZone location;
+        if (googlePubsubLiteEndpoint.getRegional()) {
+            location = CloudRegionOrZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()));
+        } else {
+            location = CloudRegionOrZone
+                    .of(CloudZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()), googlePubsubLiteEndpoint.getZone()));
+        }
+        return location;
     }
 
     public String getEndpoint() {
