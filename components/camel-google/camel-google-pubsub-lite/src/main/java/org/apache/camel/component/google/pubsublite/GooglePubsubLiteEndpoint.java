@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * <p/>
  * Built on top of the Google Cloud Pub/Sub libraries.
  */
-@UriEndpoint(firstVersion = "2.19.0", scheme = "google-pubsub-lite", title = "Google Pubsub Lite",
+@UriEndpoint(firstVersion = "4.5.0", scheme = "google-pubsub-lite", title = "Google Pubsub Lite",
              syntax = "google-pubsub-lite:projectId:destinationName", category = { Category.CLOUD, Category.MESSAGING },
              headersClass = GooglePubsubLiteConstants.class)
 public class GooglePubsubLiteEndpoint extends DefaultEndpoint {

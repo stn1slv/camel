@@ -3,7 +3,7 @@
 :shortname: google-pubsub-lite
 :artifactid: camel-google-pubsub-lite
 :description: Send and receive messages to/from Google Cloud Platform PubSub Service.
-:since: 2.19
+:since: 4.5
 :supportlevel: Stable
 :tabs-sync-option:
 :component-header: Both producer and consumer are supported
@@ -26,7 +26,7 @@ for this component:
 ------------------------------------------------------
 <dependency>
     <groupId>org.apache.camel</groupId>
-    <artifactId>camel-google-pubsub</artifactId>
+    <artifactId>camel-google-pubsub-lite</artifactId>
     <!-- use the same version as your Camel core version -->
     <version>x.x.x</version>
 </dependency>
@@ -37,7 +37,7 @@ for this component:
 The Google Pubsub Component uses the following URI format:
 
 ----
-google-pubsub://project-id:destinationName?[options]
+google-pubsub-lite://project-id:location:destinationName?[options]
 ----
 
 Destination Name can be either a topic or a subscription name.
