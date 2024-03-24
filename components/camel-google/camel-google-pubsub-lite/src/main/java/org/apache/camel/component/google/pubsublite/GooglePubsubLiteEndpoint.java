@@ -197,8 +197,8 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
         Character zone = locationParts.length == 3 ? locationParts[2].charAt(0) : null;
         boolean isRegional = zone != null ? false : true;
 
-        this.region = region;
-        this.zone = zone;
+        this.setZone(zone);
+        this.setRegion(region);
         this.setRegional(isRegional);
     }
 

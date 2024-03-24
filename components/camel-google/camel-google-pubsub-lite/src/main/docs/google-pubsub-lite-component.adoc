@@ -4,7 +4,7 @@
 :artifactid: camel-google-pubsub-lite
 :description: Send and receive messages to/from Google Cloud Platform PubSub Service.
 :since: 4.5
-:supportlevel: Stable
+:supportlevel: Preview
 :tabs-sync-option:
 :component-header: Both producer and consumer are supported
 //Manually maintained attributes
