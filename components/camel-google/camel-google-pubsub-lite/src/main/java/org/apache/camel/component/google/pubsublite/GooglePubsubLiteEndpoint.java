@@ -16,6 +16,8 @@
  */
 package org.apache.camel.component.google.pubsublite;
 
+import java.util.concurrent.ExecutorService;
+
 import org.apache.camel.*;
 import org.apache.camel.component.google.pubsublite.serializer.DefaultGooglePubsubSerializer;
 import org.apache.camel.component.google.pubsublite.serializer.GooglePubsubSerializer;
@@ -28,16 +30,14 @@ import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ExecutorService;
-
 /**
  * Send and receive messages to/from Google Cloud Platform PubSub Service.
  * <p/>
  * Built on top of the Google Cloud Pub/Sub libraries.
  */
 @UriEndpoint(firstVersion = "4.5.0", scheme = "google-pubsub-lite", title = "Google Pubsub Lite",
-        syntax = "google-pubsub-lite:projectId:location:destinationName",
-        category = {Category.CLOUD, Category.MESSAGING},
+             syntax = "google-pubsub-lite:projectId:location:destinationName",
+             category = { Category.CLOUD, Category.MESSAGING },
              headersClass = GooglePubsubLiteConstants.class)
 public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
 

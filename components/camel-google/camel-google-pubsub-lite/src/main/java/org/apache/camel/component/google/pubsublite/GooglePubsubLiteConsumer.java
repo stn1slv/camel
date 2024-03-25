@@ -16,13 +16,11 @@
  */
 package org.apache.camel.component.google.pubsublite;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 import com.google.api.core.ApiFuture;
@@ -124,95 +122,27 @@ public class GooglePubsubLiteConsumer extends DefaultConsumer {
                     localLog.debug("Subscribing to {}", subscriptionName);
                 }
 
-                //                if (endpoint.isSynchronousPull()) {
-                //                    synchronousPull(subscriptionName);
-                //                } else {
-                //                    asynchronousPull(subscriptionName);
-                //                }
-                asynchronousPull(subscriptionName);
+                while (isRunAllowed() && !isSuspendingOrSuspended()) {
+                    MessageReceiver messageReceiver
+                            = new CamelMessageReceiver(GooglePubsubLiteConsumer.this, endpoint, processor);
+
+                    Subscriber subscriber = endpoint.getComponent().getSubscriber(subscriptionName, messageReceiver, endpoint);
+                    try {
+                        subscribers.add(subscriber);
+                        subscriber.startAsync().awaitRunning();
+                        subscriber.awaitTerminated();
+                    } catch (Exception e) {
+                        localLog.error("Failure getting messages from PubSub Lite", e);
+                    } finally {
+                        localLog.debug("Stopping async subscriber {}", subscriptionName);
+                        subscriber.stopAsync();
+                    }
+                }
 
                 localLog.debug("Exit run for subscription {}", subscriptionName);
             } catch (Exception e) {
                 localLog.error("Failure getting messages from PubSub", e);
             }
-        }
-
-        private void asynchronousPull(String subscriptionName) throws IOException {
-            while (isRunAllowed() && !isSuspendingOrSuspended()) {
-                MessageReceiver messageReceiver = new CamelMessageReceiver(GooglePubsubLiteConsumer.this, endpoint, processor);
-
-                Subscriber subscriber = endpoint.getComponent().getSubscriber(subscriptionName, messageReceiver, endpoint);
-                try {
-                    subscribers.add(subscriber);
-                    subscriber.startAsync().awaitRunning();
-                    subscriber.awaitTerminated();
-                } catch (Exception e) {
-                    localLog.error("Failure getting messages from PubSub Lite", e);
-                } finally {
-                    localLog.debug("Stopping async subscriber {}", subscriptionName);
-                    subscriber.stopAsync();
-                }
-            }
-        }
-
-        private void synchronousPull(String subscriptionName) throws ExecutionException, InterruptedException {
-            //            while (isRunAllowed() && !isSuspendingOrSuspended()) {
-            //                ApiFuture<PullResponse> synchronousPullResponseFuture = null;
-            //                try (SubscriberStub subscriber = endpoint.getComponent().getSubscriberStub(endpoint)) {
-            //
-            //                    PullRequest pullRequest = PullRequest.newBuilder()
-            //                            .setMaxMessages(endpoint.getMaxMessagesPerPoll())
-            //                            .setReturnImmediately(false)
-            //                            .setSubscription(subscriptionName)
-            //                            .build();
-            //
-            //                    synchronousPullResponseFuture = subscriber.pullCallable().futureCall(pullRequest);
-            //                    pendingSynchronousPullResponses.add(synchronousPullResponseFuture);
-            //                    PullResponse pullResponse = synchronousPullResponseFuture.get();
-            //                    for (ReceivedMessage message : pullResponse.getReceivedMessagesList()) {
-            //                        PubsubMessage pubsubMessage = message.getMessage();
-            //                        Exchange exchange = createExchange(true);
-            //                        exchange.getIn().setBody(pubsubMessage.getData().toByteArray());
-            //
-            //                        exchange.getIn().setHeader(GooglePubsubLiteConstants.ACK_ID, message.getAckId());
-            //                        exchange.getIn().setHeader(GooglePubsubLiteConstants.MESSAGE_ID, pubsubMessage.getMessageId());
-            //                        exchange.getIn().setHeader(GooglePubsubLiteConstants.PUBLISH_TIME, pubsubMessage.getPublishTime());
-            //
-            //                        if (null != pubsubMessage.getAttributesMap()) {
-            //                            exchange.getIn().setHeader(GooglePubsubLiteConstants.ATTRIBUTES, pubsubMessage.getAttributesMap());
-            //                        }
-            //
-            //                        if (endpoint.getAckMode() != GooglePubsubLiteConstants.AckMode.NONE) {
-            //                            //existing subscriber can not be propagated, because it will be closed at the end of this block
-            //                            //subscriber will be created at the moment of use
-            //                            // (see  https://issues.apache.org/jira/browse/CAMEL-18447)
-            //                            exchange.getExchangeExtension()
-            //                                    .addOnCompletion(new AcknowledgeSync(
-            //                                            () -> endpoint.getComponent().getSubscriberStub(endpoint), subscriptionName));
-            //                        }
-            //
-            //                        try {
-            //                            processor.process(exchange);
-            //                        } catch (Exception e) {
-            //                            getExceptionHandler().handleException(e);
-            //                        }
-            //                    }
-            //                } catch (CancellationException e) {
-            //                    localLog.debug("PubSub synchronous pull request cancelled", e);
-            //                } catch (IOException e) {
-            //                    localLog.error("I/O exception while getting messages from PubSub. Reconnecting.", e);
-            //                } catch (ExecutionException e) {
-            //                    if (e.getCause() instanceof ApiException && ((ApiException) (e.getCause())).isRetryable()) {
-            //                        localLog.error("Retryable API exception in getting messages from PubSub", e.getCause());
-            //                    } else {
-            //                        throw e;
-            //                    }
-            //                } finally {
-            //                    if (synchronousPullResponseFuture != null) {
-            //                        pendingSynchronousPullResponses.remove(synchronousPullResponseFuture);
-            //                    }
-            //                }
-            //            }
         }
     }
 }

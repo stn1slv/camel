@@ -16,6 +16,11 @@
  */
 package org.apache.camel.component.google.pubsublite;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.GoogleCredentials;
@@ -36,11 +41,6 @@ import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Represents the component that manages {@link GooglePubsubLiteEndpoint}.
@@ -209,7 +209,7 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
         return FixedCredentialsProvider.create(ObjectHelper.isEmpty(endpoint.getServiceAccountKey())
                 ? GoogleCredentials.getApplicationDefault() : ServiceAccountCredentials.fromStream(ResourceHelper
                         .resolveMandatoryResourceAsInputStream(getCamelContext(), endpoint.getServiceAccountKey()))
-                .createScoped(PublisherStubSettings.getDefaultServiceScopes()));
+                        .createScoped(PublisherStubSettings.getDefaultServiceScopes()));
     }
 
     private CloudRegionOrZone getCloudRegionOrZone(GooglePubsubLiteEndpoint googlePubsubLiteEndpoint) {
