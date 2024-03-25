@@ -16,12 +16,10 @@ public class GooglePubsubComponentConfigurer extends PropertyConfigurerSupport i
     public boolean configure(CamelContext camelContext, Object obj, String name, Object value, boolean ignoreCase) {
         GooglePubsubLiteComponent target = (GooglePubsubLiteComponent) obj;
         switch (ignoreCase ? name.toLowerCase() : name) {
-        case "authenticate": target.setAuthenticate(property(camelContext, boolean.class, value)); return true;
         case "autowiredenabled":
         case "autowiredEnabled": target.setAutowiredEnabled(property(camelContext, boolean.class, value)); return true;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": target.setBridgeErrorHandler(property(camelContext, boolean.class, value)); return true;
-        case "endpoint": target.setEndpoint(property(camelContext, java.lang.String.class, value)); return true;
         case "lazystartproducer":
         case "lazyStartProducer": target.setLazyStartProducer(property(camelContext, boolean.class, value)); return true;
         case "publishercachesize":
@@ -67,12 +65,10 @@ public class GooglePubsubComponentConfigurer extends PropertyConfigurerSupport i
     public Object getOptionValue(Object obj, String name, boolean ignoreCase) {
         GooglePubsubLiteComponent target = (GooglePubsubLiteComponent) obj;
         switch (ignoreCase ? name.toLowerCase() : name) {
-        case "authenticate": return target.isAuthenticate();
         case "autowiredenabled":
         case "autowiredEnabled": return target.isAutowiredEnabled();
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return target.isBridgeErrorHandler();
-        case "endpoint": return target.getEndpoint();
         case "lazystartproducer":
         case "lazyStartProducer": return target.isLazyStartProducer();
         case "publishercachesize":

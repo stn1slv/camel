@@ -16,14 +16,7 @@
  */
 package org.apache.camel.component.google.pubsublite;
 
-import java.util.concurrent.ExecutorService;
-
-import org.apache.camel.Category;
-import org.apache.camel.Component;
-import org.apache.camel.Consumer;
-import org.apache.camel.ExchangePattern;
-import org.apache.camel.Processor;
-import org.apache.camel.Producer;
+import org.apache.camel.*;
 import org.apache.camel.component.google.pubsublite.serializer.DefaultGooglePubsubSerializer;
 import org.apache.camel.component.google.pubsublite.serializer.GooglePubsubSerializer;
 import org.apache.camel.spi.Metadata;
@@ -35,13 +28,16 @@ import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * Send and receive messages to/from Google Cloud Platform PubSub Service.
  * <p/>
  * Built on top of the Google Cloud Pub/Sub libraries.
  */
 @UriEndpoint(firstVersion = "4.5.0", scheme = "google-pubsub-lite", title = "Google Pubsub Lite",
-             syntax = "google-pubsub-lite:projectId:destinationName", category = { Category.CLOUD, Category.MESSAGING },
+        syntax = "google-pubsub-lite:projectId:location:destinationName",
+        category = {Category.CLOUD, Category.MESSAGING},
              headersClass = GooglePubsubLiteConstants.class)
 public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
 
@@ -68,11 +64,6 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
              description = "The Destination Name. For the consumer this will be the subscription name, while for the producer this will be the topic name.")
     @Metadata(required = true)
     private String destinationName;
-
-    @UriParam(label = "common", name = "authenticate",
-              description = "Use Credentials when interacting with PubSub service (no authentication is required when using emulator).",
-              defaultValue = "true")
-    private boolean authenticate = true;
 
     @UriParam(label = "common",
               description = "The Service account key that can be used as credentials for the PubSub publisher/subscriber. It can be loaded by default from "
@@ -208,14 +199,6 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
 
     public void setLoggerId(String loggerId) {
         this.loggerId = loggerId;
-    }
-
-    public boolean isAuthenticate() {
-        return authenticate;
-    }
-
-    public void setAuthenticate(boolean authenticate) {
-        this.authenticate = authenticate;
     }
 
     public String getServiceAccountKey() {

@@ -15,15 +15,14 @@ import org.apache.camel.spi.EndpointUriFactory;
  */
 public class GooglePubsubLiteEndpointUriFactory extends org.apache.camel.support.component.EndpointUriFactorySupport implements EndpointUriFactory {
 
-    private static final String BASE = ":projectId:destinationName";
+    private static final String BASE = ":projectId:location:destinationName";
 
     private static final Set<String> PROPERTY_NAMES;
     private static final Set<String> SECRET_PROPERTY_NAMES;
     private static final Set<String> MULTI_VALUE_PREFIXES;
     static {
-        Set<String> props = new HashSet<>(20);
+        Set<String> props = new HashSet<>(19);
         props.add("ackMode");
-        props.add("authenticate");
         props.add("bridgeErrorHandler");
         props.add("concurrentConsumers");
         props.add("destinationName");

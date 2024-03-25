@@ -16,14 +16,8 @@
  */
 package org.apache.camel.component.google.pubsublite;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
-import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.pubsub.v1.MessageReceiver;
@@ -43,24 +37,17 @@ import org.apache.camel.util.ObjectHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Represents the component that manages {@link GooglePubsubLiteEndpoint}.
  */
 @Component("google-pubsub-lite")
 public class GooglePubsubLiteComponent extends DefaultComponent {
     private static final Logger LOG = LoggerFactory.getLogger(GooglePubsubLiteComponent.class);
-
-    //TBD check
-    @Metadata(
-              label = "common",
-              description = "Endpoint to use with local Pub/Sub emulator.")
-    private String endpoint; //TBD
-
-    //TBD check
-    @Metadata(label = "common",
-              description = "Use Credentials when interacting with PubSub service (no authentication is required when using emulator).",
-              defaultValue = "true")
-    private boolean authenticate = true;
 
     @Metadata(label = "common",
               description = "The Service account key that can be used as credentials for the PubSub publisher/subscriber. It can be loaded by default from "
@@ -126,7 +113,6 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
         pubsubEndpoint.setLocation(parts[1]);
         pubsubEndpoint.setDestinationName(parts[2]);
         pubsubEndpoint.setServiceAccountKey(serviceAccountKey);
-        pubsubEndpoint.setAuthenticate(authenticate);
 
         setProperties(pubsubEndpoint, parameters);
 
@@ -220,18 +206,10 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
     //            }
 
     private CredentialsProvider getCredentialsProvider(GooglePubsubLiteEndpoint endpoint) throws IOException {
-        CredentialsProvider credentialsProvider;
-
-        if (endpoint.isAuthenticate()) {
-            credentialsProvider = FixedCredentialsProvider.create(ObjectHelper.isEmpty(endpoint.getServiceAccountKey())
-                    ? GoogleCredentials.getApplicationDefault() : ServiceAccountCredentials.fromStream(ResourceHelper
-                            .resolveMandatoryResourceAsInputStream(getCamelContext(), endpoint.getServiceAccountKey()))
-                            .createScoped(PublisherStubSettings.getDefaultServiceScopes()));
-        } else {
-            credentialsProvider = NoCredentialsProvider.create();
-        }
-
-        return credentialsProvider;
+        return FixedCredentialsProvider.create(ObjectHelper.isEmpty(endpoint.getServiceAccountKey())
+                ? GoogleCredentials.getApplicationDefault() : ServiceAccountCredentials.fromStream(ResourceHelper
+                        .resolveMandatoryResourceAsInputStream(getCamelContext(), endpoint.getServiceAccountKey()))
+                .createScoped(PublisherStubSettings.getDefaultServiceScopes()));
     }
 
     private CloudRegionOrZone getCloudRegionOrZone(GooglePubsubLiteEndpoint googlePubsubLiteEndpoint) {
@@ -243,14 +221,6 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
                     .of(CloudZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()), googlePubsubLiteEndpoint.getZone()));
         }
         return location;
-    }
-
-    public String getEndpoint() {
-        return endpoint;
-    }
-
-    public void setEndpoint(String endpoint) {
-        this.endpoint = endpoint;
     }
 
     public int getPublisherCacheSize() {
@@ -275,14 +245,6 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
 
     public void setPublisherTerminationTimeout(int publisherTerminationTimeout) {
         this.publisherTerminationTimeout = publisherTerminationTimeout;
-    }
-
-    public boolean isAuthenticate() {
-        return authenticate;
-    }
-
-    public void setAuthenticate(boolean authenticate) {
-        this.authenticate = authenticate;
     }
 
     public String getServiceAccountKey() {

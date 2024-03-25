@@ -23,7 +23,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         switch (ignoreCase ? name.toLowerCase() : name) {
         case "ackmode":
         case "ackMode": target.setAckMode(property(camelContext, org.apache.camel.component.google.pubsublite.GooglePubsubLiteConstants.AckMode.class, value)); return true;
-        case "authenticate": target.setAuthenticate(property(camelContext, boolean.class, value)); return true;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": target.setBridgeErrorHandler(property(camelContext, boolean.class, value)); return true;
         case "concurrentconsumers":
@@ -63,7 +62,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         switch (ignoreCase ? name.toLowerCase() : name) {
         case "ackmode":
         case "ackMode": return org.apache.camel.component.google.pubsublite.GooglePubsubLiteConstants.AckMode.class;
-        case "authenticate": return boolean.class;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return boolean.class;
         case "concurrentconsumers":
@@ -99,7 +97,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         switch (ignoreCase ? name.toLowerCase() : name) {
         case "ackmode":
         case "ackMode": return target.getAckMode();
-        case "authenticate": return target.isAuthenticate();
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return target.isBridgeErrorHandler();
         case "concurrentconsumers":
