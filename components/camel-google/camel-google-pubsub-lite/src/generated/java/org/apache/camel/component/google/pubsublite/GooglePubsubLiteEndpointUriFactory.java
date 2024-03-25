@@ -21,7 +21,7 @@ public class GooglePubsubLiteEndpointUriFactory extends org.apache.camel.support
     private static final Set<String> SECRET_PROPERTY_NAMES;
     private static final Set<String> MULTI_VALUE_PREFIXES;
     static {
-        Set<String> props = new HashSet<>(19);
+        Set<String> props = new HashSet<>(18);
         props.add("ackMode");
         props.add("bridgeErrorHandler");
         props.add("concurrentConsumers");
@@ -39,7 +39,6 @@ public class GooglePubsubLiteEndpointUriFactory extends org.apache.camel.support
         props.add("regional");
         props.add("serializer");
         props.add("serviceAccountKey");
-        props.add("synchronousPull");
         props.add("zone");
         PROPERTY_NAMES = Collections.unmodifiableSet(props);
         SECRET_PROPERTY_NAMES = Collections.emptySet();

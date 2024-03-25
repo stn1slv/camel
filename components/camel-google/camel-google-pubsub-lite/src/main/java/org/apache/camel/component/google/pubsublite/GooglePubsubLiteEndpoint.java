@@ -31,9 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Send and receive messages to/from Google Cloud Platform PubSub Service.
+ * Send and receive messages to/from Google Cloud Platform PubSub Lite Service.
  * <p/>
- * Built on top of the Google Cloud Pub/Sub libraries.
+ * Built on top of the Google Cloud Pub/Sub Lite libraries.
  */
 @UriEndpoint(firstVersion = "4.5.0", scheme = "google-pubsub-lite", title = "Google Pubsub Lite",
              syntax = "google-pubsub-lite:projectId:location:destinationName",
@@ -81,10 +81,6 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
     @UriParam(label = "consumer", name = "maxMessagesPerPoll",
               description = "The max number of messages to receive from the server in a single API call", defaultValue = "1")
     private Integer maxMessagesPerPoll = 1;
-
-    @UriParam(label = "consumer", name = "synchronousPull", description = "Synchronously pull batches of messages",
-              defaultValue = "false")
-    private boolean synchronousPull;
 
     @UriParam(label = "consumer", defaultValue = "AUTO", enums = "AUTO,NONE",
               description = "AUTO = exchange gets ack'ed/nack'ed on completion. NONE = downstream process has to ack/nack explicitly")
@@ -231,14 +227,6 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
 
     public void setMaxMessagesPerPoll(Integer maxMessagesPerPoll) {
         this.maxMessagesPerPoll = maxMessagesPerPoll;
-    }
-
-    public boolean isSynchronousPull() {
-        return synchronousPull;
-    }
-
-    public void setSynchronousPull(Boolean synchronousPull) {
-        this.synchronousPull = synchronousPull;
     }
 
     public GooglePubsubLiteConstants.AckMode getAckMode() {

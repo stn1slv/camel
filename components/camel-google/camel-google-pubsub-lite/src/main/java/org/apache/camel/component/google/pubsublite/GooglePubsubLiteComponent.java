@@ -179,32 +179,6 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
         return Subscriber.create(subscriberSettings);
     }
 
-    //            public SubscriberStub getSubscriberStub (GooglePubsubLiteEndpoint googlePubsubLiteEndpoint) throws
-    //            IOException {
-    //                SubscriberStubSettings.Builder builder = SubscriberStubSettings.newBuilder().setTransportChannelProvider(
-    //                        SubscriberStubSettings.defaultGrpcTransportProviderBuilder().build());
-    //
-    //                if (synchronousPullRetryableCodes != null) {
-    //                    // retrieve the default retryable codes and add the ones specified as a component option
-    //                    Set<StatusCode.Code> retryableCodes = EnumSet.copyOf(builder.pullSettings().getRetryableCodes());
-    //                    Set<StatusCode.Code> customRetryableCodes = Stream.of(synchronousPullRetryableCodes.split(","))
-    //                            .map(String::trim)
-    //                            .map(StatusCode.Code::valueOf)
-    //                            .collect(Collectors.toSet());
-    //                    retryableCodes.addAll(customRetryableCodes);
-    //                    builder.pullSettings().setRetryableCodes(retryableCodes);
-    //                }
-    //
-    //                if (StringHelper.trimToNull(endpoint) != null) {
-    //                    ManagedChannel channel = ManagedChannelBuilder.forTarget(endpoint).usePlaintext().build();
-    //                    TransportChannelProvider channelProvider
-    //                            = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-    //                    builder.setTransportChannelProvider(channelProvider);
-    //                }
-    //                builder.setCredentialsProvider(getCredentialsProvider(googlePubsubLiteEndpoint));
-    //                return builder.build().createStub();
-    //            }
-
     private CredentialsProvider getCredentialsProvider(GooglePubsubLiteEndpoint endpoint) throws IOException {
         return FixedCredentialsProvider.create(ObjectHelper.isEmpty(endpoint.getServiceAccountKey())
                 ? GoogleCredentials.getApplicationDefault() : ServiceAccountCredentials.fromStream(ResourceHelper

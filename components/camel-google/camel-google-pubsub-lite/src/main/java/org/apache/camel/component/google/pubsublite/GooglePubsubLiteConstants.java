@@ -30,8 +30,7 @@ public final class GooglePubsubLiteConstants {
     @Metadata(description = "The attributes of the message.", javaType = "Map<String, String>")
     public static final String ATTRIBUTES = "CamelGooglePubsubAttributes";
     @Metadata(label = "producer",
-              description = "If non-empty, identifies related messages for which publish order should be\n" +
-                            " respected.",
+              description = "If non-empty, identifies related messages for which publish order should be respected.",
               javaType = "String")
     public static final String ORDERING_KEY = "CamelGooglePubsubOrderingKey";
     public static final String RESERVED_GOOGLE_CLIENT_ATTRIBUTE_PREFIX = "goog";

@@ -46,8 +46,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         case "serializer": target.setSerializer(property(camelContext, org.apache.camel.component.google.pubsublite.serializer.GooglePubsubSerializer.class, value)); return true;
         case "serviceaccountkey":
         case "serviceAccountKey": target.setServiceAccountKey(property(camelContext, java.lang.String.class, value)); return true;
-        case "synchronouspull":
-        case "synchronousPull": target.setSynchronousPull(property(camelContext, boolean.class, value)); return true;
         default: return false;
         }
     }
@@ -85,8 +83,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         case "serializer": return org.apache.camel.component.google.pubsublite.serializer.GooglePubsubSerializer.class;
         case "serviceaccountkey":
         case "serviceAccountKey": return java.lang.String.class;
-        case "synchronouspull":
-        case "synchronousPull": return boolean.class;
         default: return null;
         }
     }
@@ -120,8 +116,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         case "serializer": return target.getSerializer();
         case "serviceaccountkey":
         case "serviceAccountKey": return target.getServiceAccountKey();
-        case "synchronouspull":
-        case "synchronousPull": return target.isSynchronousPull();
         default: return null;
         }
     }
