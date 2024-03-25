@@ -21,7 +21,7 @@ public class GooglePubsubLiteEndpointUriFactory extends org.apache.camel.support
     private static final Set<String> SECRET_PROPERTY_NAMES;
     private static final Set<String> MULTI_VALUE_PREFIXES;
     static {
-        Set<String> props = new HashSet<>(18);
+        Set<String> props = new HashSet<>(16);
         props.add("ackMode");
         props.add("bridgeErrorHandler");
         props.add("concurrentConsumers");
@@ -29,17 +29,15 @@ public class GooglePubsubLiteEndpointUriFactory extends org.apache.camel.support
         props.add("exceptionHandler");
         props.add("exchangePattern");
         props.add("lazyStartProducer");
+        props.add("location");
         props.add("loggerId");
         props.add("maxAckExtensionPeriod");
         props.add("maxMessagesPerPoll");
         props.add("messageOrderingEnabled");
         props.add("projectId");
         props.add("pubsubEndpoint");
-        props.add("region");
-        props.add("regional");
         props.add("serializer");
         props.add("serviceAccountKey");
-        props.add("zone");
         PROPERTY_NAMES = Collections.unmodifiableSet(props);
         SECRET_PROPERTY_NAMES = Collections.emptySet();
         MULTI_VALUE_PREFIXES = Collections.emptySet();
@@ -58,9 +56,7 @@ public class GooglePubsubLiteEndpointUriFactory extends org.apache.camel.support
         Map<String, Object> copy = new HashMap<>(properties);
 
         uri = buildPathParameter(syntax, uri, "projectId", null, true, copy);
-        uri = buildPathParameter(syntax, uri, "region", null, true, copy);
-        uri = buildPathParameter(syntax, uri, "zone", null, false, copy);
-        uri = buildPathParameter(syntax, uri, "regional", null, false, copy);
+        uri = buildPathParameter(syntax, uri, "location", null, true, copy);
         uri = buildPathParameter(syntax, uri, "destinationName", null, true, copy);
         uri = buildQueryParameters(uri, copy, encode);
         return uri;

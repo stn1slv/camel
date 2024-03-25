@@ -43,22 +43,13 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
 
     private Logger log;
 
-    @UriPath(label = "common", description = "The Google Cloud PubSub Project Id")
+    @UriPath(label = "common", description = "The Google Cloud PubSub Lite Project Id")
     @Metadata(required = true)
     private Long projectId;
 
-    @UriPath(label = "common", description = "The Google Cloud PubSub Lite region")
+    @UriPath(label = "common", description = "The Google Cloud PubSub Lite location")
     @Metadata(required = true)
-    private String region;
-
-    @UriPath(label = "common", description = "The Google Cloud PubSub Lite zone")
-    @Metadata(required = false)
-    private Character zone;
-
-    @UriPath(label = "common",
-             description = "The Google Cloud PubSub Lite. True if using a regional location. False if using a zonal location.")
-    @Metadata(required = false)
-    private Boolean regional;
+    private String location;
 
     @UriPath(label = "common",
              description = "The Destination Name. For the consumer this will be the subscription name, while for the producer this will be the topic name.")
@@ -170,25 +161,6 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
         setProjectId(Long.parseLong(projectId));
     }
 
-    public String getRegion() {
-        return region;
-    }
-
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
-    public void setLocation(String locationWithZone) {
-        String[] locationParts = locationWithZone.split("-");
-        String region = locationParts[0] + "-" + locationParts[1];
-        Character zone = locationParts.length == 3 ? locationParts[2].charAt(0) : null;
-        boolean isRegional = zone != null ? false : true;
-
-        this.setZone(zone);
-        this.setRegion(region);
-        this.setRegional(isRegional);
-    }
-
     public String getLoggerId() {
         return loggerId;
     }
@@ -269,19 +241,11 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
         this.pubsubEndpoint = pubsubEndpoint;
     }
 
-    public Character getZone() {
-        return zone;
+    public String getLocation() {
+        return location;
     }
 
-    public void setZone(Character zone) {
-        this.zone = zone;
-    }
-
-    public Boolean getRegional() {
-        return regional;
-    }
-
-    public void setRegional(Boolean regional) {
-        this.regional = regional;
+    public void setLocation(String location) {
+        this.location = location;
     }
 }

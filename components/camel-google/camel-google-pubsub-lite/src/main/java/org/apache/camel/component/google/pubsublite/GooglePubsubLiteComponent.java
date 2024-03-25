@@ -69,12 +69,6 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
               description = "How many milliseconds should a producer be allowed to terminate.")
     private int publisherTerminationTimeout = 60000;
 
-    //TBD check
-    @Metadata(
-              label = "consumer",
-              description = "Comma-separated list of additional retryable error codes for synchronous pull. By default the PubSub client library retries ABORTED, UNAVAILABLE, UNKNOWN")
-    private String synchronousPullRetryableCodes; //TBD
-
     private RemovalListener<String, Publisher> removalListener = removal -> {
         Publisher publisher = removal.getValue();
         if (publisher == null) {
@@ -133,12 +127,10 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
 
     private Publisher buildPublisher(String topicName, GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
             throws IOException {
-        CloudRegionOrZone location = getCloudRegionOrZone(googlePubsubLiteEndpoint);
-        TopicPath topicPath = TopicPath.newBuilder()
-                .setProject(ProjectNumber.of(googlePubsubLiteEndpoint.getProjectId()))
-                .setLocation(location)
-                .setName(TopicName.of(googlePubsubLiteEndpoint.getDestinationName()))
-                .build();
+        TopicPath topicPath = TopicPath.parse("projects/" + googlePubsubLiteEndpoint.getProjectId() +
+                                              "/locations/" + googlePubsubLiteEndpoint.getLocation() +
+                                              "/topics/" + googlePubsubLiteEndpoint.getDestinationName());
+
         PublisherSettings publisherSettings = PublisherSettings.newBuilder().setTopicPath(topicPath)
                 .setCredentialsProvider(getCredentialsProvider(googlePubsubLiteEndpoint))
                 .build();
@@ -151,13 +143,10 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
             String subscriptionName, MessageReceiver messageReceiver, GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
             throws IOException {
 
-        CloudRegionOrZone location = getCloudRegionOrZone(googlePubsubLiteEndpoint);
-
-        SubscriptionPath subscriptionPath = SubscriptionPath.newBuilder()
-                .setLocation(location)
-                .setProject(ProjectNumber.of(googlePubsubLiteEndpoint.getProjectId()))
-                .setName(SubscriptionName.of(googlePubsubLiteEndpoint.getDestinationName()))
-                .build();
+        SubscriptionPath subscriptionPath = SubscriptionPath
+                .parse("projects/" + googlePubsubLiteEndpoint.getProjectId() +
+                       "/locations/" + googlePubsubLiteEndpoint.getLocation() +
+                       "/subscriptions/" + googlePubsubLiteEndpoint.getDestinationName());
 
         // The message stream is paused based on the maximum size or number of messages that the
         // subscriber has already received, whichever condition is met first.
@@ -184,17 +173,6 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
                 ? GoogleCredentials.getApplicationDefault() : ServiceAccountCredentials.fromStream(ResourceHelper
                         .resolveMandatoryResourceAsInputStream(getCamelContext(), endpoint.getServiceAccountKey()))
                         .createScoped(PublisherStubSettings.getDefaultServiceScopes()));
-    }
-
-    private CloudRegionOrZone getCloudRegionOrZone(GooglePubsubLiteEndpoint googlePubsubLiteEndpoint) {
-        CloudRegionOrZone location;
-        if (googlePubsubLiteEndpoint.getRegional()) {
-            location = CloudRegionOrZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()));
-        } else {
-            location = CloudRegionOrZone
-                    .of(CloudZone.of(CloudRegion.of(googlePubsubLiteEndpoint.getRegion()), googlePubsubLiteEndpoint.getZone()));
-        }
-        return location;
     }
 
     public int getPublisherCacheSize() {
@@ -227,13 +205,5 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
 
     public void setServiceAccountKey(String serviceAccountKey) {
         this.serviceAccountKey = serviceAccountKey;
-    }
-
-    public String getSynchronousPullRetryableCodes() {
-        return synchronousPullRetryableCodes;
-    }
-
-    public void setSynchronousPullRetryableCodes(String synchronousPullRetryableCodes) {
-        this.synchronousPullRetryableCodes = synchronousPullRetryableCodes;
     }
 }
