@@ -17,17 +17,14 @@
 package org.apache.camel.component.google.pubsublite;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
-import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsublite.cloudpubsub.Subscriber;
 import com.google.common.base.Strings;
-import com.google.pubsub.v1.*;
+import com.google.pubsub.v1.ProjectSubscriptionName;
 import org.apache.camel.Processor;
 import org.apache.camel.component.google.pubsublite.consumer.CamelMessageReceiver;
 import org.apache.camel.support.DefaultConsumer;
@@ -42,14 +39,12 @@ public class GooglePubsubLiteConsumer extends DefaultConsumer {
     private final Processor processor;
     private ExecutorService executor;
     private final List<Subscriber> subscribers;
-    private final Set<ApiFuture<PullResponse>> pendingSynchronousPullResponses;
 
     GooglePubsubLiteConsumer(GooglePubsubLiteEndpoint endpoint, Processor processor) {
         super(endpoint, processor);
         this.endpoint = endpoint;
         this.processor = processor;
         this.subscribers = Collections.synchronizedList(new LinkedList<>());
-        this.pendingSynchronousPullResponses = Collections.synchronizedSet(new HashSet<>());
         String loggerId = endpoint.getLoggerId();
 
         if (Strings.isNullOrEmpty(loggerId)) {
@@ -81,8 +76,6 @@ public class GooglePubsubLiteConsumer extends DefaultConsumer {
             }
         }
 
-        safeCancelSynchronousPullResponses();
-
         if (executor != null) {
             if (getEndpoint() != null && getEndpoint().getCamelContext() != null) {
                 getEndpoint().getCamelContext().getExecutorServiceManager().shutdownGraceful(executor);
@@ -91,19 +84,6 @@ public class GooglePubsubLiteConsumer extends DefaultConsumer {
             }
         }
         executor = null;
-    }
-
-    private void safeCancelSynchronousPullResponses() {
-        synchronized (pendingSynchronousPullResponses) {
-            for (ApiFuture<PullResponse> pullResponseApiFuture : pendingSynchronousPullResponses) {
-                try {
-                    pullResponseApiFuture.cancel(true);
-                } catch (Exception e) {
-                    localLog.warn("Exception while cancelling pending synchronous pull response", e);
-                }
-            }
-            pendingSynchronousPullResponses.clear();
-        }
     }
 
     private class SubscriberWrapper implements Runnable {
