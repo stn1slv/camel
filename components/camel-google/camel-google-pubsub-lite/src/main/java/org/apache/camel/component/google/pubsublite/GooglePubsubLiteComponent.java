@@ -122,10 +122,10 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
 
     public Publisher getPublisher(String topicName, GooglePubsubLiteEndpoint googlePubsubEndpoint)
             throws ExecutionException {
-        return cachedPublishers.get(topicName, () -> buildPublisher(topicName, googlePubsubEndpoint));
+        return cachedPublishers.get(topicName, () -> buildPublisher(googlePubsubEndpoint));
     }
 
-    private Publisher buildPublisher(String topicName, GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
+    private Publisher buildPublisher(GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
             throws IOException {
         TopicPath topicPath = TopicPath.parse("projects/" + googlePubsubLiteEndpoint.getProjectId() +
                                               "/locations/" + googlePubsubLiteEndpoint.getLocation() +
@@ -139,8 +139,7 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
         return publisher;
     }
 
-    public Subscriber getSubscriber(
-            String subscriptionName, MessageReceiver messageReceiver, GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
+    public Subscriber getSubscriber(MessageReceiver messageReceiver, GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
             throws IOException {
 
         SubscriptionPath subscriptionPath = SubscriptionPath
