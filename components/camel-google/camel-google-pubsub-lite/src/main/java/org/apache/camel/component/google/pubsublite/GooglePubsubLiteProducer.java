@@ -82,7 +82,8 @@ public class GooglePubsubLiteProducer extends DefaultProducer {
     private void send(Exchange exchange) throws Exception {
 
         GooglePubsubLiteEndpoint endpoint = (GooglePubsubLiteEndpoint) getEndpoint();
-        String topicName = String.format("projects/%s/topics/%s", endpoint.getProjectId(), endpoint.getDestinationName());
+        String topicName = String.format("projects/%s/locations/%s/topics/%s", endpoint.getProjectId(), endpoint.getLocation(),
+                endpoint.getDestinationName());
 
         Publisher publisher = endpoint.getComponent().getPublisher(topicName, endpoint);
 

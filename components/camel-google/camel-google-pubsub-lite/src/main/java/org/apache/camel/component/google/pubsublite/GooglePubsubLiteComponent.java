@@ -27,7 +27,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.stub.PublisherStubSettings;
-import com.google.cloud.pubsublite.*;
+import com.google.cloud.pubsublite.SubscriptionPath;
+import com.google.cloud.pubsublite.TopicPath;
 import com.google.cloud.pubsublite.cloudpubsub.*;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -138,9 +139,12 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
 
     private Publisher buildPublisher(GooglePubsubLiteEndpoint googlePubsubLiteEndpoint)
             throws IOException {
-        TopicPath topicPath = TopicPath.parse("projects/" + googlePubsubLiteEndpoint.getProjectId() +
-                                              "/locations/" + googlePubsubLiteEndpoint.getLocation() +
-                                              "/topics/" + googlePubsubLiteEndpoint.getDestinationName());
+
+        TopicPath topicPath = TopicPath.parse(
+                String.format("projects/%s/locations/%s/topics/%s",
+                        googlePubsubLiteEndpoint.getProjectId(),
+                        googlePubsubLiteEndpoint.getLocation(),
+                        googlePubsubLiteEndpoint.getDestinationName()));
 
         PublisherSettings publisherSettings = PublisherSettings.newBuilder().setTopicPath(topicPath)
                 .setCredentialsProvider(getCredentialsProvider(googlePubsubLiteEndpoint))
@@ -154,16 +158,15 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
             throws IOException {
 
         SubscriptionPath subscriptionPath = SubscriptionPath
-                .parse("projects/" + googlePubsubLiteEndpoint.getProjectId() +
-                       "/locations/" + googlePubsubLiteEndpoint.getLocation() +
-                       "/subscriptions/" + googlePubsubLiteEndpoint.getDestinationName());
+                .parse(String.format("projects/%s/locations/%s/subscriptions/%s",
+                        googlePubsubLiteEndpoint.getProjectId(),
+                        googlePubsubLiteEndpoint.getLocation(),
+                        googlePubsubLiteEndpoint.getDestinationName()));
 
         // The message stream is paused based on the maximum size or number of messages that the
         // subscriber has already received, whichever condition is met first.
         FlowControlSettings flowControlSettings = FlowControlSettings.builder()
-                // 10 MiB. Must be greater than the allowed size of the largest message (1 MiB).
                 .setBytesOutstanding(consumerBytesOutstanding)
-                // 1,000 outstanding messages. Must be >0.
                 .setMessagesOutstanding(consumerMessagesOutstanding)
                 .build();
 
