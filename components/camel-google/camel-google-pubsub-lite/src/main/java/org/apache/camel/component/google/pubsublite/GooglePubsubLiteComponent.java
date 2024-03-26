@@ -65,6 +65,17 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
     private int publisherCacheTimeout = 180000;
 
     @Metadata(
+              label = "consumer",
+              description = "How many milliseconds should each producer stay alive in the cache. " +
+                            "Must be greater than the allowed size of the largest message (1 MiB).")
+    private long consumerBytesOutstanding = 10 * 1024 * 1024;
+
+    @Metadata(
+              label = "consumer",
+              description = "The number of messages that may be outstanding to the client. Must be >0.")
+    private long consumerMessagesOutstanding = 1000;
+
+    @Metadata(
               label = "advanced",
               description = "How many milliseconds should a producer be allowed to terminate.")
     private int publisherTerminationTimeout = 60000;
@@ -151,9 +162,9 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
         // subscriber has already received, whichever condition is met first.
         FlowControlSettings flowControlSettings = FlowControlSettings.builder()
                 // 10 MiB. Must be greater than the allowed size of the largest message (1 MiB).
-                .setBytesOutstanding(10 * 1024 * 1024L)
+                .setBytesOutstanding(consumerBytesOutstanding)
                 // 1,000 outstanding messages. Must be >0.
-                .setMessagesOutstanding(1000L)
+                .setMessagesOutstanding(consumerMessagesOutstanding)
                 .build();
 
         SubscriberSettings subscriberSettings = SubscriberSettings.newBuilder()
@@ -204,5 +215,21 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
 
     public void setServiceAccountKey(String serviceAccountKey) {
         this.serviceAccountKey = serviceAccountKey;
+    }
+
+    public long getConsumerBytesOutstanding() {
+        return consumerBytesOutstanding;
+    }
+
+    public void setConsumerBytesOutstanding(long consumerBytesOutstanding) {
+        this.consumerBytesOutstanding = consumerBytesOutstanding;
+    }
+
+    public long getConsumerMessagesOutstanding() {
+        return consumerMessagesOutstanding;
+    }
+
+    public void setConsumerMessagesOutstanding(long consumerMessagesOutstanding) {
+        this.consumerMessagesOutstanding = consumerMessagesOutstanding;
     }
 }

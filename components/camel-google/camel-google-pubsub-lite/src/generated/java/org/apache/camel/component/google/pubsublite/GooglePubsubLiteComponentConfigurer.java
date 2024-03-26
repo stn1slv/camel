@@ -25,6 +25,10 @@ public class GooglePubsubLiteComponentConfigurer extends PropertyConfigurerSuppo
         case "autowiredEnabled": target.setAutowiredEnabled(property(camelContext, boolean.class, value)); return true;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": target.setBridgeErrorHandler(property(camelContext, boolean.class, value)); return true;
+        case "consumerbytesoutstanding":
+        case "consumerBytesOutstanding": target.setConsumerBytesOutstanding(property(camelContext, long.class, value)); return true;
+        case "consumermessagesoutstanding":
+        case "consumerMessagesOutstanding": target.setConsumerMessagesOutstanding(property(camelContext, long.class, value)); return true;
         case "lazystartproducer":
         case "lazyStartProducer": target.setLazyStartProducer(property(camelContext, boolean.class, value)); return true;
         case "publishercachesize":
@@ -46,6 +50,10 @@ public class GooglePubsubLiteComponentConfigurer extends PropertyConfigurerSuppo
         case "autowiredEnabled": return boolean.class;
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return boolean.class;
+        case "consumerbytesoutstanding":
+        case "consumerBytesOutstanding": return long.class;
+        case "consumermessagesoutstanding":
+        case "consumerMessagesOutstanding": return long.class;
         case "lazystartproducer":
         case "lazyStartProducer": return boolean.class;
         case "publishercachesize":
@@ -68,6 +76,10 @@ public class GooglePubsubLiteComponentConfigurer extends PropertyConfigurerSuppo
         case "autowiredEnabled": return target.isAutowiredEnabled();
         case "bridgeerrorhandler":
         case "bridgeErrorHandler": return target.isBridgeErrorHandler();
+        case "consumerbytesoutstanding":
+        case "consumerBytesOutstanding": return target.getConsumerBytesOutstanding();
+        case "consumermessagesoutstanding":
+        case "consumerMessagesOutstanding": return target.getConsumerMessagesOutstanding();
         case "lazystartproducer":
         case "lazyStartProducer": return target.isLazyStartProducer();
         case "publishercachesize":
