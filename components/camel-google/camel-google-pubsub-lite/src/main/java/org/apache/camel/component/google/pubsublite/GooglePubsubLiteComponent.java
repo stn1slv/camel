@@ -51,7 +51,7 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
     private static final Logger LOG = LoggerFactory.getLogger(GooglePubsubLiteComponent.class);
 
     @Metadata(label = "common",
-              description = "The Service account key that can be used as credentials for the PubSub publisher/subscriber. It can be loaded by default from "
+              description = "The Service account key that can be used as credentials for the PubSub Lite publisher/subscriber. It can be loaded by default from "
                             + " classpath, but you can prefix with classpath:, file:, or http: to load the resource from different systems.")
     private String serviceAccountKey;
 

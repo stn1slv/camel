@@ -9,15 +9,15 @@
 :component-header: Both producer and consumer are supported
 //Manually maintained attributes
 :group: Google
-:camel-spring-boot-name: google-pubsub
+:camel-spring-boot-name: google-pubsub-lite
 
 *Since Camel {since}*
 
 *{component-header}*
 
-The Google Pubsub component provides access
-to https://cloud.google.com/pubsub/[Cloud Pub/Sub Infrastructure] via
-the https://github.com/googleapis/java-pubsub[Google Cloud Java Client for Google Cloud Pub/Sub].
+The Google Pubsub Lite component provides access
+to https://cloud.google.com/pubsub/[Cloud Pub/Sub Lite Infrastructure] via
+the https://github.com/googleapis/java-pubsublite[Google Cloud Pub/Sub Lite Client for Javas].
 
 Maven users will need to add the following dependency to their pom.xml
 for this component:
@@ -101,27 +101,5 @@ again after the ack deadline.
 
 The consumer endpoint returns the content of the message as byte[] - exactly as the underlying system sends it.
 It is up for the route to convert/unmarshall the contents.
-
-== Authentication Configuration
-
-By default this component aquires credentials using `GoogleCredentials.getApplicationDefault()`.
-This behavior can be disabled by setting _authenticate_ option to `false`, in which case requests to Google API will be made without authentication details. This is only desirable when developing against an emulator.
-This behavior can be altered by supplying a path to a service account key file.
-
-== Rollback and Redelivery
-
-The rollback for Google PubSub relies on the idea of the Acknowledgement Deadline - the time period where Google PubSub expects to receive the acknowledgement.
-If the acknowledgement has not been received, the message is redelivered.
-
-Google provides an API to extend the deadline for a message.
-
-More information in https://cloud.google.com/pubsub/docs/subscriber#ack_deadline[Google PubSub Documentation]
-
-So, rollback is effectively a deadline extension API call with zero value - i.e. deadline is reached now and message can
-be redelivered to the next consumer.
-
-It is possible to delay the message redelivery by setting the acknowledgement deadline explicitly for the rollback by
-setting the message header `GooglePubsubConstants.ACK_DEADLINE` to the value in seconds.
-
 
 include::spring-boot:partial$starter.adoc[]
