@@ -99,7 +99,7 @@ public class GooglePubsubLiteProducerTest extends CamelTestSupport {
         return new RouteBuilder() {
             public void configure() {
                 from("direct:start")
-                        .to("google-pubsub-lite:mockedTopic");
+                        .to("google-pubsub-lite:123456789012:europe-west3:test");
             }
         };
     }
