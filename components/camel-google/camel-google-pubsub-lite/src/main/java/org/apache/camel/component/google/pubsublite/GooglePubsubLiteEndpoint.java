@@ -82,11 +82,6 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
               defaultValue = "3600")
     private int maxAckExtensionPeriod = 3600;
 
-    @UriParam(defaultValue = "false",
-              description = "Should message ordering be enabled",
-              label = "producer,advanced")
-    private boolean messageOrderingEnabled;
-
     @UriParam(description = "Pub/Sub endpoint to use. Required when using message ordering, and ensures that messages are received in order even when multiple publishers are used",
               label = "producer,advanced")
     private String pubsubEndpoint;
@@ -223,14 +218,6 @@ public class GooglePubsubLiteEndpoint extends DefaultEndpoint {
 
     public void setSerializer(GooglePubsubSerializer serializer) {
         this.serializer = serializer;
-    }
-
-    public boolean isMessageOrderingEnabled() {
-        return this.messageOrderingEnabled;
-    }
-
-    public void setMessageOrderingEnabled(boolean messageOrderingEnabled) {
-        this.messageOrderingEnabled = messageOrderingEnabled;
     }
 
     public String getPubsubEndpoint() {

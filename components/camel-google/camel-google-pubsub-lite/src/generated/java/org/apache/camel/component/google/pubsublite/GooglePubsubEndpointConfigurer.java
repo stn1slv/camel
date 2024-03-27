@@ -35,8 +35,6 @@ public class GooglePubsubEndpointConfigurer extends PropertyConfigurerSupport im
         case "maxAckExtensionPeriod": target.setMaxAckExtensionPeriod(property(camelContext, int.class, value)); return true;
         case "maxmessagesperpoll":
         case "maxMessagesPerPoll": target.setMaxMessagesPerPoll(property(camelContext, java.lang.Integer.class, value)); return true;
-        case "messageorderingenabled":
-        case "messageOrderingEnabled": target.setMessageOrderingEnabled(property(camelContext, boolean.class, value)); return true;
         case "pubsubendpoint":
         case "pubsubEndpoint": target.setPubsubEndpoint(property(camelContext, java.lang.String.class, value)); return true;
         case "serializer": target.setSerializer(property(camelContext, GooglePubsubSerializer.class, value)); return true;
@@ -106,8 +104,6 @@ public class GooglePubsubEndpointConfigurer extends PropertyConfigurerSupport im
         case "maxAckExtensionPeriod": return target.getMaxAckExtensionPeriod();
         case "maxmessagesperpoll":
         case "maxMessagesPerPoll": return target.getMaxMessagesPerPoll();
-        case "messageorderingenabled":
-        case "messageOrderingEnabled": return target.isMessageOrderingEnabled();
         case "pubsubendpoint":
         case "pubsubEndpoint": return target.getPubsubEndpoint();
         case "serializer": return target.getSerializer();

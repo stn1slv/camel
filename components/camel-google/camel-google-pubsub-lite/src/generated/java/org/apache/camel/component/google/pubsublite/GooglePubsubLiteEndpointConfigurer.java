@@ -39,8 +39,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         case "maxAckExtensionPeriod": target.setMaxAckExtensionPeriod(property(camelContext, int.class, value)); return true;
         case "maxmessagesperpoll":
         case "maxMessagesPerPoll": target.setMaxMessagesPerPoll(property(camelContext, java.lang.Integer.class, value)); return true;
-        case "messageorderingenabled":
-        case "messageOrderingEnabled": target.setMessageOrderingEnabled(property(camelContext, boolean.class, value)); return true;
         case "pubsubendpoint":
         case "pubsubEndpoint": target.setPubsubEndpoint(property(camelContext, java.lang.String.class, value)); return true;
         case "serializer": target.setSerializer(property(camelContext, org.apache.camel.component.google.pubsublite.serializer.GooglePubsubSerializer.class, value)); return true;
@@ -76,8 +74,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         case "maxAckExtensionPeriod": return int.class;
         case "maxmessagesperpoll":
         case "maxMessagesPerPoll": return java.lang.Integer.class;
-        case "messageorderingenabled":
-        case "messageOrderingEnabled": return boolean.class;
         case "pubsubendpoint":
         case "pubsubEndpoint": return java.lang.String.class;
         case "serializer": return org.apache.camel.component.google.pubsublite.serializer.GooglePubsubSerializer.class;
@@ -109,8 +105,6 @@ public class GooglePubsubLiteEndpointConfigurer extends PropertyConfigurerSuppor
         case "maxAckExtensionPeriod": return target.getMaxAckExtensionPeriod();
         case "maxmessagesperpoll":
         case "maxMessagesPerPoll": return target.getMaxMessagesPerPoll();
-        case "messageorderingenabled":
-        case "messageOrderingEnabled": return target.isMessageOrderingEnabled();
         case "pubsubendpoint":
         case "pubsubEndpoint": return target.getPubsubEndpoint();
         case "serializer": return target.getSerializer();

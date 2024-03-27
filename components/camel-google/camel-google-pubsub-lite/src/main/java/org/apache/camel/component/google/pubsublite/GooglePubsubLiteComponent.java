@@ -115,9 +115,13 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
         }
 
         GooglePubsubLiteEndpoint pubsubEndpoint = new GooglePubsubLiteEndpoint(uri, this);
+        LOG.debug("Google Cloud ProjectId {}", parts[0]);
         pubsubEndpoint.setProjectId(parts[0]);
+        LOG.debug("Google Cloud LocationId {}", parts[1]);
         pubsubEndpoint.setLocation(parts[1]);
+        LOG.debug("Google Cloud DestinationName {}", parts[2]);
         pubsubEndpoint.setDestinationName(parts[2]);
+        LOG.debug("Google Cloud ServiceAccountKey {}", serviceAccountKey);
         pubsubEndpoint.setServiceAccountKey(serviceAccountKey);
 
         setProperties(pubsubEndpoint, parameters);
@@ -162,6 +166,9 @@ public class GooglePubsubLiteComponent extends DefaultComponent {
                         googlePubsubLiteEndpoint.getProjectId(),
                         googlePubsubLiteEndpoint.getLocation(),
                         googlePubsubLiteEndpoint.getDestinationName()));
+
+        LOG.debug("ConsumerBytesOutstanding {}", consumerBytesOutstanding);
+        LOG.debug("ConsumerMessagesOutstanding {}", consumerMessagesOutstanding);
 
         // The message stream is paused based on the maximum size or number of messages that the
         // subscriber has already received, whichever condition is met first.
