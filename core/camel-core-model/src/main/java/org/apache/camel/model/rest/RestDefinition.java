@@ -869,7 +869,7 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
         }
         if (openApi != null) {
             addRouteDefinition(camelContext, openApi, answer, config.getComponent(), config.getProducerComponent(),
-                    config.getApiContextPath());
+                    config.getApiContextPath(), config.isClientRequestValidation());
         }
 
         return answer;
@@ -967,10 +967,10 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
         return answer;
     }
 
-    @SuppressWarnings("rawtypes")
     private void addRouteDefinition(
             CamelContext camelContext, OpenApiDefinition openApi, List<RouteDefinition> answer,
-            String component, String producerComponent, String apiContextPath) {
+            String component, String producerComponent, String apiContextPath,
+            boolean clientValidation) {
 
         RouteDefinition route = new RouteDefinition();
         if (openApi.getRouteId() != null) {
@@ -979,46 +979,30 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
         // add dummy empty stop
         route.getOutputs().add(new StopDefinition());
 
-        RestBindingDefinition binding = new RestBindingDefinition();
-        binding.setComponent(component);
-        if (binding.getBindingMode() != null) {
-            String mode = binding.getBindingMode();
-            if ("json".equals(mode)) {
-                binding.setConsumes("application/json");
-                binding.setProduces("application/json");
-            } else if ("xml".equals(mode)) {
-                binding.setConsumes("application/xml");
-                binding.setProduces("application/xml");
-            } else if ("json_xml".equals(mode)) {
-                binding.setConsumes("application/json;application/xml");
-                binding.setProduces("application/json;application/xml");
-            }
-        }
-        binding.setSkipBindingOnErrorCode(getSkipBindingOnErrorCode());
-        binding.setClientRequestValidation(getClientRequestValidation());
-        binding.setEnableCORS(getEnableCORS());
-        binding.setEnableNoContentResponse(getEnableNoContentResponse());
+        final RestBindingDefinition binding = getRestBindingDefinition(camelContext, component);
         route.setRestBindingDefinition(binding);
 
         // append options
         Map<String, Object> options = new HashMap<>();
         if (binding.getConsumes() != null) {
-            options.put("consumes", binding.getConsumes());
+            options.put("consumes", parseText(camelContext, binding.getConsumes()));
         }
         if (binding.getProduces() != null) {
-            options.put("produces", binding.getProduces());
+            options.put("produces", parseText(camelContext, binding.getProduces()));
         }
-        if (openApi.getRequestValidationEnabled() != null) {
-            options.put("requestValidationEnabled", openApi.getRequestValidationEnabled());
+        if (getClientRequestValidation() != null) {
+            options.put("clientRequestValidation", parseBoolean(camelContext, getClientRequestValidation()));
+        } else if (clientValidation) {
+            options.put("clientRequestValidation", "true");
         }
         if (openApi.getMissingOperation() != null) {
-            options.put("missingOperation", openApi.getMissingOperation());
+            options.put("missingOperation", parseText(camelContext, openApi.getMissingOperation()));
         }
         if (openApi.getMockIncludePattern() != null) {
-            options.put("mockIncludePattern", openApi.getMockIncludePattern());
+            options.put("mockIncludePattern", parseText(camelContext, openApi.getMockIncludePattern()));
         }
         if (openApi.getApiContextPath() != null) {
-            options.put("apiContextPath", openApi.getApiContextPath());
+            options.put("apiContextPath", parseText(camelContext, openApi.getApiContextPath()));
         }
 
         // include optional description
@@ -1046,6 +1030,32 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
         route.fromRest(from);
         route.setRestDefinition(this);
         answer.add(route);
+    }
+
+    private RestBindingDefinition getRestBindingDefinition(CamelContext camelContext, String component) {
+        String mode = getBindingMode();
+        if (mode == null) {
+            mode = camelContext.getRestConfiguration().getBindingMode().name();
+        }
+
+        RestBindingDefinition binding = new RestBindingDefinition();
+        binding.setComponent(component);
+        if ("json".equals(mode)) {
+            binding.setConsumes("application/json");
+            binding.setProduces("application/json");
+        } else if ("xml".equals(mode)) {
+            binding.setConsumes("application/xml");
+            binding.setProduces("application/xml");
+        } else if ("json_xml".equals(mode)) {
+            binding.setConsumes("application/json;application/xml");
+            binding.setProduces("application/json;application/xml");
+        }
+        binding.setBindingMode(mode);
+        binding.setSkipBindingOnErrorCode(getSkipBindingOnErrorCode());
+        binding.setClientRequestValidation(getClientRequestValidation());
+        binding.setEnableCORS(getEnableCORS());
+        binding.setEnableNoContentResponse(getEnableNoContentResponse());
+        return binding;
     }
 
     private void addRouteDefinition(
@@ -1138,6 +1148,11 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
                         && ObjectHelper.isNotEmpty(param.getDefaultValue())) {
                     binding.addDefaultValue(param.getName(), parseText(camelContext, param.getDefaultValue()));
                 }
+                // register all allowed values for the query and header parameters
+                if ((RestParamType.query == type || RestParamType.header == type)
+                        && param.getAllowableValues() != null) {
+                    binding.addAllowedValue(param.getName(), parseText(camelContext, param.getAllowableValuesAsCommaString()));
+                }
                 // register which parameters are required
                 Boolean required = param.getRequired();
                 if (required != null && required) {
@@ -1181,13 +1196,7 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
             // description 2) verb description 3) rest description
             // this allows end users to define general descriptions and override
             // then per to/route or verb
-            String description = verb.getTo() != null ? verb.getTo().getDescriptionText() : route.getDescriptionText();
-            if (description == null) {
-                description = verb.getDescriptionText();
-            }
-            if (description == null) {
-                description = getDescriptionText();
-            }
+            final String description = getDescription(verb, route);
             if (description != null) {
                 options.put("description", parseText(camelContext, description));
             }
@@ -1268,6 +1277,17 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
             route.setRestDefinition(this);
             answer.add(route);
         }
+    }
+
+    private String getDescription(VerbDefinition verb, RouteDefinition route) {
+        String description = verb.getTo() != null ? verb.getTo().getDescriptionText() : route.getDescriptionText();
+        if (description == null) {
+            description = verb.getDescriptionText();
+        }
+        if (description == null) {
+            description = getDescriptionText();
+        }
+        return description;
     }
 
     private Set<String> uriTemplating(

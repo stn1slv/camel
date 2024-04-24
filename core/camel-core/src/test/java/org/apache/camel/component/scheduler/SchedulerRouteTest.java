@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SchedulerRouteTest extends ContextTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(SchedulerRouteTest.class);
-    private MyBean bean = new MyBean();
+    private final MyBean bean = new MyBean();
 
     @Test
     public void testSchedulerInvokesBeanMethod() throws Exception {
@@ -43,7 +43,7 @@ public class SchedulerRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             public void configure() {
                 from("scheduler://foo?delay=100").log("Fired scheduler").to("bean:myBean", "mock:result");
@@ -59,7 +59,7 @@ public class SchedulerRouteTest extends ContextTestSupport {
     }
 
     public static class MyBean {
-        public AtomicInteger counter = new AtomicInteger();
+        public final AtomicInteger counter = new AtomicInteger();
 
         public void someMethod() {
             LOG.debug("Invoked someMethod()");

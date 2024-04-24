@@ -22,12 +22,17 @@ public enum BedrockModels {
     TITAN_TEXT_LITE_V1("amazon.titan-text-lite-v1"),
     TITAN_IMAGE_GENERATOR_V1("amazon.titan-image-generator-v1"),
     TITAN_EMBEDDINGS_G1("amazon.titan-embed-text-v1"),
+    TITAN_MULTIMODAL_EMBEDDINGS_G1("amazon.titan-embed-image-v1"),
     JURASSIC2_ULTRA("ai21.j2-ultra-v1"),
     JURASSIC2_MID("ai21.j2-mid-v1"),
     ANTROPHIC_CLAUDE_INSTANT_V1("anthropic.claude-instant-v1"),
     ANTROPHIC_CLAUDE_V2("anthropic.claude-v2"),
     ANTROPHIC_CLAUDE_V2_1("anthropic.claude-v2:1"),
-    ANTROPHIC_CLAUDE_V3("anthropic.claude-3-sonnet-20240229-v1:0");
+    ANTROPHIC_CLAUDE_V3("anthropic.claude-3-sonnet-20240229-v1:0"),
+    ANTROPHIC_CLAUDE_HAIKU_V3("anthropic.claude-3-haiku-20240307-v1:0"),
+    MISTRAL_7B_INSTRUCT("mistral.mistral-7b-instruct-v0:2"),
+    MISTRAL_8x7B_INSTRUCT("mistral.mixtral-8x7b-instruct-v0:1"),
+    MISTRAL_LARGE("mistral.mistral-large-2402-v1:0");
 
     public final String model;
 

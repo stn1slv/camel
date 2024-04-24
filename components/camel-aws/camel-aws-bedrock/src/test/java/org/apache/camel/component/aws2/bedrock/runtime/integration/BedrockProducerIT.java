@@ -336,6 +336,131 @@ class BedrockProducerIT extends CamelTestSupport {
         MockEndpoint.assertIsSatisfied(context);
     }
 
+    @Test
+    public void testInvokeAnthropicV3HaikuModel() throws InterruptedException {
+
+        result.expectedMessageCount(1);
+        final Exchange result = template.send("direct:send_anthropic_v3_haiku_model", exchange -> {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = mapper.createObjectNode();
+
+            ArrayNode messages = mapper.createArrayNode();
+
+            ObjectNode element = mapper.createObjectNode();
+            element.putIfAbsent("role", new TextNode("user"));
+
+            ArrayNode content = mapper.createArrayNode();
+
+            ObjectNode textContent = mapper.createObjectNode();
+
+            textContent.putIfAbsent("type", new TextNode("text"));
+            textContent.putIfAbsent("text", new TextNode("Can you tell the history of Mayflower?"));
+
+            content.add(textContent);
+
+            element.putIfAbsent("content", content);
+
+            messages.add(element);
+
+            rootNode.putIfAbsent("messages", messages);
+            rootNode.putIfAbsent("max_tokens", new IntNode(1000));
+            rootNode.putIfAbsent("anthropic_version", new TextNode("bedrock-2023-05-31"));
+
+            exchange.getMessage().setBody(mapper.writer().writeValueAsString(rootNode));
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_CONTENT_TYPE, "application/json");
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_ACCEPT_CONTENT_TYPE, "application/json");
+        });
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testInvokeMistral7BInstructModel() throws InterruptedException {
+
+        result.expectedMessageCount(1);
+        final Exchange result = template.send("direct:send_mistral_7b_instruct_model", exchange -> {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = mapper.createObjectNode();
+            rootNode.putIfAbsent("prompt",
+                    new TextNode("\"<s>[INST] Can you tell the history of Mayflower? [/INST]\\\""));
+
+            rootNode.putIfAbsent("max_tokens", new IntNode(300));
+            rootNode.putIfAbsent("temperature", new DoubleNode(0.5));
+            rootNode.putIfAbsent("top_p", new DoubleNode(0.9));
+            rootNode.putIfAbsent("top_k", new IntNode(50));
+
+            exchange.getMessage().setBody(mapper.writer().writeValueAsString(rootNode));
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_CONTENT_TYPE, "application/json");
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_ACCEPT_CONTENT_TYPE, "application/json");
+        });
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testInvokeMistral8x7BInstructModel() throws InterruptedException {
+
+        result.expectedMessageCount(1);
+        final Exchange result = template.send("direct:send_mistral_8x7b_instruct_model", exchange -> {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = mapper.createObjectNode();
+            rootNode.putIfAbsent("prompt",
+                    new TextNode("\"<s>[INST] Can you tell the history of Mayflower? [/INST]\\\""));
+
+            rootNode.putIfAbsent("max_tokens", new IntNode(300));
+            rootNode.putIfAbsent("temperature", new DoubleNode(0.5));
+            rootNode.putIfAbsent("top_p", new DoubleNode(0.9));
+            rootNode.putIfAbsent("top_k", new IntNode(50));
+
+            exchange.getMessage().setBody(mapper.writer().writeValueAsString(rootNode));
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_CONTENT_TYPE, "application/json");
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_ACCEPT_CONTENT_TYPE, "application/json");
+        });
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testInvokeMistralLargeModel() throws InterruptedException {
+
+        result.expectedMessageCount(1);
+        final Exchange result = template.send("direct:send_mistral_large_model", exchange -> {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = mapper.createObjectNode();
+            rootNode.putIfAbsent("prompt",
+                    new TextNode("\"<s>[INST] Can you tell the history of Mayflower? [/INST]\\\""));
+
+            rootNode.putIfAbsent("max_tokens", new IntNode(200));
+            rootNode.putIfAbsent("temperature", new DoubleNode(0.5));
+            rootNode.putIfAbsent("top_p", new DoubleNode(0.9));
+            rootNode.putIfAbsent("top_k", new IntNode(50));
+
+            exchange.getMessage().setBody(mapper.writer().writeValueAsString(rootNode));
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_CONTENT_TYPE, "application/json");
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_ACCEPT_CONTENT_TYPE, "application/json");
+        });
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testInvokeTitanMultimodalEmbeddingsModel() throws InterruptedException {
+
+        result.expectedMessageCount(1);
+        final Exchange result = template.send("direct:send_titan_multimodal_embeddings", exchange -> {
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = mapper.createObjectNode();
+            rootNode.putIfAbsent("inputText",
+                    new TextNode("A Sci-fi camel running in the desert"));
+
+            exchange.getMessage().setBody(mapper.writer().writeValueAsString(rootNode));
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_CONTENT_TYPE, "application/json");
+            exchange.getMessage().setHeader(BedrockConstants.MODEL_ACCEPT_CONTENT_TYPE, "*/*");
+        });
+
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
     @Override
     protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
@@ -362,6 +487,11 @@ class BedrockProducerIT extends CamelTestSupport {
                 from("direct:send_titan_embeddings")
                         .to("aws-bedrock:label?accessKey=RAW({{aws.manual.access.key}})&secretKey=RAW({{aws.manual.secret.key}}&region=us-east-1&operation=invokeEmbeddingsModel&modelId="
                             + BedrockModels.TITAN_EMBEDDINGS_G1.model)
+                        .to(result);
+
+                from("direct:send_titan_multimodal_embeddings")
+                        .to("aws-bedrock:label?accessKey=RAW({{aws.manual.access.key}})&secretKey=RAW({{aws.manual.secret.key}}&region=us-east-1&operation=invokeEmbeddingsModel&modelId="
+                            + BedrockModels.TITAN_MULTIMODAL_EMBEDDINGS_G1.model)
                         .to(result);
 
                 from("direct:send_jurassic2_model")
@@ -401,6 +531,30 @@ class BedrockProducerIT extends CamelTestSupport {
                 from("direct:send_anthropic_v3_model")
                         .to("aws-bedrock:label?accessKey=RAW({{aws.manual.access.key}})&secretKey=RAW({{aws.manual.secret.key}}&region=us-east-1&operation=invokeTextModel&modelId="
                             + BedrockModels.ANTROPHIC_CLAUDE_V3.model)
+                        .log("Completions: ${body}")
+                        .to(result);
+
+                from("direct:send_anthropic_v3_haiku_model")
+                        .to("aws-bedrock:label?accessKey=RAW({{aws.manual.access.key}})&secretKey=RAW({{aws.manual.secret.key}}&region=us-east-1&operation=invokeTextModel&modelId="
+                            + BedrockModels.ANTROPHIC_CLAUDE_HAIKU_V3.model)
+                        .log("Completions: ${body}")
+                        .to(result);
+
+                from("direct:send_mistral_7b_instruct_model")
+                        .to("aws-bedrock:label?accessKey=RAW({{aws.manual.access.key}})&secretKey=RAW({{aws.manual.secret.key}}&region=us-east-1&operation=invokeTextModel&modelId="
+                            + BedrockModels.MISTRAL_7B_INSTRUCT.model)
+                        .log("Completions: ${body}")
+                        .to(result);
+
+                from("direct:send_mistral_8x7b_instruct_model")
+                        .to("aws-bedrock:label?accessKey=RAW({{aws.manual.access.key}})&secretKey=RAW({{aws.manual.secret.key}}&region=us-east-1&operation=invokeTextModel&modelId="
+                            + BedrockModels.MISTRAL_8x7B_INSTRUCT.model)
+                        .log("Completions: ${body}")
+                        .to(result);
+
+                from("direct:send_mistral_large_model")
+                        .to("aws-bedrock:label?accessKey=RAW({{aws.manual.access.key}})&secretKey=RAW({{aws.manual.secret.key}}&region=us-east-1&operation=invokeTextModel&modelId="
+                            + BedrockModels.MISTRAL_LARGE.model)
                         .log("Completions: ${body}")
                         .to(result);
             }

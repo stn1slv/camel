@@ -249,9 +249,17 @@ public class BedrockProducer extends DefaultProducer {
                     throw new RuntimeException(e);
                 }
             }
-            case "anthropic.claude-3-sonnet-20240229-v1:0" -> {
+            case "anthropic.claude-3-sonnet-20240229-v1:0", "anthropic.claude-3-haiku-20240307-v1:0" -> {
                 try {
                     setAnthropicV3Text(result, message);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case "mistral.mistral-7b-instruct-v0:2", "mistral.mixtral-8x7b-instruct-v0:1",
+                    "mistral.mistral-large-2402-v1:0" -> {
+                try {
+                    setMistralText(result, message);
                 } catch (JsonProcessingException e) {
                     throw new RuntimeException(e);
                 }
@@ -277,6 +285,12 @@ public class BedrockProducer extends DefaultProducer {
     }
 
     private void setAnthropicV3Text(InvokeModelResponse result, Message message) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonString = mapper.readTree(result.body().asUtf8String());
+        message.setBody(jsonString);
+    }
+
+    private void setMistralText(InvokeModelResponse result, Message message) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode jsonString = mapper.readTree(result.body().asUtf8String());
         message.setBody(jsonString);

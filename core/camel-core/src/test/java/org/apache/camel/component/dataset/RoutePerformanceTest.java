@@ -33,11 +33,11 @@ import org.junit.jupiter.api.Test;
  */
 public class RoutePerformanceTest extends ContextTestSupport {
 
-    private int size = 250;
+    private final int size = 250;
 
-    private SimpleDataSet dataSet = new SimpleDataSet(size);
+    private final SimpleDataSet dataSet = new SimpleDataSet(size);
 
-    private String uri = "mock:results";
+    private final String uri = "mock:results";
 
     @Override
     protected Registry createCamelRegistry() throws Exception {
@@ -61,10 +61,10 @@ public class RoutePerformanceTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 Map<String, Object> headers = new HashMap<>();
                 headers.put("foo", 123);
                 dataSet.setDefaultHeaders(headers);

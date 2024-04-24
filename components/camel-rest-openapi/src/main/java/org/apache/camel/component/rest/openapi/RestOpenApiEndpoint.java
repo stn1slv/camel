@@ -33,9 +33,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.atlassian.oai.validator.OpenApiInteractionValidator;
-import com.atlassian.oai.validator.report.LevelResolver;
-import com.atlassian.oai.validator.report.ValidationReport;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
@@ -60,9 +57,11 @@ import org.apache.camel.ExchangePattern;
 import org.apache.camel.NoSuchBeanException;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
-import org.apache.camel.component.rest.openapi.validator.RequestValidationCustomizer;
+import org.apache.camel.component.platform.http.spi.PlatformHttpConsumerAware;
+import org.apache.camel.component.rest.openapi.validator.DefaultRequestValidator;
 import org.apache.camel.component.rest.openapi.validator.RequestValidator;
 import org.apache.camel.component.rest.openapi.validator.RestOpenApiOperation;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.RestConfiguration;
 import org.apache.camel.spi.RestOpenApiConsumerFactory;
@@ -132,7 +131,7 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
                             + " or multiple types as `application/json, application/xml; q=0.5` according to the RFC7231. This equates"
                             + " to the value of `Accept` HTTP header. If set overrides any value found in the OpenApi specification and."
                             + " in the component configuration",
-              label = "producer")
+              label = "consumer")
     private String consumes;
     @UriParam(description = "What payload type this component is producing. For example `application/json`"
                             + " according to the RFC7231. This equates to the value of `Content-Type` HTTP header. If set overrides"
@@ -151,17 +150,14 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
              defaultValue = RestOpenApiComponent.DEFAULT_SPECIFICATION_URI,
              defaultValueNote = "By default loads `openapi.json` file", label = "common")
     private String specificationUri;
-    @UriParam(description = "Enable validation of requests against the configured OpenAPI specification")
+    @Metadata(label = "consumer,advanced",
+              description = "Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode is enabled for JSon or XML. Multiple package names can be separated by comma.")
+    private String bindingPackageScan;
+    @UriParam(label = "consumer",
+              description = "Whether to enable validation of the client request to check if the incoming request is valid according to the OpenAPI specification")
+    private boolean clientRequestValidation;
+    @UriParam(label = "producer", description = "Enable validation of requests against the configured OpenAPI specification")
     private boolean requestValidationEnabled;
-    @UriParam(description = "If request validation is enabled, this option provides the capability to customize"
-                            + " the creation of OpenApiInteractionValidator used to validate requests.",
-              label = "advanced")
-    private RequestValidationCustomizer requestValidationCustomizer;
-    @UriParam(description = "Levels for specific OpenAPI request validation options. Multiple options can be"
-                            + " specified as URI options prefixed by 'validation.'. For example, validation.request.body=ERROR"
-                            + "&validation.request.body.unexpected=IGNORED. Supported values are INFO, ERROR, WARN & IGNORE.",
-              label = "advanced", prefix = "validation.", multiValue = true)
-    private Map<String, Object> requestValidationLevels = new HashMap<>();
     @UriParam(description = "To use a custom strategy for how to process Rest DSL requests", label = "consumer,advanced")
     private RestOpenapiProcessorStrategy restOpenapiProcessorStrategy;
     @UriParam(description = "Whether the consumer should fail,ignore or return a mock response for OpenAPI operations that are not mapped to a corresponding route.",
@@ -213,12 +209,13 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
     public Consumer createConsumer(final Processor processor) throws Exception {
         OpenAPI doc = loadSpecificationFrom(getCamelContext(), specificationUri);
         String path = determineBasePath(doc);
-        Processor target = new RestOpenApiProcessor(this, doc, path, apiContextPath, processor, restOpenapiProcessorStrategy);
+        RestOpenApiProcessor target
+                = new RestOpenApiProcessor(this, doc, path, apiContextPath, processor, restOpenapiProcessorStrategy);
         CamelContextAware.trySetCamelContext(target, getCamelContext());
         return createConsumerFor(path, target);
     }
 
-    protected Consumer createConsumerFor(String basePath, Processor processor) throws Exception {
+    protected Consumer createConsumerFor(String basePath, RestOpenApiProcessor processor) throws Exception {
         RestOpenApiConsumerFactory factory = null;
         String cname = null;
         if (getConsumerComponentName() != null) {
@@ -300,6 +297,9 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
             RestConfiguration config = CamelContextHelper.getRestConfiguration(getCamelContext(), cname);
             Map<String, Object> copy = new HashMap<>(parameters); // defensive copy of the parameters
             Consumer consumer = factory.createConsumer(getCamelContext(), processor, basePath, config, copy);
+            if (consumer instanceof PlatformHttpConsumerAware phca) {
+                processor.setPlatformHttpConsumer(phca);
+            }
             configureConsumer(consumer);
             return consumer;
         } else {
@@ -421,15 +421,6 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
         this.specificationUri = specificationUri;
     }
 
-    public void setRequestValidationCustomizer(
-            RequestValidationCustomizer requestValidationCustomizer) {
-        this.requestValidationCustomizer = requestValidationCustomizer;
-    }
-
-    public RequestValidationCustomizer getRequestValidationCustomizer() {
-        return requestValidationCustomizer;
-    }
-
     public void setRequestValidationEnabled(boolean requestValidationEnabled) {
         this.requestValidationEnabled = requestValidationEnabled;
     }
@@ -438,12 +429,12 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
         return requestValidationEnabled;
     }
 
-    public void setRequestValidationLevels(Map<String, Object> requestValidationLevels) {
-        this.requestValidationLevels = requestValidationLevels;
+    public boolean isClientRequestValidation() {
+        return clientRequestValidation;
     }
 
-    public Map<String, Object> getRequestValidationLevels() {
-        return requestValidationLevels;
+    public void setClientRequestValidation(boolean clientRequestValidation) {
+        this.clientRequestValidation = clientRequestValidation;
     }
 
     public RestOpenapiProcessorStrategy getRestOpenapiProcessorStrategy() {
@@ -476,6 +467,14 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
 
     public void setApiContextPath(String apiContextPath) {
         this.apiContextPath = apiContextPath;
+    }
+
+    public String getBindingPackageScan() {
+        return bindingPackageScan;
+    }
+
+    public void setBindingPackageScan(String bindingPackageScan) {
+        this.bindingPackageScan = bindingPackageScan;
     }
 
     Producer createProducerFor(
@@ -538,10 +537,6 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
 
     String determineComponentName() {
         return Optional.ofNullable(componentName).orElse(getComponent().getComponentName());
-    }
-
-    String determineConsumerComponentName() {
-        return Optional.ofNullable(consumerComponentName).orElse(getComponent().getConsumerComponentName());
     }
 
     Map<String, Object> determineEndpointParameters(final OpenAPI openapi, final Operation operation) {
@@ -799,27 +794,11 @@ public final class RestOpenApiEndpoint extends DefaultEndpoint {
         return resolved.toString();
     }
 
-    RequestValidator configureRequestValidator(OpenAPI openapi, Operation operation, String method, String uriTemplate) {
-        RestOpenApiOperation restOpenApiOperation = new RestOpenApiOperation(operation, method, uriTemplate);
-        OpenApiInteractionValidator.Builder builder = OpenApiInteractionValidator.createFor(openapi);
-
-        LevelResolver.Builder levelResolverBuilder = LevelResolver.create();
-        levelResolverBuilder.withDefaultLevel(ValidationReport.Level.IGNORE)
-                .withLevel("validation.request.body", ValidationReport.Level.ERROR)
-                .withLevel("validation.request.contentType.notAllowed", ValidationReport.Level.ERROR)
-                .withLevel("validation.request.path.missing", ValidationReport.Level.ERROR)
-                .withLevel("validation.request.parameter.header.missing", ValidationReport.Level.ERROR)
-                .withLevel("validation.request.parameter.query.missing", ValidationReport.Level.ERROR);
-
-        requestValidationLevels.forEach((key, level) -> {
-            levelResolverBuilder.withLevel("validation." + key,
-                    ValidationReport.Level.valueOf(level.toString().toUpperCase()));
-        });
-        builder.withLevelResolver(levelResolverBuilder.build());
-
-        requestValidationCustomizer.customizeOpenApiInteractionValidator(builder);
-
-        return new RequestValidator(builder.build(), restOpenApiOperation, requestValidationCustomizer);
+    protected RequestValidator configureRequestValidator(
+            OpenAPI openAPI, Operation operation, String method, String uriTemplate) {
+        DefaultRequestValidator answer = new DefaultRequestValidator();
+        answer.setOperation(new RestOpenApiOperation(operation, method, uriTemplate));
+        return answer;
     }
 
     static String determineOption(

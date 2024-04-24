@@ -41,7 +41,7 @@ public class LoadTimerTest extends ContextTestSupport {
     }
 
     @Test
-    public void testTimer() throws Exception {
+    public void testTimer() {
         TimerListenerManager myTimer = new TimerListenerManager();
         myTimer.setCamelContext(context);
         myTimer.start();
@@ -65,7 +65,7 @@ public class LoadTimerTest extends ContextTestSupport {
     private static class TestLoadAware implements TimerListener {
 
         volatile int counter;
-        LoadTriplet load = new LoadTriplet();
+        final LoadTriplet load = new LoadTriplet();
 
         @Override
         public void onTimer() {

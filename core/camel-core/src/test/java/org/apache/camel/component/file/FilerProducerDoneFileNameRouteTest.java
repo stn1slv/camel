@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class FilerProducerDoneFileNameRouteTest extends ContextTestSupport {
 
-    private Properties myProp = new Properties();
+    private final Properties myProp = new Properties();
 
     @Override
     protected Registry createCamelRegistry() throws Exception {
@@ -56,10 +56,10 @@ public class FilerProducerDoneFileNameRouteTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 myProp.put("myDir", testDirectory().toString());
 
                 context.getPropertiesComponent().setLocation("ref:myProp");

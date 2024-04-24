@@ -205,8 +205,7 @@ public class CaseInsensitiveMapTest {
         Map<String, Object> map = new CaseInsensitiveMap();
         map.put("foo", "cheese");
 
-        Map<String, Object> other = new HashMap<>();
-        map.putAll(other);
+        map.putAll(new HashMap<>());
 
         assertEquals("cheese", map.get("FOO"));
         assertEquals("cheese", map.get("foo"));
@@ -504,7 +503,7 @@ public class CaseInsensitiveMapTest {
     }
 
     @Disabled("Manual test")
-    public void xxxTestCopyMapWithCamelHeadersTest() throws Exception {
+    public void testCopyMapWithCamelHeadersTest() throws Exception {
         Map<String, Object> map = new CaseInsensitiveMap();
         map.put("CamelA", "A");
         map.put("CamelB", "B");

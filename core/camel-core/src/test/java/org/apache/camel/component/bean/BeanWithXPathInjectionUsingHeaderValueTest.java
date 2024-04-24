@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * otherwise it will be applied to the body
  */
 public class BeanWithXPathInjectionUsingHeaderValueTest extends ContextTestSupport {
-    protected MyBean myBean = new MyBean();
+    protected final MyBean myBean = new MyBean();
 
     @Test
-    public void testConstantXPathHeaders() throws Exception {
+    public void testConstantXPathHeaders() {
         template.sendBodyAndHeader("bean:myBean", "<response>OK</response>", "invoiceDetails",
                 "<invoice><person><name>Alan</name><date>26/08/2012</date></person></invoice>");
 

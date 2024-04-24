@@ -20,6 +20,8 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
+import org.apache.camel.component.platform.http.spi.PlatformHttpConsumerAware;
+import org.apache.camel.support.processor.RestBindingAdvice;
 
 /**
  * Strategy for processing the Rest DSL that services an OpenAPI spec.
@@ -53,10 +55,11 @@ public interface RestOpenapiProcessorStrategy {
     /**
      * Validates the OpenAPI specification on startup
      *
-     * @param  openAPI   the openapi specification
-     * @throws Exception is thrown if validation error on startup
+     * @param  openAPI              the openapi specification
+     * @param  platformHttpConsumer the platform http consumer
+     * @throws Exception            is thrown if validation error on startup
      */
-    default void validateOpenApi(OpenAPI openAPI) throws Exception {
+    default void validateOpenApi(OpenAPI openAPI, PlatformHttpConsumerAware platformHttpConsumer) throws Exception {
         // noop
     }
 
@@ -65,6 +68,7 @@ public interface RestOpenapiProcessorStrategy {
      *
      * @param  operation the rest operation
      * @param  path      the context-path
+     * @param  binding   binding advice
      * @param  exchange  the exchange
      * @param  callback  the AsyncCallback will be invoked when the processing of the exchange is completed. If the
      *                   exchange is completed synchronously, then the callback is also invoked synchronously. The
@@ -72,7 +76,10 @@ public interface RestOpenapiProcessorStrategy {
      * @return           (doneSync) true to continue execute synchronously, false to continue being executed
      *                   asynchronously
      */
-    boolean process(Operation operation, String path, Exchange exchange, AsyncCallback callback);
+    boolean process(
+            Operation operation, String path,
+            RestBindingAdvice binding,
+            Exchange exchange, AsyncCallback callback);
 
     /**
      * Strategy for processing the OpenAPI specification (to return the contract)

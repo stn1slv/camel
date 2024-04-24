@@ -21,18 +21,14 @@ import java.util.Map;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
 import org.apache.camel.SSLContextParametersAware;
-import org.apache.camel.component.rest.openapi.validator.DefaultRequestValidationCustomizer;
-import org.apache.camel.component.rest.openapi.validator.RequestValidationCustomizer;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.RestProducerFactory;
 import org.apache.camel.spi.annotations.Component;
 import org.apache.camel.support.DefaultComponent;
 import org.apache.camel.support.jsse.SSLContextParameters;
-import org.apache.camel.util.PropertiesHelper;
 
 import static org.apache.camel.component.rest.openapi.RestOpenApiHelper.isHostParam;
 import static org.apache.camel.component.rest.openapi.RestOpenApiHelper.isMediaRange;
-import static org.apache.camel.util.StringHelper.notEmpty;
 
 /**
  * An awesome REST component backed by OpenApi specifications. Creates endpoints that connect to REST APIs defined by
@@ -124,12 +120,14 @@ public final class RestOpenApiComponent extends DefaultComponent implements SSLC
                             + " any value present in the OpenApi specification. Can be overridden in endpoint configuration.",
               label = "producer,advanced")
     private String produces;
-    @Metadata(label = "common", description = "Enable validation of requests against the configured OpenAPI specification")
+    @Metadata(label = "consumer,advanced",
+              description = "Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode is enabled for JSon or XML. Multiple package names can be separated by comma.")
+    private String bindingPackageScan;
+    @Metadata(label = "consumer",
+              description = "Whether to enable validation of the client request to check if the incoming request is valid according to the OpenAPI specification")
+    private boolean clientRequestValidation;
+    @Metadata(label = "producer", description = "Enable validation of requests against the configured OpenAPI specification")
     private boolean requestValidationEnabled;
-    @Metadata(description = "If request validation is enabled, this option provides the capability to customize"
-                            + " the creation of OpenApiInteractionValidator used to validate requests.",
-              label = "common,advanced")
-    private RequestValidationCustomizer requestValidationCustomizer = new DefaultRequestValidationCustomizer();
     @Metadata(description = "Whether the consumer should fail,ignore or return a mock response for OpenAPI operations that are not mapped to a corresponding route.",
               label = "consumer", enums = "fail,ignore,mock", defaultValue = "fail")
     private String missingOperation;
@@ -159,14 +157,29 @@ public final class RestOpenApiComponent extends DefaultComponent implements SSLC
             throws Exception {
         RestOpenApiEndpoint endpoint = new RestOpenApiEndpoint(uri, remaining, this, parameters);
         endpoint.setApiContextPath(getApiContextPath());
-        endpoint.setRequestValidationCustomizer(getRequestValidationCustomizer());
+        endpoint.setBindingPackageScan(getBindingPackageScan());
+        endpoint.setClientRequestValidation(isClientRequestValidation());
         endpoint.setRequestValidationEnabled(isRequestValidationEnabled());
-        endpoint.setRequestValidationLevels(PropertiesHelper.extractProperties(parameters, "validation."));
         endpoint.setRestOpenapiProcessorStrategy(getRestOpenapiProcessorStrategy());
         endpoint.setMissingOperation(getMissingOperation());
         endpoint.setMockIncludePattern(getMockIncludePattern());
         setProperties(endpoint, parameters);
         return endpoint;
+    }
+
+    @Override
+    protected void doInit() throws Exception {
+        super.doInit();
+
+        if (bindingPackageScan == null) {
+            // prioritize use rest configuration
+            String base = getCamelContext().getRestConfiguration().getBindingPackageScan();
+            if (base == null) {
+                // over general base package from camel context
+                base = getCamelContext().getCamelContextExtension().getBasePackageScan();
+            }
+            bindingPackageScan = base;
+        }
     }
 
     public String getBasePath() {
@@ -239,11 +252,11 @@ public final class RestOpenApiComponent extends DefaultComponent implements SSLC
     }
 
     public void setBasePath(final String basePath) {
-        this.basePath = notEmpty(basePath, "basePath");
+        this.basePath = basePath;
     }
 
     public void setComponentName(final String componentName) {
-        this.componentName = notEmpty(componentName, "componentName");
+        this.componentName = componentName;
     }
 
     public void setConsumerComponentName(String consumerComponentName) {
@@ -283,11 +296,19 @@ public final class RestOpenApiComponent extends DefaultComponent implements SSLC
         return this.requestValidationEnabled;
     }
 
-    public void setRequestValidationCustomizer(RequestValidationCustomizer requestValidationCustomizer) {
-        this.requestValidationCustomizer = requestValidationCustomizer;
+    public boolean isClientRequestValidation() {
+        return clientRequestValidation;
     }
 
-    public RequestValidationCustomizer getRequestValidationCustomizer() {
-        return requestValidationCustomizer;
+    public void setClientRequestValidation(boolean clientRequestValidation) {
+        this.clientRequestValidation = clientRequestValidation;
+    }
+
+    public String getBindingPackageScan() {
+        return bindingPackageScan;
+    }
+
+    public void setBindingPackageScan(String bindingPackageScan) {
+        this.bindingPackageScan = bindingPackageScan;
     }
 }

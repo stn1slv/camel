@@ -66,10 +66,10 @@ public class BeanParameterValueOgnlTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 from("direct:start").to("bean:foo?method=bar(${body},true)").to("mock:result");
 
                 from("direct:start2").to("bean:foo?method=bar(${body.name}, true)").to("mock:result");
@@ -103,8 +103,8 @@ public class BeanParameterValueOgnlTest extends ContextTestSupport {
     }
 
     public static final class Animal {
-        private String name;
-        private int age;
+        private final String name;
+        private final int age;
         private Animal friend;
 
         private Animal(String name, int age) {

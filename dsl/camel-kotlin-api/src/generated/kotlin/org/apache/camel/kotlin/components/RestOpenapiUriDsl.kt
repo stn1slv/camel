@@ -70,24 +70,36 @@ public class RestOpenapiUriDsl(
   }
 
   /**
-   * Enable validation of requests against the configured OpenAPI specification
-   */
-  public fun requestValidationEnabled(requestValidationEnabled: String) {
-    it.property("requestValidationEnabled", requestValidationEnabled)
-  }
-
-  /**
-   * Enable validation of requests against the configured OpenAPI specification
-   */
-  public fun requestValidationEnabled(requestValidationEnabled: Boolean) {
-    it.property("requestValidationEnabled", requestValidationEnabled.toString())
-  }
-
-  /**
    * Sets the context-path to use for servicing the OpenAPI specification
    */
   public fun apiContextPath(apiContextPath: String) {
     it.property("apiContextPath", apiContextPath)
+  }
+
+  /**
+   * Whether to enable validation of the client request to check if the incoming request is valid
+   * according to the OpenAPI specification
+   */
+  public fun clientRequestValidation(clientRequestValidation: String) {
+    it.property("clientRequestValidation", clientRequestValidation)
+  }
+
+  /**
+   * Whether to enable validation of the client request to check if the incoming request is valid
+   * according to the OpenAPI specification
+   */
+  public fun clientRequestValidation(clientRequestValidation: Boolean) {
+    it.property("clientRequestValidation", clientRequestValidation.toString())
+  }
+
+  /**
+   * What payload type this component capable of consuming. Could be one type, like application/json
+   * or multiple types as application/json, application/xml; q=0.5 according to the RFC7231. This
+   * equates to the value of Accept HTTP header. If set overrides any value found in the OpenApi
+   * specification and. in the component configuration
+   */
+  public fun consumes(consumes: String) {
+    it.property("consumes", consumes)
   }
 
   /**
@@ -178,16 +190,6 @@ public class RestOpenapiUriDsl(
   }
 
   /**
-   * What payload type this component capable of consuming. Could be one type, like application/json
-   * or multiple types as application/json, application/xml; q=0.5 according to the RFC7231. This
-   * equates to the value of Accept HTTP header. If set overrides any value found in the OpenApi
-   * specification and. in the component configuration
-   */
-  public fun consumes(consumes: String) {
-    it.property("consumes", consumes)
-  }
-
-  /**
    * Scheme hostname and port to direct the HTTP requests to in the form of https://hostname:port.
    * Can be configured at the endpoint, component or in the corresponding REST configuration in the
    * Camel Context. If you give this component a name (e.g. petstore) that REST configuration is
@@ -205,6 +207,20 @@ public class RestOpenapiUriDsl(
    */
   public fun produces(produces: String) {
     it.property("produces", produces)
+  }
+
+  /**
+   * Enable validation of requests against the configured OpenAPI specification
+   */
+  public fun requestValidationEnabled(requestValidationEnabled: String) {
+    it.property("requestValidationEnabled", requestValidationEnabled)
+  }
+
+  /**
+   * Enable validation of requests against the configured OpenAPI specification
+   */
+  public fun requestValidationEnabled(requestValidationEnabled: Boolean) {
+    it.property("requestValidationEnabled", requestValidationEnabled.toString())
   }
 
   /**
@@ -239,23 +255,5 @@ public class RestOpenapiUriDsl(
    */
   public fun lazyStartProducer(lazyStartProducer: Boolean) {
     it.property("lazyStartProducer", lazyStartProducer.toString())
-  }
-
-  /**
-   * If request validation is enabled, this option provides the capability to customize the creation
-   * of OpenApiInteractionValidator used to validate requests.
-   */
-  public fun requestValidationCustomizer(requestValidationCustomizer: String) {
-    it.property("requestValidationCustomizer", requestValidationCustomizer)
-  }
-
-  /**
-   * Levels for specific OpenAPI request validation options. Multiple options can be specified as
-   * URI options prefixed by 'validation.'. For example,
-   * validation.request.body=ERROR&validation.request.body.unexpected=IGNORED. Supported values are
-   * INFO, ERROR, WARN & IGNORE.
-   */
-  public fun requestValidationLevels(requestValidationLevels: String) {
-    it.property("requestValidationLevels", requestValidationLevels)
   }
 }

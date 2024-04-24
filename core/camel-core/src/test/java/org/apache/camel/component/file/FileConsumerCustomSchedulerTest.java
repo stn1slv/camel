@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
 
-    private MyScheduler scheduler = new MyScheduler();
+    private final MyScheduler scheduler = new MyScheduler();
 
     @Override
     protected Registry createCamelRegistry() throws Exception {
@@ -57,10 +57,10 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 from(fileUri("?scheduler=#myScheduler&scheduler.foo=bar&initialDelay=0&delay=10"))
                         .routeId("foo").noAutoStartup().to("mock:result");
             }
@@ -70,7 +70,6 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
     private static final class MyScheduler implements ScheduledPollConsumerScheduler {
 
         private CamelContext camelContext;
-        private Timer timer;
         private TimerTask timerTask;
         private volatile int counter;
         private String foo;
@@ -110,7 +109,7 @@ public class FileConsumerCustomSchedulerTest extends ContextTestSupport {
 
         @Override
         public void startScheduler() {
-            timer = new Timer();
+            Timer timer = new Timer();
             timer.schedule(timerTask, 10);
         }
 

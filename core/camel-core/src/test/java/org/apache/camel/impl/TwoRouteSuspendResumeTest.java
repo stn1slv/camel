@@ -51,7 +51,7 @@ public class TwoRouteSuspendResumeTest extends ContextTestSupport {
 
         // need to give seda consumer thread time to idle
         await().atMost(1, TimeUnit.SECONDS).until(() -> {
-            return context.getEndpoint("seda:foo", SedaEndpoint.class).getQueue().size() == 0;
+            return context.getEndpoint("seda:foo", SedaEndpoint.class).getQueue().isEmpty();
         });
 
         // even though we wait for the queues to empty, there is a race condition where the consumer
@@ -83,10 +83,10 @@ public class TwoRouteSuspendResumeTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 from("seda:foo").routeId("foo").to("log:foo").to("mock:result");
 
                 from("direct:bar").routeId("bar").to("log:bar").to("mock:bar");

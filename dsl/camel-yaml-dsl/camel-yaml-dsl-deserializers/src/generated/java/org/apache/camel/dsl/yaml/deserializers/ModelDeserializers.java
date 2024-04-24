@@ -83,6 +83,7 @@ import org.apache.camel.model.SetHeaderDefinition;
 import org.apache.camel.model.SetHeadersDefinition;
 import org.apache.camel.model.SetPropertyDefinition;
 import org.apache.camel.model.SetVariableDefinition;
+import org.apache.camel.model.SetVariablesDefinition;
 import org.apache.camel.model.SortDefinition;
 import org.apache.camel.model.SplitDefinition;
 import org.apache.camel.model.StepDefinition;
@@ -5288,6 +5289,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "id", type = "string", description = "The id of this node", displayName = "Id"),
                     @YamlProperty(name = "jtaTransactionErrorHandler", type = "object:org.apache.camel.model.errorhandler.JtaTransactionErrorHandlerDefinition", oneOf = "errorHandlerType"),
                     @YamlProperty(name = "noErrorHandler", type = "object:org.apache.camel.model.errorhandler.NoErrorHandlerDefinition", oneOf = "errorHandlerType"),
+                    @YamlProperty(name = "refErrorHandler", type = "object:org.apache.camel.model.errorhandler.RefErrorHandlerDefinition", oneOf = "errorHandlerType"),
                     @YamlProperty(name = "springTransactionErrorHandler", type = "object:org.apache.camel.model.errorhandler.SpringTransactionErrorHandlerDefinition", oneOf = "errorHandlerType")
             }
     )
@@ -5323,6 +5325,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 }
                 case "noErrorHandler": {
                     org.apache.camel.model.errorhandler.NoErrorHandlerDefinition val = asType(node, org.apache.camel.model.errorhandler.NoErrorHandlerDefinition.class);
+                    target.setErrorHandlerType(val);
+                    break;
+                }
+                case "refErrorHandler": {
+                    org.apache.camel.model.errorhandler.RefErrorHandlerDefinition val = asType(node, org.apache.camel.model.errorhandler.RefErrorHandlerDefinition.class);
                     target.setErrorHandlerType(val);
                     break;
                 }
@@ -10362,7 +10369,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
                     @YamlProperty(name = "missingOperation", type = "enum:fail,ignore,mock", defaultValue = "fail", description = "Whether to fail, ignore or return a mock response for OpenAPI operations that are not mapped to a corresponding route.", displayName = "Missing Operation"),
                     @YamlProperty(name = "mockIncludePattern", type = "string", defaultValue = "classpath:camel-mock/**", description = "Used for inclusive filtering of mock data from directories. The pattern is using Ant-path style pattern. Multiple patterns can be specified separated by comma.", displayName = "Mock Include Pattern"),
-                    @YamlProperty(name = "requestValidationEnabled", type = "boolean", description = "Whether to enable validation of the client request to check that the request contains valid and expected data.", displayName = "Request Validation Enabled"),
                     @YamlProperty(name = "routeId", type = "string", description = "Sets the id of the route", displayName = "Route Id"),
                     @YamlProperty(name = "specification", type = "string", required = true, description = "Path to the OpenApi specification file.", displayName = "Specification")
             }
@@ -10395,11 +10401,6 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 case "mockIncludePattern": {
                     String val = asText(node);
                     target.setMockIncludePattern(val);
-                    break;
-                }
-                case "requestValidationEnabled": {
-                    String val = asText(node);
-                    target.setRequestValidationEnabled(val);
                     break;
                 }
                 case "routeId": {
@@ -13887,6 +13888,7 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     @YamlProperty(name = "apiProperty", type = "array:org.apache.camel.model.rest.RestPropertyDefinition", description = "Allows to configure as many additional properties for the api documentation. For example set property api.title to my cool stuff", displayName = "Api Property"),
                     @YamlProperty(name = "apiVendorExtension", type = "boolean", description = "Whether vendor extension is enabled in the Rest APIs. If enabled then Camel will include additional information as vendor extension (eg keys starting with x-) such as route ids, class names etc. Not all 3rd party API gateways and tools supports vendor-extensions when importing your API docs.", displayName = "Api Vendor Extension"),
                     @YamlProperty(name = "bindingMode", type = "enum:auto,json,json_xml,off,xml", defaultValue = "off", description = "Sets the binding mode to use. The default value is off", displayName = "Binding Mode"),
+                    @YamlProperty(name = "bindingPackageScan", type = "string", description = "Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode is enabled for JSon or XML. Multiple package names can be separated by comma.", displayName = "Binding Package Scan"),
                     @YamlProperty(name = "clientRequestValidation", type = "boolean", description = "Whether to enable validation of the client request to check: 1) Content-Type header matches what the Rest DSL consumes; returns HTTP Status 415 if validation error. 2) Accept header matches what the Rest DSL produces; returns HTTP Status 406 if validation error. 3) Missing required data (query parameters, HTTP headers, body); returns HTTP Status 400 if validation error. 4) Parsing error of the message body (JSon, XML or Auto binding mode must be enabled); returns HTTP Status 400 if validation error.", displayName = "Client Request Validation"),
                     @YamlProperty(name = "component", type = "enum:platform-http,servlet,jetty,undertow,netty-http,coap", description = "The Camel Rest component to use for the REST transport (consumer), such as netty-http, jetty, servlet, undertow. If no component has been explicit configured, then Camel will lookup if there is a Camel component that integrates with the Rest DSL, or if a org.apache.camel.spi.RestConsumerFactory is registered in the registry. If either one is found, then that is being used.", displayName = "Component"),
                     @YamlProperty(name = "componentProperty", type = "array:org.apache.camel.model.rest.RestPropertyDefinition", description = "Allows to configure as many additional properties for the rest component in use.", displayName = "Component Property"),
@@ -13957,6 +13959,11 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                 }
                 case "bindingMode": {
                     target.setBindingMode(asEnum(node, org.apache.camel.model.rest.RestBindingMode.class));
+                    break;
+                }
+                case "bindingPackageScan": {
+                    String val = asText(node);
+                    target.setBindingPackageScan(val);
                     break;
                 }
                 case "clientRequestValidation": {
@@ -16606,6 +16613,72 @@ public final class ModelDeserializers extends YamlDeserializerSupport {
                     } else {
                         return false;
                     }
+                }
+            }
+            return true;
+        }
+    }
+
+    @YamlType(
+            nodes = {
+                    "set-variables",
+                    "setVariables"
+            },
+            types = org.apache.camel.model.SetVariablesDefinition.class,
+            order = org.apache.camel.dsl.yaml.common.YamlDeserializerResolver.ORDER_LOWEST - 1,
+            displayName = "Set Variables",
+            description = "Allows setting multiple variables at the same time.",
+            deprecated = false,
+            properties = {
+                    @YamlProperty(name = "description", type = "string", description = "Sets the description of this node", displayName = "Description"),
+                    @YamlProperty(name = "disabled", type = "boolean", description = "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime.", displayName = "Disabled"),
+                    @YamlProperty(name = "id", type = "string", description = "Sets the id of this node", displayName = "Id"),
+                    @YamlProperty(name = "inheritErrorHandler", type = "boolean"),
+                    @YamlProperty(name = "variables", type = "array:org.apache.camel.model.SetVariableDefinition")
+            }
+    )
+    public static class SetVariablesDefinitionDeserializer extends YamlDeserializerBase<SetVariablesDefinition> {
+        public SetVariablesDefinitionDeserializer() {
+            super(SetVariablesDefinition.class);
+        }
+
+        @Override
+        protected SetVariablesDefinition newInstance() {
+            return new SetVariablesDefinition();
+        }
+
+        @Override
+        protected boolean setProperty(SetVariablesDefinition target, String propertyKey,
+                String propertyName, Node node) {
+            propertyKey = org.apache.camel.util.StringHelper.dashToCamelCase(propertyKey);
+            switch(propertyKey) {
+                case "disabled": {
+                    String val = asText(node);
+                    target.setDisabled(val);
+                    break;
+                }
+                case "inheritErrorHandler": {
+                    String val = asText(node);
+                    target.setInheritErrorHandler(java.lang.Boolean.valueOf(val));
+                    break;
+                }
+                case "variables": {
+                    java.util.List<org.apache.camel.model.SetVariableDefinition> val = asFlatList(node, org.apache.camel.model.SetVariableDefinition.class);
+                    target.setVariables(val);
+                    break;
+                }
+                case "id": {
+                    String val = asText(node);
+                    target.setId(val);
+                    break;
+                }
+                case "description": {
+                    String val = asText(node);
+                    target.setDescription(val);
+                    break;
+                }
+                default: {
+                    return false;
                 }
             }
             return true;

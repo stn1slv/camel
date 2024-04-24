@@ -56,7 +56,7 @@ public class BeanConcurrentTest extends ContextTestSupport {
         assertEquals(1000, list.size());
         for (int i = 1; i < 1000; i++) {
             int num = 1000 + i;
-            String s = "" + num + " " + num;
+            String s = num + " " + num;
             assertEquals(s, list.get(i));
         }
     }
@@ -69,10 +69,10 @@ public class BeanConcurrentTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
             @Override
-            public void configure() throws Exception {
+            public void configure() {
                 from("seda:foo?concurrentConsumers=10").routeId("foo").noAutoStartup().to("bean:myBean").to("mock:result");
             }
         };
@@ -109,6 +109,7 @@ public class BeanConcurrentTest extends ContextTestSupport {
             this.baz = baz;
         }
 
+        @SuppressWarnings("unused")
         public void doSomething() {
             // noop
         }

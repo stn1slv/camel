@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.equalToCompressingWhiteSpace;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class PlatformHttpRestOpenApiConsumerRestDslTest {
@@ -42,6 +43,9 @@ public class PlatformHttpRestOpenApiConsumerRestDslTest {
                     rest().openApi().specification("openapi-v3.json").missingOperation("ignore");
 
                     from("direct:getPetById")
+                            .process(e -> {
+                                assertEquals("123", e.getMessage().getHeader("petId"));
+                            })
                             .setBody().constant("{\"pet\": \"tony the tiger\"}");
                 }
             });
@@ -213,7 +217,7 @@ public class PlatformHttpRestOpenApiConsumerRestDslTest {
             context.addRoutes(new RouteBuilder() {
                 @Override
                 public void configure() {
-                    rest().openApi().specification("openapi-v3.json").missingOperation("ignore").requestValidationEnabled();
+                    rest().clientRequestValidation(true).openApi().specification("openapi-v3.json").missingOperation("ignore");
 
                     from("direct:updatePet")
                             .setBody().constant("{\"pet\": \"tony the tiger\"}");
@@ -226,7 +230,7 @@ public class PlatformHttpRestOpenApiConsumerRestDslTest {
                     .when()
                     .put("/api/v3/pet")
                     .then()
-                    .statusCode(405); // no request body
+                    .statusCode(400); // no request body
         } finally {
             context.stop();
         }

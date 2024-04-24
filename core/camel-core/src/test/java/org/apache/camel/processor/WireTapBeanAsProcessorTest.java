@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * Wire tap unit test
  */
 public class WireTapBeanAsProcessorTest extends ContextTestSupport {
-    private MyBean myBean = new MyBean();
+    private final MyBean myBean = new MyBean();
     private MockEndpoint result;
 
     @Override
@@ -81,7 +81,7 @@ public class WireTapBeanAsProcessorTest extends ContextTestSupport {
         private String tapped;
 
         @Override
-        public void process(Exchange exchange) throws Exception {
+        public void process(Exchange exchange) {
             tapped = exchange.getIn().getBody(String.class);
         }
 

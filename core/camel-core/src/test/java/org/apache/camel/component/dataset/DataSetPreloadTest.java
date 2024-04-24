@@ -26,9 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class DataSetPreloadTest extends ContextTestSupport {
 
-    private SimpleDataSet dataSet = new SimpleDataSet(20);
+    private final SimpleDataSet dataSet = new SimpleDataSet(20);
 
-    private String uri = "dataset:foo?initialDelay=0&preloadSize=5";
+    private final String uri = "dataset:foo?initialDelay=0&preloadSize=5";
 
     @Override
     protected Registry createCamelRegistry() throws Exception {
@@ -55,9 +55,9 @@ public class DataSetPreloadTest extends ContextTestSupport {
     }
 
     @Override
-    protected RouteBuilder createRouteBuilder() throws Exception {
+    protected RouteBuilder createRouteBuilder() {
         return new RouteBuilder() {
-            public void configure() throws Exception {
+            public void configure() {
                 from(uri).to("seda:test").noAutoStartup();
 
                 from("seda:test").to(uri);

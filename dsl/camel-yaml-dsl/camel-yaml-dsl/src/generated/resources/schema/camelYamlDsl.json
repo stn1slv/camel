@@ -151,6 +151,9 @@
           "setVariable" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.SetVariableDefinition"
           },
+          "setVariables" : {
+            "$ref" : "#/items/definitions/org.apache.camel.model.SetVariablesDefinition"
+          },
           "sort" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.SortDefinition"
           },
@@ -205,85 +208,6 @@
           "serviceCall" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.cloud.ServiceCallDefinition"
           }
-        }
-      },
-      "org.apache.camel.ErrorHandlerFactory" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "anyOf" : [ {
-          "oneOf" : [ {
-            "type" : "object",
-            "required" : [ "deadLetterChannel" ],
-            "properties" : {
-              "deadLetterChannel" : {
-                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.DeadLetterChannelDefinition"
-              }
-            }
-          }, {
-            "not" : {
-              "anyOf" : [ {
-                "required" : [ "deadLetterChannel" ]
-              }, {
-                "required" : [ "defaultErrorHandler" ]
-              }, {
-                "required" : [ "jtaTransactionErrorHandler" ]
-              }, {
-                "required" : [ "noErrorHandler" ]
-              }, {
-                "required" : [ "refErrorHandler" ]
-              }, {
-                "required" : [ "springTransactionErrorHandler" ]
-              } ]
-            }
-          }, {
-            "type" : "object",
-            "required" : [ "defaultErrorHandler" ],
-            "properties" : {
-              "defaultErrorHandler" : {
-                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.DefaultErrorHandlerDefinition"
-              }
-            }
-          }, {
-            "type" : "object",
-            "required" : [ "jtaTransactionErrorHandler" ],
-            "properties" : {
-              "jtaTransactionErrorHandler" : {
-                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.JtaTransactionErrorHandlerDefinition"
-              }
-            }
-          }, {
-            "type" : "object",
-            "required" : [ "noErrorHandler" ],
-            "properties" : {
-              "noErrorHandler" : {
-                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.NoErrorHandlerDefinition"
-              }
-            }
-          }, {
-            "type" : "object",
-            "required" : [ "refErrorHandler" ],
-            "properties" : {
-              "refErrorHandler" : {
-                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.RefErrorHandlerDefinition"
-              }
-            }
-          }, {
-            "type" : "object",
-            "required" : [ "springTransactionErrorHandler" ],
-            "properties" : {
-              "springTransactionErrorHandler" : {
-                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.SpringTransactionErrorHandlerDefinition"
-              }
-            }
-          } ]
-        } ],
-        "properties" : {
-          "deadLetterChannel" : { },
-          "defaultErrorHandler" : { },
-          "jtaTransactionErrorHandler" : { },
-          "noErrorHandler" : { },
-          "refErrorHandler" : { },
-          "springTransactionErrorHandler" : { }
         }
       },
       "org.apache.camel.dsl.yaml.deserializers.BeansDeserializer" : {
@@ -1483,6 +1407,8 @@
               }, {
                 "required" : [ "noErrorHandler" ]
               }, {
+                "required" : [ "refErrorHandler" ]
+              }, {
                 "required" : [ "springTransactionErrorHandler" ]
               } ]
             }
@@ -1512,6 +1438,14 @@
             }
           }, {
             "type" : "object",
+            "required" : [ "refErrorHandler" ],
+            "properties" : {
+              "refErrorHandler" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.errorhandler.RefErrorHandlerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
             "required" : [ "springTransactionErrorHandler" ],
             "properties" : {
               "springTransactionErrorHandler" : {
@@ -1530,6 +1464,7 @@
           "defaultErrorHandler" : { },
           "jtaTransactionErrorHandler" : { },
           "noErrorHandler" : { },
+          "refErrorHandler" : { },
           "springTransactionErrorHandler" : { }
         }
       },
@@ -5190,7 +5125,7 @@
             "type" : "string"
           },
           "errorHandler" : {
-            "$ref" : "#/items/definitions/org.apache.camel.ErrorHandlerFactory"
+            "$ref" : "#/items/definitions/org.apache.camel.model.ErrorHandlerDefinition"
           },
           "errorHandlerRef" : {
             "type" : "string"
@@ -5243,7 +5178,7 @@
           "startupOrder" : {
             "type" : "number"
           },
-          "streamCaching" : {
+          "streamCache" : {
             "type" : "boolean"
           },
           "trace" : {
@@ -6312,6 +6247,35 @@
           "expression" : { }
         },
         "required" : [ "name" ]
+      },
+      "org.apache.camel.model.SetVariablesDefinition" : {
+        "title" : "Set Variables",
+        "description" : "Allows setting multiple variables at the same time.",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "title" : "Description",
+            "description" : "Sets the description of this node"
+          },
+          "disabled" : {
+            "type" : "boolean",
+            "title" : "Disabled",
+            "description" : "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime."
+          },
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "Sets the id of this node"
+          },
+          "variables" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/items/definitions/org.apache.camel.model.SetVariableDefinition"
+            }
+          }
+        }
       },
       "org.apache.camel.model.SortDefinition" : {
         "title" : "Sort",
@@ -14702,11 +14666,6 @@
             "description" : "Used for inclusive filtering of mock data from directories. The pattern is using Ant-path style pattern. Multiple patterns can be specified separated by comma.",
             "default" : "classpath:camel-mock/**"
           },
-          "requestValidationEnabled" : {
-            "type" : "boolean",
-            "title" : "Request Validation Enabled",
-            "description" : "Whether to enable validation of the client request to check that the request contains valid and expected data."
-          },
           "routeId" : {
             "type" : "string",
             "title" : "Route Id",
@@ -15372,6 +15331,11 @@
             "description" : "Sets the binding mode to use. The default value is off",
             "default" : "off",
             "enum" : [ "auto", "json", "json_xml", "off", "xml" ]
+          },
+          "bindingPackageScan" : {
+            "type" : "string",
+            "title" : "Binding Package Scan",
+            "description" : "Package name to use as base (offset) for classpath scanning of POJO classes are located when using binding mode is enabled for JSon or XML. Multiple package names can be separated by comma."
           },
           "clientRequestValidation" : {
             "type" : "boolean",

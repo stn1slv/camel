@@ -20,12 +20,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Content;
-import joptsimple.internal.Strings;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.AsyncProducer;
 import org.apache.camel.CamelContext;
@@ -36,12 +36,14 @@ import org.apache.camel.NonManagedService;
 import org.apache.camel.Route;
 import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.component.platform.http.PlatformHttpComponent;
+import org.apache.camel.component.platform.http.spi.PlatformHttpConsumerAware;
 import org.apache.camel.spi.PackageScanResourceResolver;
 import org.apache.camel.spi.ProducerCache;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.cache.DefaultProducerCache;
+import org.apache.camel.support.processor.RestBindingAdvice;
 import org.apache.camel.support.service.ServiceHelper;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.FileUtil;
@@ -62,11 +64,10 @@ public class DefaultRestOpenapiProcessorStrategy extends ServiceSupport
     private String component = "direct";
     private String missingOperation;
     private String mockIncludePattern;
-    private String apiContextPath;
     private final List<String> uris = new ArrayList<>();
 
     @Override
-    public void validateOpenApi(OpenAPI openAPI) throws Exception {
+    public void validateOpenApi(OpenAPI openAPI, PlatformHttpConsumerAware platformHttpConsumer) throws Exception {
         List<String> ids = new ArrayList<>();
         for (var e : openAPI.getPaths().entrySet()) {
             for (var o : e.getValue().readOperations()) {
@@ -96,9 +97,9 @@ public class DefaultRestOpenapiProcessorStrategy extends ServiceSupport
             if ("fail".equalsIgnoreCase(missingOperation)) {
                 throw new IllegalArgumentException(msg);
             } else if ("ignore".equalsIgnoreCase(missingOperation)) {
-                LOG.warn(msg + ". This validation error is ignored.");
+                LOG.warn(msg + "\nThis validation error is ignored.");
             } else if ("mock".equalsIgnoreCase(missingOperation)) {
-                LOG.debug(msg + ". This validation error is ignored (Will return a mocked/empty response).");
+                LOG.debug(msg + "\nThis validation error is ignored (Will return a mocked/empty response).");
             }
         }
 
@@ -111,29 +112,29 @@ public class DefaultRestOpenapiProcessorStrategy extends ServiceSupport
             }
             for (var p : openAPI.getPaths().entrySet()) {
                 String uri = path + p.getKey();
-                String verbs = Strings.join(p.getValue().readOperationsMap().keySet().stream()
+                String verbs = p.getValue().readOperationsMap().keySet().stream()
                         .map(Enum::name)
                         .sorted()
-                        .collect(Collectors.toList()), ",");
+                        .collect(Collectors.joining(","));
                 String consumes = null;
                 String produces = null;
                 for (var o : p.getValue().readOperations()) {
                     if (o.getRequestBody() != null) {
                         Content c = o.getRequestBody().getContent();
                         if (c != null) {
-                            consumes = Strings.join(c.keySet().stream().sorted().collect(Collectors.toList()), ",");
+                            consumes = c.keySet().stream().sorted().collect(Collectors.joining(","));
                         }
                     }
                     if (o.getResponses() != null) {
                         for (var a : o.getResponses().values()) {
                             Content c = a.getContent();
                             if (c != null) {
-                                produces = Strings.join(c.keySet().stream().sorted().collect(Collectors.toList()), ",");
+                                produces = c.keySet().stream().sorted().collect(Collectors.joining(","));
                             }
                         }
                     }
                 }
-                phc.addHttpEndpoint(uri, verbs, consumes, produces, null);
+                phc.addHttpEndpoint(uri, verbs, consumes, produces, platformHttpConsumer.getPlatformHttpConsumer());
                 uris.add(uri);
             }
         }
@@ -162,22 +163,42 @@ public class DefaultRestOpenapiProcessorStrategy extends ServiceSupport
     }
 
     @Override
-    public boolean process(Operation operation, String path, Exchange exchange, AsyncCallback callback) {
-        if ("mock".equalsIgnoreCase(missingOperation)) {
+    public boolean process(
+            Operation operation, String path,
+            RestBindingAdvice binding,
+            Exchange exchange, AsyncCallback callback) {
+
+        if ("mock".equalsIgnoreCase(missingOperation) || "ignore".equalsIgnoreCase(missingOperation)) {
             // check if there is a route
             Endpoint e = camelContext.hasEndpoint(component + ":" + operation.getOperationId());
             if (e == null) {
-                loadMockData(operation, path, exchange);
+                if ("mock".equalsIgnoreCase(missingOperation)) {
+                    // no route then try to load mock data as the answer
+                    loadMockData(operation, path, exchange);
+                }
                 callback.done(true);
                 return true;
             }
         }
 
-        Endpoint e = camelContext.getEndpoint(component + ":" + operation.getOperationId());
-        AsyncProducer p = producerCache.acquireProducer(e);
+        // there is a route so process
+        Map<String, Object> state;
+        try {
+            state = binding.before(exchange);
+        } catch (Exception e) {
+            exchange.setException(e);
+            callback.done(true);
+            return true;
+        }
+
+        final Endpoint e = camelContext.getEndpoint(component + ":" + operation.getOperationId());
+        final AsyncProducer p = producerCache.acquireProducer(e);
         return p.process(exchange, doneSync -> {
             try {
                 producerCache.releaseProducer(e, p);
+                binding.after(exchange, state);
+            } catch (Exception ex) {
+                exchange.setException(ex);
             } finally {
                 callback.done(doneSync);
             }
@@ -262,10 +283,12 @@ public class DefaultRestOpenapiProcessorStrategy extends ServiceSupport
         this.component = component;
     }
 
+    @Override
     public String getMissingOperation() {
         return missingOperation;
     }
 
+    @Override
     public void setMissingOperation(String missingOperation) {
         this.missingOperation = missingOperation;
     }
@@ -278,14 +301,6 @@ public class DefaultRestOpenapiProcessorStrategy extends ServiceSupport
     @Override
     public void setMockIncludePattern(String mockIncludePattern) {
         this.mockIncludePattern = mockIncludePattern;
-    }
-
-    public String getApiContextPath() {
-        return apiContextPath;
-    }
-
-    public void setApiContextPath(String apiContextPath) {
-        this.apiContextPath = apiContextPath;
     }
 
     @Override

@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 public class BeanRecipientListTest extends ContextTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(BeanRecipientListTest.class);
-    protected MyBean myBean = new MyBean();
+    protected final MyBean myBean = new MyBean();
 
     @Test
     public void testSendMessage() throws Exception {
@@ -51,7 +51,7 @@ public class BeanRecipientListTest extends ContextTestSupport {
         checkBean();
     }
 
-    protected void checkBean() throws Exception {
+    protected void checkBean() {
         Object lookedUpBean = context.getRegistry().lookupByName("myBean");
         assertSame(myBean, lookedUpBean, "Lookup of 'myBean' should return same object!");
     }
@@ -73,8 +73,8 @@ public class BeanRecipientListTest extends ContextTestSupport {
     }
 
     public static class MyBean {
-        private static AtomicInteger counter = new AtomicInteger();
-        private int id;
+        private static final AtomicInteger counter = new AtomicInteger();
+        private final int id;
 
         public MyBean() {
             id = counter.incrementAndGet();
