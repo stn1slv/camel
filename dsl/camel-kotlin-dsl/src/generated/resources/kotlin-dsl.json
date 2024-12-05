@@ -3,7 +3,7 @@
     "kind": "other",
     "name": "kotlin-dsl",
     "title": "Kotlin DSL",
-    "description": "Camel DSL with Kotlin",
+    "description": "Camel DSL with Kotlin (Deprecated)",
     "deprecated": false,
     "firstVersion": "3.9.0",
     "label": "dsl",
@@ -11,6 +11,6 @@
     "metadata": { "routes.language": "kotlin" },
     "groupId": "org.apache.camel",
     "artifactId": "camel-kotlin-dsl",
-    "version": "4.6.0-SNAPSHOT"
+    "version": "4.7.0-SNAPSHOT"
   }
 }

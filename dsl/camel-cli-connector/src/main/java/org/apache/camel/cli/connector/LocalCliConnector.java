@@ -771,9 +771,21 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                         camelContext.getRouteController().stopRoute(id);
                     }
                 } else if ("suspend".equals(command)) {
-                    camelContext.getRouteController().suspendRoute(id);
+                    if ("*".equals(id)) {
+                        for (Route r : camelContext.getRoutes()) {
+                            camelContext.getRouteController().suspendRoute(r.getRouteId());
+                        }
+                    } else {
+                        camelContext.getRouteController().suspendRoute(id);
+                    }
                 } else if ("resume".equals(command)) {
-                    camelContext.getRouteController().resumeRoute(id);
+                    if ("*".equals(id)) {
+                        for (Route r : camelContext.getRoutes()) {
+                            camelContext.getRouteController().resumeRoute(r.getRouteId());
+                        }
+                    } else {
+                        camelContext.getRouteController().resumeRoute(id);
+                    }
                 }
             } catch (Exception e) {
                 // ignore
@@ -957,12 +969,29 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                         root.put("transformers", json);
                     }
                 }
+                DevConsole dc17 = dcr.resolveById("service");
+                if (dc17 != null) {
+                    JsonObject json = (JsonObject) dc17.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("services", json);
+                    }
+                }
+                DevConsole dc18 = dcr.resolveById("platform-http");
+                if (dc18 != null) {
+                    JsonObject json = (JsonObject) dc18.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("platform-http", json);
+                    }
+                }
+                DevConsole dc19 = dcr.resolveById("rest");
+                if (dc19 != null) {
+                    JsonObject json = (JsonObject) dc19.call(DevConsole.MediaType.JSON);
+                    if (json != null && !json.isEmpty()) {
+                        root.put("rests", json);
+                    }
+                }
             }
             // various details
-            JsonObject services = collectServices();
-            if (!services.isEmpty()) {
-                root.put("services", services);
-            }
             JsonObject mem = collectMemory();
             if (mem != null) {
                 root.put("memory", mem);
@@ -1072,55 +1101,6 @@ public class LocalCliConnector extends ServiceSupport implements CliConnector, C
                 root.put("azure-secrets", json);
             }
         }
-        return root;
-    }
-
-    private JsonObject collectServices() {
-        JsonObject root = new JsonObject();
-
-        // platform-http is optional
-        if (camelContext.hasComponent("platform-http") != null) {
-            Optional<DevConsole> dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("platform-http");
-            if (dc.isPresent()) {
-                JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-                if (json != null) {
-                    root.put("platform-http", json);
-                }
-            }
-        }
-        // netty is optional
-        Optional<DevConsole> dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("netty");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("netty", json);
-            }
-        }
-        // mina is optional
-        dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("mina");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("mina", json);
-            }
-        }
-        // mllp is optional
-        dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("mllp");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("mllp", json);
-            }
-        }
-        // knative is optional
-        dc = PluginHelper.getDevConsoleResolver(camelContext).lookupDevConsole("knative");
-        if (dc.isPresent()) {
-            JsonObject json = (JsonObject) dc.get().call(DevConsole.MediaType.JSON);
-            if (json != null) {
-                root.put("knative", json);
-            }
-        }
-
         return root;
     }
 

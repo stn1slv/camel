@@ -60,8 +60,16 @@ public class CatalogDoc extends CamelCommand {
     String camelVersion;
 
     @CommandLine.Option(names = { "--runtime" }, completionCandidates = RuntimeCompletionCandidates.class,
-                        description = "Runtime (spring-boot, quarkus, or camel-main)")
+                        description = "Runtime (${COMPLETION-CANDIDATES})")
     String runtime;
+
+    @CommandLine.Option(names = { "--quarkus-version" }, description = "Quarkus Platform version",
+                        defaultValue = "3.11.1")
+    String quarkusVersion;
+
+    @CommandLine.Option(names = { "--quarkus-group-id" }, description = "Quarkus Platform Maven groupId",
+                        defaultValue = "io.quarkus.platform")
+    String quarkusGroupId = "io.quarkus.platform";
 
     @CommandLine.Option(names = { "--repos" },
                         description = "Additional maven repositories for download on-demand (Use commas to separate multiple repositories)")
@@ -86,7 +94,7 @@ public class CatalogDoc extends CamelCommand {
     boolean headers;
 
     @CommandLine.Option(names = {
-            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "4.5.0")
+            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "4.6.0")
     String kameletsVersion;
 
     CamelCatalog catalog;
@@ -99,7 +107,7 @@ public class CatalogDoc extends CamelCommand {
         if ("spring-boot".equals(runtime)) {
             return CatalogLoader.loadSpringBootCatalog(repos, camelVersion);
         } else if ("quarkus".equals(runtime)) {
-            return CatalogLoader.loadQuarkusCatalog(repos, camelVersion);
+            return CatalogLoader.loadQuarkusCatalog(repos, quarkusVersion, quarkusGroupId);
         }
         if (camelVersion == null) {
             return new DefaultCamelCatalog(true);
@@ -173,26 +181,23 @@ public class CatalogDoc extends CamelCommand {
                 // assume its a component
                 suggestions = SuggestSimilarHelper.didYouMean(findComponentNames(catalog), name);
             }
-            if (suggestions != null) {
+            if (!suggestions.isEmpty()) {
                 String type = kamelet ? "kamelet" : "component";
                 printer().printf("Camel %s: %s not found. Did you mean? %s%n", type, name, String.join(", ", suggestions));
             } else {
                 printer().println("Camel resource: " + name + " not found");
             }
         } else {
-            List<String> suggestions = null;
-            if ("kamelet".equals(prefix)) {
-                suggestions = SuggestSimilarHelper.didYouMean(KameletCatalogHelper.findKameletNames(kameletsVersion), name);
-            } else if ("component".equals(prefix)) {
-                suggestions = SuggestSimilarHelper.didYouMean(findComponentNames(catalog), name);
-            } else if ("dataformat".equals(prefix)) {
-                suggestions = SuggestSimilarHelper.didYouMean(catalog.findDataFormatNames(), name);
-            } else if ("language".equals(prefix)) {
-                suggestions = SuggestSimilarHelper.didYouMean(catalog.findLanguageNames(), name);
-            } else if ("other".equals(prefix)) {
-                suggestions = SuggestSimilarHelper.didYouMean(catalog.findOtherNames(), name);
-            }
-            if (suggestions != null) {
+            List<String> suggestions = switch (prefix) {
+                case "kamelet" ->
+                    SuggestSimilarHelper.didYouMean(KameletCatalogHelper.findKameletNames(kameletsVersion), name);
+                case "component" -> SuggestSimilarHelper.didYouMean(findComponentNames(catalog), name);
+                case "dataformat" -> SuggestSimilarHelper.didYouMean(catalog.findDataFormatNames(), name);
+                case "language" -> SuggestSimilarHelper.didYouMean(catalog.findLanguageNames(), name);
+                case "other" -> SuggestSimilarHelper.didYouMean(catalog.findOtherNames(), name);
+                default -> List.of();
+            };
+            if (!suggestions.isEmpty()) {
                 printer().printf("Camel %s: %s not found. Did you mean? %s%n", prefix, name, String.join(", ", suggestions));
             } else {
                 printer().printf("Camel %s: %s not found.%n", prefix, name);

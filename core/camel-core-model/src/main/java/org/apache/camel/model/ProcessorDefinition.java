@@ -78,7 +78,7 @@ import org.slf4j.Logger;
 @XmlAccessorType(XmlAccessType.FIELD)
 @SuppressWarnings("rawtypes")
 public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>> extends OptionalIdentifiedDefinition<Type>
-        implements Block {
+        implements Block, CopyableDefinition<ProcessorDefinition> {
     @XmlTransient
     private static final AtomicInteger COUNTER = new AtomicInteger();
     @XmlAttribute
@@ -433,7 +433,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      *
      * @return the builder
      */
-    @Deprecated
+    @Deprecated(since = "3.19.0")
     public ServiceCallDefinition serviceCall() {
         ServiceCallDefinition answer = new ServiceCallDefinition();
         addOutput(answer);
@@ -446,7 +446,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @param  name the service name
      * @return      the builder
      */
-    @Deprecated
+    @Deprecated(since = "3.19.0")
     public Type serviceCall(String name) {
         ServiceCallDefinition answer = new ServiceCallDefinition();
         answer.setName(name);
@@ -461,7 +461,7 @@ public abstract class ProcessorDefinition<Type extends ProcessorDefinition<Type>
      * @param  uri  the endpoint uri to use for calling the service
      * @return      the builder
      */
-    @Deprecated
+    @Deprecated(since = "3.19.0")
     public Type serviceCall(String name, @AsEndpointUri String uri) {
         ServiceCallDefinition answer = new ServiceCallDefinition();
         answer.setName(name);

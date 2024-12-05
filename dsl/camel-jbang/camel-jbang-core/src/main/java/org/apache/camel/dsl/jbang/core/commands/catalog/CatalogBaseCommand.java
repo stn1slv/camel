@@ -45,12 +45,16 @@ public abstract class CatalogBaseCommand extends CamelCommand {
     String camelVersion;
 
     @CommandLine.Option(names = { "--runtime" }, completionCandidates = RuntimeCompletionCandidates.class,
-                        description = "Runtime (spring-boot, quarkus, or camel-main)")
+                        description = "Runtime (${COMPLETION-CANDIDATES})")
     String runtime;
 
     @CommandLine.Option(names = { "--quarkus-version" }, description = "Quarkus Platform version",
-                        defaultValue = "3.9.4")
+                        defaultValue = "3.11.1")
     String quarkusVersion;
+
+    @CommandLine.Option(names = { "--quarkus-group-id" }, description = "Quarkus Platform Maven groupId",
+                        defaultValue = "io.quarkus.platform")
+    String quarkusGroupId = "io.quarkus.platform";
 
     @CommandLine.Option(names = { "--repos" },
                         description = "Additional maven repositories for download on-demand (Use commas to separate multiple repositories)")
@@ -96,7 +100,7 @@ public abstract class CatalogBaseCommand extends CamelCommand {
         if ("spring-boot".equals(runtime)) {
             return CatalogLoader.loadSpringBootCatalog(repos, camelVersion);
         } else if ("quarkus".equals(runtime)) {
-            return CatalogLoader.loadQuarkusCatalog(repos, quarkusVersion);
+            return CatalogLoader.loadQuarkusCatalog(repos, quarkusVersion, quarkusGroupId);
         }
         if (camelVersion == null) {
             return new DefaultCamelCatalog(true);

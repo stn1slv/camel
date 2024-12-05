@@ -26,9 +26,9 @@ import org.apache.camel.spi.Metadata;
 import org.slf4j.Logger;
 
 /**
- * Logs the defined message to the logger
+ * Used for printing custom messages to the logger.
  */
-@Metadata(label = "eip,routing")
+@Metadata(label = "eip,routing", title = "Logger")
 @XmlRootElement(name = "log")
 @XmlAccessorType(XmlAccessType.FIELD)
 public class LogDefinition extends NoOutputDefinition<LogDefinition> {
@@ -53,9 +53,24 @@ public class LogDefinition extends NoOutputDefinition<LogDefinition> {
     public LogDefinition() {
     }
 
+    protected LogDefinition(LogDefinition source) {
+        super(source);
+        this.loggerBean = source.loggerBean;
+        this.message = source.message;
+        this.loggingLevel = source.loggingLevel;
+        this.logName = source.logName;
+        this.marker = source.marker;
+        this.logger = source.logger;
+    }
+
     public LogDefinition(String message) {
         this();
         this.message = message;
+    }
+
+    @Override
+    public LogDefinition copyDefinition() {
+        return new LogDefinition(this);
     }
 
     @Override

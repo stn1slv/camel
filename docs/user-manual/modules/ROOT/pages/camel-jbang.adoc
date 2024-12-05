@@ -67,14 +67,14 @@ So running a simple route will be as easy as doing the following:
 
 [source,bash]
 ----
-docker run apache/camel-jbang:4.4.0 run example.yaml
+docker run -v .:/integrations apache/camel-jbang:4.4.0 run /integrations/example.yaml
 ----
 
 or
 
 [source,bash]
 ----
-podman run apache/camel-jbang:4.4.0 run example.yaml
+podman run -v .:/integrations apache/camel-jbang:4.4.0 run /integrations/example.yaml
 ----
 
 == Using Camel JBang
@@ -255,12 +255,12 @@ And Camel will now prompt in the terminal for you to enter values for the placeh
 
 [source,bash]
 ----
-2023-12-15 21:46:44.218  INFO 15033 --- [           main] org.apache.camel.main.MainSupport   : Apache Camel (JBang) 4.6.0-SNAPSHOT is starting
+2023-12-15 21:46:44.218  INFO 15033 --- [           main] org.apache.camel.main.MainSupport   : Apache Camel (JBang) 4.7.0-SNAPSHOT is starting
 2023-12-15 21:46:44.331  INFO 15033 --- [           main] org.apache.camel.main.MainSupport   : Using Java 17.0.5 with PID 15033. Started by davsclaus in /Users/davsclaus/workspace/deleteme/prompt
 2023-12-15 21:46:45.360  INFO 15033 --- [           main] mel.cli.connector.LocalCliConnector : Management from Camel JBang enabled
 Enter optional value for time (1000):
 Enter required value for you: Jack
-2023-12-15 21:46:55.239  INFO 15033 --- [           main] el.impl.engine.AbstractCamelContext : Apache Camel 4.6.0-SNAPSHOT (foo) is starting
+2023-12-15 21:46:55.239  INFO 15033 --- [           main] el.impl.engine.AbstractCamelContext : Apache Camel 4.7.0-SNAPSHOT (foo) is starting
 2023-12-15 21:46:55.323  INFO 15033 --- [           main] g.apache.camel.main.BaseMainSupport : Property-placeholders summary
 2023-12-15 21:46:55.323  INFO 15033 --- [           main] g.apache.camel.main.BaseMainSupport :     [prompt]                       you=Jack
 2023-12-15 21:46:55.341  INFO 15033 --- [           main] el.impl.engine.AbstractCamelContext : Routes startup (started:1)
@@ -1016,8 +1016,9 @@ camel plugin get --all
 ----
 Supported plugins:
 
- NAME     COMMAND  DEPENDENCY                             DESCRIPTION
- camel-k  k        org.apache.camel:camel-jbang-plugin-k  Manage Camel integrations on Kubernetes
+ NAME      COMMAND   DEPENDENCY                                    DESCRIPTION
+ camel-k   k         org.apache.camel:camel-jbang-plugin-k         Manage Camel integrations on Kubernetes
+ generate  generate  org.apache.camel:camel-jbang-plugin-generate  Generate code such as DTOs
 ----
 
 In case you want to enable a plugin and its functionality you can add it as follows:
@@ -1025,6 +1026,13 @@ In case you want to enable a plugin and its functionality you can add it as foll
 [source,bash]
 ----
 camel plugin add <plugin-name>
+----
+
+For example to install `generate` you execute:
+
+[source,bash]
+----
+camel plugin add generate
 ----
 
 This adds the plugin and all subcommands are now available for execution.
@@ -1175,6 +1183,59 @@ spec:
 
 The Camel K JBang plugin also provides the bind command. It enhances the arbitrary bind command with the option to directly create this resource on the
 Kubernetes cluster. Please refer to the plugin documentation for more complex examples and a full description on how to use the bind command options.
+
+=== Creating a new Kamelet
+
+You can create a new kamelet with the `init` command by using kamelet naming convention.
+
+For example to create a new kamelet source, you can do:
+
+[source,bash]
+----
+camel init cheese-source.kamelet.yaml
+----
+
+This will create a basic kamelet (based on the timer source).
+
+And to use the kamelet you could create the following route:
+
+[source,yaml]
+----
+- from:
+    uri: "kamelet:cheese-source"
+    parameters:
+      period: "2000"
+      message: "Hello World"
+    steps:
+      - log: "${body}"
+----
+
+If you want to create a sink kamelet, then you just name it with sink as follows (based on log sink):
+
+[source,bash]
+----
+camel init wine-sink.kamelet.yaml
+----
+
+You can then change the route to use the wine kamelet as follows:
+
+[source,yaml]
+----
+- from:
+    uri: "kamelet:cheese-source"
+    parameters:
+      period: "2000"
+      message: "Hello World"
+    steps:
+      - to: "kamelet:wine-sink"
+----
+
+If you want to create a new Kamelet based on an existing Kamelet, for example to create a new sink based on the existing MySQL:
+
+[source,bash]
+----
+camel init orderdb-sink.kamelet.yaml --from-kamelet=mysql-sink
+----
 
 === Run from clipboard
 
@@ -1595,18 +1656,33 @@ To start the routes, you can do:
 camel cmd start-route chuck
 ----
 
-To stop _all_ routes in every Camel integration you need to use the `--all` flag as follows:
+To stop _all_ routes in every Camel integration:
 
 [source,bash]
 ----
-camel cmd stop-route --all
+camel cmd stop-route
 ----
 
 And you can start _all_ routes using:
 
 [source,bash]
 ----
-camel cmd start-route --all
+camel cmd start-route
+----
+
+To start a specific route, you need to use `--id` parameter such as the following,
+which will start routes named `route1` in all running integrations:
+
+[source,bash]
+----
+camel cmd start-route --id=route1
+----
+
+If you want to do this in a specific integration you must include the name or pid:
+
+[source,bash]
+----
+camel cmd start-route bar --id=route1
 ----
 
 TIP: You can stop one or more route by their ids by separating using
@@ -1631,7 +1707,7 @@ camel cmd logger
  91103  foo     20s  root    INFO
 ----
 
-The logging level can be change at runtime, for example to change foo to DEBUG you execute:
+The logging level can be changed at runtime, for example to change foo to DEBUG you execute:
 
 [source,bash]
 ----
@@ -1639,6 +1715,43 @@ camel cmd logger --level=DEBUG foo
 ----
 
 TIP: You can use `--all` to change logging levels for all running integrations.
+
+===== Configuring individual logging levels
+
+From *Camel 4.6* onwards you can easily configure different logging levels from CLI and `application.properties`.
+
+For example from CLI you can specify using the `--logging-category` option. For example to enable DEBUG logging if using Kafka:
+
+[source,bash]
+----
+$ camel run myapp.yaml --logging-category=org.apache.kafka=DEBUG
+----
+
+You can specify multiple categories by repeating the CLI option as shown:
+
+[source,bash]
+----
+$ camel run myapp.yaml --logging-category=org.apache.kafka=DEBUG --logging-category=com.foo.something=TRACE
+----
+
+You can also configure logging levels in `application.properties` using two styles
+
+- `logging.level.` is the default style used by Camel and Spring Boot
+- `quarkus.log.category.` is used by Quarkus
+
+For example, you can declare as follows:
+
+[source,properties]
+----
+
+# make it easy to configure individual logging levels
+logging.level.org.apache.kafka = DEBUG
+logging.level.com.foo.something = TRACE
+
+# you can also use quarkus style naming
+quarkus.log.category."org.apache.kafka".level = DEBUG
+quarkus.log.category."com.foo.something".level = TRACE
+----
 
 ==== Listing services
 
@@ -2100,6 +2213,72 @@ For example we can customize used `org.apache.camel.spi.UuidGenerator` with this
 
 That's it - Camel context will then look up for the instances of `org.apache.camel.spi.UuidGenerator` and if one is found, it'll be used by Camel.
 
+=== Configuring JDBC DataSources
+
+When using SQL databases, then you would often need to configure a JDBC connection pool. You can do this:
+
+- Manually by adding 3rd party JAR dependency for the data source (and connection pool), and configure this from Java or XML/YAML DSL.
+- *Camel 4.6* Spring Boot style with `spring.datasource.` configuration in `application.properties` (uses Hikari connection-pool)
+
+==== Defining datasource in YAML DSL as a bean
+
+Here is a snippet how you can declare a bean as the `DataSource` for a Postgres database in YAML DSL:
+
+[source,yaml]
+----
+- beans:
+    - name: PostgresqlDataSource
+      properties:
+        databaseName: "postgres"
+        password: "postgres"
+        portNumber: "5432"
+        serverName: localhost
+        user: postgres
+      type: org.postgresql.ds.PGSimpleDataSource
+----
+
+You would then also need to add the JAR dependency with Maven coordinates: `org.postgresql:postgresql:42.7.3`.
+
+==== Using Spring Boot JDBC data source
+
+In `application.properties` you can set up the datasource such as:
+
+[source,properties]
+----
+spring.datasource.url= jdbc:sqlserver://db.example.net:1433;databaseName=test_db
+spring.datasource.username=user
+spring.datasource.password=password
+spring.datasource.driverClassName=com.microsoft.sqlserver.jdbc.SQLServerDriver
+----
+
+The name of the `DataSource` will be registered with `springDataSource`, however you can configure the name via:
+
+[source,properties]
+----
+spring.datasource.name=myDataSourceNameHere
+----
+
+TIP: Some JDBC drivers are automatic detected by camel-jbang. If not then you need to add the JAR dependency manually.
+
+And you can configure the Hikari connection-pool (if needed) such as:
+
+[source,properties]
+----
+spring.datasource.hikari.connection-timeout=30000
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.idle-timeout=600000
+spring.datasource.hikari.max-lifetime=1800000
+spring.datasource.hikari.pool-name=collection-pool
+----
+
+And you can set logging to DEBUG on hikari to see the actual configuration:
+
+[source,properties]
+----
+logging.level.com.zaxxer.hikari = DEBUG
+----
+
 === Debugging
 
 There are two kinds of debugging:
@@ -2151,12 +2330,12 @@ And in the bottom you can see content of the message (similar to the `camel trac
 2023-11-03 18:15:06.715  INFO 33384 --- [           main] g.apache.camel.main.BaseMainSupport :     [Command Line]                 camel.debug.loggingLevel=DEBUG
 2023-11-03 18:15:06.715  INFO 33384 --- [           main] g.apache.camel.main.BaseMainSupport :     [Command Line]                 camel.debug.singleStepIncludeStartEnd=true
 2023-11-03 18:15:06.787  INFO 33384 --- [           main] mel.cli.connector.LocalCliConnector : Camel CLI enabled (local)
-2023-11-03 18:15:06.833  INFO 33384 --- [           main] el.impl.engine.AbstractCamelContext : Apache Camel 4.6.0-SNAPSHOT (foo) is starting
+2023-11-03 18:15:06.833  INFO 33384 --- [           main] el.impl.engine.AbstractCamelContext : Apache Camel 4.7.0-SNAPSHOT (foo) is starting
 2023-11-03 18:15:06.906  INFO 33384 --- [           main] g.apache.camel.main.BaseMainSupport : Property-placeholders summary
 2023-11-03 18:15:06.906  INFO 33384 --- [           main] g.apache.camel.main.BaseMainSupport :     [application.properties]       my-name=Donald Duck
 2023-11-03 18:15:06.924  INFO 33384 --- [           main] el.impl.engine.AbstractCamelContext : Routes startup (started:1)
 2023-11-03 18:15:06.924  INFO 33384 --- [           main] el.impl.engine.AbstractCamelContext :     Started route-07a6 (timer://yaml)
-2023-11-03 18:15:06.924  INFO 33384 --- [           main] el.impl.engine.AbstractCamelContext : Apache Camel 4.6.0-SNAPSHOT (foo) started in 91ms (build:0ms init:0ms start:91ms)
+2023-11-03 18:15:06.924  INFO 33384 --- [           main] el.impl.engine.AbstractCamelContext : Apache Camel 4.7.0-SNAPSHOT (foo) started in 91ms (build:0ms init:0ms start:91ms)
 2023-11-03 18:15:11.951  INFO 33384 --- [ - timer://yaml] foo.camel.yaml:10                   : Before:
 
 Source: foo.camel.yaml:13                                                         History
@@ -2398,6 +2577,54 @@ Here we can easily see that the health check is failing because of the `org.apac
 which is due to invalid configuration: `Invalid url in bootstrap.servers: value`.
 
 TIP: Use `camel get health --help` to see all the various options.
+
+
+== Running with Spring Boot or Quarkus
+
+Camel JBang is __primary__ intended to be Camel standalone only. In *Camel 4.6* onwards we added limited
+support for running with Spring Boot or Quarkus, but there are some limitations.
+
+You use the `--runtime` option to specify which platform to use, as shown below:
+
+[source,bash]
+----
+camel run foo.camel.yaml --runtime=spring-boot
+----
+
+And for Quarkus:
+
+[source,bash]
+----
+camel run foo.camel.yaml --runtime=quarkus
+----
+
+When running this way, then Camel JBang is _essentially_ doing an _export_ to a temporary folder,
+and then running Spring Boot or Quarkus using Maven.
+
+You can do changes to the source file and have Quarkus and Spring Boot reload the routes, just as `camel run --dev` can do,
+but uses the natural Spring Boot _dev-tools_ and Quarkus _dev mode_ functionality.
+
+There are several limitations, one would be that Spring Boot and Quarkus cannot automatically detect new components and download JARs.
+(you can stop and run again to update dependencies).
+
+When using Quarkus then you can only select the Quarkus version to run, that are locked to a specific Camel version.
+You can see the versions by `camel version list --runtime=quarkus`. On the other hand Spring Boot is more flexible
+where you can choose different Spring Boot and Camel versions (within reasonable range).
+
+For example:
+
+[source,bash]
+----
+camel run foo.camel.yaml --runtime=spring-boot --spring-boot-version=3.2.3 --camel-version=4.4.1
+----
+
+And for Quarkus:
+
+[source,bash]
+----
+camel run foo.camel.yaml --runtime=quarkus --quarkus-version=3.9.4
+----
+
 
 == Transforming message (data mapping)
 
@@ -3261,7 +3488,7 @@ For example, the following can be used for a general Camel based application to 
 ----
 label.runtime=app.kubernetes.io/runtime
 jib.to.image=demo/myapp:1.0
-jkube.version=1.16.0
+jkube.version=1.16.2
 jkube.build.strategy=jib
 jkube.skip.build=true
 jkube.namespace=my-namespace
@@ -3438,7 +3665,7 @@ The follow options related to _exporting_, can be configured in `application.pro
 |Resource fragments for Kubernetes (Use commas to separate multiple files). See more details at xref:_exporting_to_camel_main_for_kubernetes[].
 
 |`camel.jbang.javaVersion`
-|Java version (11 or 17)
+|Java version (17 or 21). Java 17 is default.
 
 |`camel.jbang.kameletsVersion`
 |Apache Camel Kamelets version

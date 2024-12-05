@@ -87,6 +87,7 @@ public class RouteDevConsole extends AbstractDevConsole {
                 sb.append(String.format("    Node Prefix Id: %s", mrb.getNodePrefixId()));
             }
             sb.append(String.format("\n    From: %s", mrb.getEndpointUri()));
+            sb.append(String.format("\n    Remote: %s", mrb.isRemoteEndpoint()));
             if (mrb.getSourceLocation() != null) {
                 sb.append(String.format("\n    Source: %s", mrb.getSourceLocation()));
             }
@@ -233,6 +234,7 @@ public class RouteDevConsole extends AbstractDevConsole {
                 jo.put("nodePrefixId", mrb.getNodePrefixId());
             }
             jo.put("from", mrb.getEndpointUri());
+            jo.put("remote", mrb.isRemoteEndpoint());
             if (mrb.getSourceLocation() != null) {
                 jo.put("source", mrb.getSourceLocation());
             }
@@ -301,23 +303,20 @@ public class RouteDevConsole extends AbstractDevConsole {
             return;
         }
 
-        // sort by index
-        List<ManagedProcessorMBean> mps = new ArrayList<>();
-        for (String id : ids) {
-            ManagedProcessorMBean mp = mcc.getManagedProcessor(id);
-            if (mp != null) {
-                mps.add(mp);
-            }
-        }
-        // sort processors by index
-        mps.sort(Comparator.comparingInt(ManagedProcessorMBean::getIndex));
+        List<ManagedProcessorMBean> mps = ids.stream().map(mcc::getManagedProcessor)
+                .filter(Objects::nonNull)
+                // sort processors by index
+                .sorted(Comparator.comparingInt(ManagedProcessorMBean::getIndex))
+                .toList();
 
         for (ManagedProcessorMBean mp : mps) {
             JsonObject jo = new JsonObject();
             arr.add(jo);
 
             jo.put("id", mp.getProcessorId());
-            jo.put("nodePrefixId", mp.getNodePrefixId());
+            if (mp.getNodePrefixId() != null) {
+                jo.put("nodePrefixId", mp.getNodePrefixId());
+            }
             if (mp.getSourceLocation() != null) {
                 String loc = mp.getSourceLocation();
                 if (mp.getSourceLineNumber() != null) {
@@ -461,7 +460,7 @@ public class RouteDevConsole extends AbstractDevConsole {
         if (percent) {
             double p;
             if (total > 0) {
-                p = (covered / total) * 100;
+                p = ((double) covered / total) * 100;
             } else {
                 p = 0;
             }

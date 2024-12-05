@@ -98,6 +98,8 @@ public class CamelJBangMain implements Callable<Integer> {
                         .addSubcommand("circuit-breaker", new CommandLine(new ListCircuitBreaker(main)))
                         .addSubcommand("metric", new CommandLine(new ListMetric(main)))
                         .addSubcommand("service", new CommandLine(new ListService(main)))
+                        .addSubcommand("rest", new CommandLine(new ListRest(main)))
+                        .addSubcommand("platform-http", new CommandLine(new ListPlatformHttp(main)))
                         .addSubcommand("source", new CommandLine(new CamelSourceAction(main)))
                         .addSubcommand("route-dump", new CommandLine(new CamelRouteDumpAction(main)))
                         .addSubcommand("startup-recorder", new CommandLine(new CamelStartupRecorderAction(main)))
@@ -110,6 +112,8 @@ public class CamelJBangMain implements Callable<Integer> {
                 .addSubcommand("cmd", new CommandLine(new CamelAction(main))
                         .addSubcommand("start-route", new CommandLine(new CamelRouteStartAction(main)))
                         .addSubcommand("stop-route", new CommandLine(new CamelRouteStopAction(main)))
+                        .addSubcommand("suspend-route", new CommandLine(new CamelRouteSuspendAction(main)))
+                        .addSubcommand("resume-route", new CommandLine(new CamelRouteResumeAction(main)))
                         .addSubcommand("reset-stats", new CommandLine(new CamelResetStatsAction(main)))
                         .addSubcommand("reload", new CommandLine(new CamelReloadAction(main)))
                         .addSubcommand("send", new CommandLine(new CamelSendAction(main)))
@@ -121,8 +125,6 @@ public class CamelJBangMain implements Callable<Integer> {
                         .addSubcommand("list", new CommandLine(new DependencyList(main)))
                         .addSubcommand("copy", new CommandLine(new DependencyCopy(main)))
                         .addSubcommand("update", new CommandLine(new DependencyUpdate(main))))
-                .addSubcommand("generate", new CommandLine(new CodeGenerator(main))
-                        .addSubcommand("rest", new CommandLine(new CodeRestGenerator(main))))
                 .addSubcommand("sbom", new CommandLine(new SBOMGenerator(main)))
                 .addSubcommand("catalog", new CommandLine(new CatalogCommand(main))
                         .addSubcommand("component", new CommandLine(new CatalogComponent(main)))
@@ -153,7 +155,7 @@ public class CamelJBangMain implements Callable<Integer> {
                         .addSubcommand("set", new CommandLine(new VersionSet(main)))
                         .addSubcommand("list", new CommandLine(new VersionList(main))));
 
-        PluginHelper.addPlugins(commandLine, main);
+        PluginHelper.addPlugins(commandLine, main, args);
 
         commandLine.getCommandSpec().versionProvider(() -> {
             CamelCatalog catalog = new DefaultCamelCatalog();

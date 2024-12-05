@@ -86,8 +86,8 @@ public class AzureServicebusUriDsl(
   }
 
   /**
-   * Sets the proxy configuration to use for ServiceBusSenderAsyncClient. When a proxy is
-   * configured, AMQP_WEB_SOCKETS must be used for the transport type.
+   * Sets the proxy configuration to use for ServiceBusSenderClient. When a proxy is configured,
+   * AMQP_WEB_SOCKETS must be used for the transport type.
    */
   public fun proxyOptions(proxyOptions: String) {
     it.property("proxyOptions", proxyOptions)
@@ -99,29 +99,6 @@ public class AzureServicebusUriDsl(
    */
   public fun serviceBusType(serviceBusType: String) {
     it.property("serviceBusType", serviceBusType)
-  }
-
-  /**
-   * Sets the desired operation to be used in the consumer
-   */
-  public fun consumerOperation(consumerOperation: String) {
-    it.property("consumerOperation", consumerOperation)
-  }
-
-  /**
-   * Disables auto-complete and auto-abandon of received messages. By default, a successfully
-   * processed message is completed. If an error happens when the message is abandoned.
-   */
-  public fun disableAutoComplete(disableAutoComplete: String) {
-    it.property("disableAutoComplete", disableAutoComplete)
-  }
-
-  /**
-   * Disables auto-complete and auto-abandon of received messages. By default, a successfully
-   * processed message is completed. If an error happens when the message is abandoned.
-   */
-  public fun disableAutoComplete(disableAutoComplete: Boolean) {
-    it.property("disableAutoComplete", disableAutoComplete.toString())
   }
 
   /**
@@ -149,17 +126,17 @@ public class AzureServicebusUriDsl(
   }
 
   /**
-   * Set the max number of messages to be peeked during the peek operation.
+   * Sets maximum number of concurrent calls
    */
-  public fun peekNumMaxMessages(peekNumMaxMessages: String) {
-    it.property("peekNumMaxMessages", peekNumMaxMessages)
+  public fun maxConcurrentCalls(maxConcurrentCalls: String) {
+    it.property("maxConcurrentCalls", maxConcurrentCalls)
   }
 
   /**
-   * Set the max number of messages to be peeked during the peek operation.
+   * Sets maximum number of concurrent calls
    */
-  public fun peekNumMaxMessages(peekNumMaxMessages: Int) {
-    it.property("peekNumMaxMessages", peekNumMaxMessages.toString())
+  public fun maxConcurrentCalls(maxConcurrentCalls: Int) {
+    it.property("maxConcurrentCalls", maxConcurrentCalls.toString())
   }
 
   /**
@@ -185,10 +162,10 @@ public class AzureServicebusUriDsl(
   }
 
   /**
-   * Sets the receiverAsyncClient in order to consume messages by the consumer
+   * Sets the processorClient in order to consume messages by the consumer
    */
-  public fun receiverAsyncClient(receiverAsyncClient: String) {
-    it.property("receiverAsyncClient", receiverAsyncClient)
+  public fun processorClient(processorClient: String) {
+    it.property("processorClient", processorClient)
   }
 
   /**
@@ -261,22 +238,6 @@ public class AzureServicebusUriDsl(
   }
 
   /**
-   * If the consumer has connection failure to Azure ServiceBus, then delay (millis) some time
-   * before re-connecting.
-   */
-  public fun reconnectDelay(reconnectDelay: String) {
-    it.property("reconnectDelay", reconnectDelay)
-  }
-
-  /**
-   * If the consumer has connection failure to Azure ServiceBus, then delay (millis) some time
-   * before re-connecting.
-   */
-  public fun reconnectDelay(reconnectDelay: Int) {
-    it.property("reconnectDelay", reconnectDelay.toString())
-  }
-
-  /**
    * Set binary mode. If true, message body will be sent as byte. By default, it is false.
    */
   public fun binary(binary: String) {
@@ -305,10 +266,10 @@ public class AzureServicebusUriDsl(
   }
 
   /**
-   * Sets SenderAsyncClient to be used in the producer.
+   * Sets senderClient to be used in the producer.
    */
-  public fun senderAsyncClient(senderAsyncClient: String) {
-    it.property("senderAsyncClient", senderAsyncClient)
+  public fun senderClient(senderClient: String) {
+    it.property("senderClient", senderClient)
   }
 
   /**

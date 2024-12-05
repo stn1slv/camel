@@ -16,6 +16,7 @@
  */
 package org.apache.camel.processor.errorhandler;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Random;
 
@@ -85,7 +86,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
     public static final RedeliveryPolicy DEFAULT_POLICY = new RedeliveryPolicy();
 
     protected static Random randomNumberGenerator;
-    private static final long serialVersionUID = -338222777701473252L;
+    private static final @Serial long serialVersionUID = -338222777701473252L;
     private static final Logger LOG = LoggerFactory.getLogger(RedeliveryPolicy.class);
 
     protected long redeliveryDelay = 1000L;
@@ -236,7 +237,7 @@ public class RedeliveryPolicy implements Cloneable, Serializable {
             Random random = getRandomNumberGenerator(); // NOSONAR
             double variance = (random.nextBoolean() ? collisionAvoidanceFactor : -collisionAvoidanceFactor)
                               * random.nextDouble();
-            redeliveryDelayResult += redeliveryDelayResult * variance;
+            redeliveryDelayResult += (long) (redeliveryDelayResult * variance);
         }
 
         // ensure the calculated result is not bigger than the max delay (if configured)

@@ -16,8 +16,6 @@
  */
 package org.apache.camel.component.master;
 
-import java.util.Optional;
-
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
 import org.apache.camel.Processor;
@@ -42,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * A consumer which is only really active when the {@link CamelClusterView} has the leadership.
  */
 @ManagedResource(description = "Managed Master Consumer")
-public class MasterConsumer extends DefaultConsumer implements ResumeAware {
+public class MasterConsumer extends DefaultConsumer implements ResumeAware<ResumeStrategy> {
     private static final transient Logger LOG = LoggerFactory.getLogger(MasterConsumer.class);
 
     private final CamelClusterService clusterService;
@@ -169,7 +167,7 @@ public class MasterConsumer extends DefaultConsumer implements ResumeAware {
 
     private final class LeadershipListener implements CamelClusterEventListener.Leadership {
         @Override
-        public void leadershipChanged(CamelClusterView view, Optional<CamelClusterMember> leader) {
+        public void leadershipChanged(CamelClusterView view, CamelClusterMember leader) {
             if (!isRunAllowed()) {
                 return;
             }

@@ -27,8 +27,8 @@ import org.apache.camel.builder.endpoint.dsl.*;
 public class StaticEndpointBuilders {
 
     /**
-     * ActiveMQ (camel-activemq)
-     * Send messages to (or consume from) Apache ActiveMQ. This component
+     * ActiveMQ 5.x (camel-activemq)
+     * Send messages to (or consume from) Apache ActiveMQ 5.x. This component
      * extends the Camel JMS component.
      * 
      * Category: messaging
@@ -53,8 +53,8 @@ public class StaticEndpointBuilders {
         return activemq("activemq", path);
     }
     /**
-     * ActiveMQ (camel-activemq)
-     * Send messages to (or consume from) Apache ActiveMQ. This component
+     * ActiveMQ 5.x (camel-activemq)
+     * Send messages to (or consume from) Apache ActiveMQ 5.x. This component
      * extends the Camel JMS component.
      * 
      * Category: messaging
@@ -78,6 +78,60 @@ public class StaticEndpointBuilders {
      * @return the dsl builder
      */
     public static ActiveMQEndpointBuilderFactory.ActiveMQEndpointBuilder activemq(String componentName, String path) {
+        return ActiveMQEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * ActiveMQ 6.x (camel-activemq6)
+     * Send messages to (or consume from) Apache ActiveMQ 6.x. This component
+     * extends the Camel JMS component.
+     * 
+     * Category: messaging
+     * Since: 4.7
+     * Maven coordinates: org.apache.camel:camel-activemq6
+     * 
+     * Syntax: <code>activemq6:destinationType:destinationName</code>
+     * 
+     * Path parameter: destinationType
+     * The kind of destination to use
+     * Default value: queue
+     * There are 4 enums and the value can be one of: queue, topic, temp-queue,
+     * temp-topic
+     * 
+     * Path parameter: destinationName (required)
+     * Name of the queue or topic to use as destination
+     * 
+     * @param path destinationType:destinationName
+     * @return the dsl builder
+     */
+    public static ActiveMQEndpointBuilderFactory.ActiveMQEndpointBuilder activemq6(String path) {
+        return activemq6("activemq6", path);
+    }
+    /**
+     * ActiveMQ 6.x (camel-activemq6)
+     * Send messages to (or consume from) Apache ActiveMQ 6.x. This component
+     * extends the Camel JMS component.
+     * 
+     * Category: messaging
+     * Since: 4.7
+     * Maven coordinates: org.apache.camel:camel-activemq6
+     * 
+     * Syntax: <code>activemq6:destinationType:destinationName</code>
+     * 
+     * Path parameter: destinationType
+     * The kind of destination to use
+     * Default value: queue
+     * There are 4 enums and the value can be one of: queue, topic, temp-queue,
+     * temp-topic
+     * 
+     * Path parameter: destinationName (required)
+     * Name of the queue or topic to use as destination
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path destinationType:destinationName
+     * @return the dsl builder
+     */
+    public static ActiveMQEndpointBuilderFactory.ActiveMQEndpointBuilder activemq6(String componentName, String path) {
         return ActiveMQEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
@@ -186,7 +240,7 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: apiName (required)
      * What kind of operation to perform
-     * There are 2 enums and the value can be one of: CLIENT, SERVER
+     * There are 3 enums and the value can be one of: CLIENT, SERVER, RECEIPT
      * 
      * Path parameter: methodName (required)
      * What sub operation to use for the selected operation
@@ -209,7 +263,7 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: apiName (required)
      * What kind of operation to perform
-     * There are 2 enums and the value can be one of: CLIENT, SERVER
+     * There are 3 enums and the value can be one of: CLIENT, SERVER, RECEIPT
      * 
      * Path parameter: methodName (required)
      * What sub operation to use for the selected operation
@@ -2550,7 +2604,8 @@ public class StaticEndpointBuilders {
     }
     /**
      * CoAP (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -2569,7 +2624,8 @@ public class StaticEndpointBuilders {
     }
     /**
      * CoAP (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -2590,7 +2646,8 @@ public class StaticEndpointBuilders {
     }
     /**
      * CoAP (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -2609,7 +2666,8 @@ public class StaticEndpointBuilders {
     }
     /**
      * CoAP (Secure) (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -2628,7 +2686,8 @@ public class StaticEndpointBuilders {
     }
     /**
      * CoAP (camel-coap)
-     * Send and receive messages to/from COAP capable devices.
+     * Send and receive messages to/from CoAP (Constrained Application Protocol)
+     * capable devices.
      * 
      * Category: iot
      * Since: 2.16
@@ -9200,10 +9259,10 @@ public class StaticEndpointBuilders {
      * 
      * Syntax: <code>kudu:host:port/tableName</code>
      * 
-     * Path parameter: host
+     * Path parameter: host (required)
      * Host of the server to connect to
      * 
-     * Path parameter: port
+     * Path parameter: port (required)
      * Port of the server to connect to
      * 
      * Path parameter: tableName
@@ -9226,10 +9285,10 @@ public class StaticEndpointBuilders {
      * 
      * Syntax: <code>kudu:host:port/tableName</code>
      * 
-     * Path parameter: host
+     * Path parameter: host (required)
      * Host of the server to connect to
      * 
-     * Path parameter: port
+     * Path parameter: port (required)
      * Port of the server to connect to
      * 
      * Path parameter: tableName
@@ -9482,8 +9541,9 @@ public class StaticEndpointBuilders {
         return LdifEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * Log (camel-log)
-     * Log messages to the underlying logging mechanism.
+     * Log Data (camel-log)
+     * Prints data form the routed message (such as body and headers) to the
+     * logger.
      * 
      * Category: core,monitoring
      * Since: 1.1
@@ -9501,8 +9561,9 @@ public class StaticEndpointBuilders {
         return log("log", path);
     }
     /**
-     * Log (camel-log)
-     * Log messages to the underlying logging mechanism.
+     * Log Data (camel-log)
+     * Prints data form the routed message (such as body and headers) to the
+     * logger.
      * 
      * Category: core,monitoring
      * Since: 1.1
@@ -10545,6 +10606,7 @@ public class StaticEndpointBuilders {
      * @param path database
      * @return the dsl builder
      */
+    @Deprecated
     public static NitriteEndpointBuilderFactory.NitriteEndpointBuilder nitrite(String path) {
         return nitrite("nitrite", path);
     }
@@ -10566,6 +10628,7 @@ public class StaticEndpointBuilders {
      * @param path database
      * @return the dsl builder
      */
+    @Deprecated
     public static NitriteEndpointBuilderFactory.NitriteEndpointBuilder nitrite(String componentName, String path) {
         return NitriteEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
@@ -11442,6 +11505,46 @@ public class StaticEndpointBuilders {
      */
     public static PgEventEndpointBuilderFactory.PgEventEndpointBuilder pgevent(String componentName, String path) {
         return PgEventEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Pinecone (camel-pinecone)
+     * Perform operations on the Pinecone Vector Database.
+     * 
+     * Category: database,ai
+     * Since: 4.6
+     * Maven coordinates: org.apache.camel:camel-pinecone
+     * 
+     * Syntax: <code>pinecone:collection</code>
+     * 
+     * Path parameter: collection (required)
+     * The collection Name
+     * 
+     * @param path collection
+     * @return the dsl builder
+     */
+    public static PineconeVectorDbEndpointBuilderFactory.PineconeVectorDbEndpointBuilder pinecone(String path) {
+        return pinecone("pinecone", path);
+    }
+    /**
+     * Pinecone (camel-pinecone)
+     * Perform operations on the Pinecone Vector Database.
+     * 
+     * Category: database,ai
+     * Since: 4.6
+     * Maven coordinates: org.apache.camel:camel-pinecone
+     * 
+     * Syntax: <code>pinecone:collection</code>
+     * 
+     * Path parameter: collection (required)
+     * The collection Name
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path collection
+     * @return the dsl builder
+     */
+    public static PineconeVectorDbEndpointBuilderFactory.PineconeVectorDbEndpointBuilder pinecone(String componentName, String path) {
+        return PineconeVectorDbEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Platform HTTP (camel-platform-http)
@@ -12938,6 +13041,50 @@ public class StaticEndpointBuilders {
         return SmbEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * Smooks (camel-smooks)
+     * EDI, XML, CSV, etc. based data transformation using Smooks.
+     * 
+     * Category: transformation
+     * Since: 4.7
+     * Maven coordinates: org.apache.camel:camel-smooks
+     * 
+     * Syntax: <code>smooks:smooksConfig</code>
+     * 
+     * Path parameter: smooksConfig (required)
+     * Smooks XML configuration file
+     * This option can also be loaded from an existing file, by prefixing with
+     * file: or classpath: followed by the location of the file.
+     * 
+     * @param path smooksConfig
+     * @return the dsl builder
+     */
+    public static SmooksEndpointBuilderFactory.SmooksEndpointBuilder smooks(String path) {
+        return smooks("smooks", path);
+    }
+    /**
+     * Smooks (camel-smooks)
+     * EDI, XML, CSV, etc. based data transformation using Smooks.
+     * 
+     * Category: transformation
+     * Since: 4.7
+     * Maven coordinates: org.apache.camel:camel-smooks
+     * 
+     * Syntax: <code>smooks:smooksConfig</code>
+     * 
+     * Path parameter: smooksConfig (required)
+     * Smooks XML configuration file
+     * This option can also be loaded from an existing file, by prefixing with
+     * file: or classpath: followed by the location of the file.
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path smooksConfig
+     * @return the dsl builder
+     */
+    public static SmooksEndpointBuilderFactory.SmooksEndpointBuilder smooks(String componentName, String path) {
+        return SmooksEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * SMPP (camel-smpp)
      * Send and receive SMS messages using a SMSC (Short Message Service
      * Center).
@@ -13987,7 +14134,7 @@ public class StaticEndpointBuilders {
      * 
      * Syntax: <code>thrift:host:port/service</code>
      * 
-     * Path parameter: host
+     * Path parameter: host (required)
      * The Thrift server host name. This is localhost or 0.0.0.0 (if not
      * defined) when being a consumer or remote server host name when using
      * producer.
@@ -14016,7 +14163,7 @@ public class StaticEndpointBuilders {
      * 
      * Syntax: <code>thrift:host:port/service</code>
      * 
-     * Path parameter: host
+     * Path parameter: host (required)
      * The Thrift server host name. This is localhost or 0.0.0.0 (if not
      * defined) when being a consumer or remote server host name when using
      * producer.

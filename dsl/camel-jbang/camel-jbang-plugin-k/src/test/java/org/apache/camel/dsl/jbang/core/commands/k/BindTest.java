@@ -155,7 +155,6 @@ class BindTest extends KubeBaseTest {
                         mount:
                           configs:
                           - configmap:my-cm
-                          hotReload: false
                   source:
                     ref:
                       kind: Kamelet
@@ -195,7 +194,7 @@ class BindTest extends KubeBaseTest {
                   integration:
                     spec:
                       traits:
-                        serviceBinding:
+                        service-binding:
                           services:
                           - serving.knative.dev/v1:Service:my-service
                   source:

@@ -218,8 +218,27 @@ public final class StringHelper {
         // must replace amp first, so we dont replace &lt; to amp later
         return text.replace("&", "&amp;")
                 .replace("\"", "&quot;")
+                .replace("'", "&apos;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;");
+    }
+
+    /**
+     * Decodes the text into safe XML by replacing XML tokens with character values
+     *
+     * @param  text the text
+     * @return      the encoded text
+     */
+    public static String xmlDecode(final String text) {
+        if (text == null) {
+            return "";
+        }
+        // must replace amp first, so we dont replace &lt; to amp later
+        return text.replace("&amp;", "&")
+                .replace("&quot;", "\"")
+                .replace("&apos;", "'")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">");
     }
 
     /**
@@ -249,7 +268,7 @@ public final class StringHelper {
     public static boolean isClassName(String text) {
         if (text != null) {
             int lastIndexOf = text.lastIndexOf('.');
-            if (lastIndexOf <= 0 || lastIndexOf == text.length()) {
+            if (lastIndexOf <= 0) {
                 return false;
             }
 
@@ -1104,7 +1123,7 @@ public final class StringHelper {
         StringBuilder answer = new StringBuilder();
 
         Character prev = null;
-        Character next = null;
+        Character next;
         char[] arr = text.toCharArray();
         for (int i = 0; i < arr.length; i++) {
             char ch = arr[i];

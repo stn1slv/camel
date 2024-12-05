@@ -36,14 +36,14 @@ public class SplitterParallelIssueTest extends ContextTestSupport {
         MockEndpoint mock = getMockEndpoint("mock:end");
         int size = 20;
         mock.expectedMessageCount(size);
-        int time = Math.max(10000, size * 2 * delay);
+        int time = 10000;
         mock.setResultWaitTime(time);
 
         for (int i = 0; i < size; i++) {
             final int num = i;
             new Thread(new Runnable() {
                 public void run() {
-                    template.sendBody("direct:start", "" + num);
+                    template.sendBody("direct:start", Integer.toString(num));
                 }
             }).start();
         }
@@ -61,7 +61,7 @@ public class SplitterParallelIssueTest extends ContextTestSupport {
                             @Override
                             public void process(Exchange exchange) throws Exception {
                                 int num = exchange.getIn().getBody(int.class);
-                                final long sleep = num * delay;
+                                final long sleep = (long) num * delay;
                                 log.info("Sleep for {} ms", sleep);
                                 Thread.sleep(sleep);
                             }

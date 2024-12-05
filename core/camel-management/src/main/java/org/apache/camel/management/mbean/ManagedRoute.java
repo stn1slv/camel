@@ -63,7 +63,7 @@ import org.apache.camel.spi.ManagementStrategy;
 import org.apache.camel.spi.RoutePolicy;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.ObjectHelper;
-import org.apache.camel.xml.jaxb.JaxbHelper;
+import org.apache.camel.xml.LwModelHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -697,7 +697,7 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
         // convert to model from xml
         ExtendedCamelContext ecc = context.getCamelContextExtension();
         InputStream is = context.getTypeConverter().convertTo(InputStream.class, xml);
-        RoutesDefinition routes = JaxbHelper.loadRoutesDefinition(context, is);
+        RoutesDefinition routes = LwModelHelper.loadRoutesDefinition(is);
         if (routes == null || routes.getRoutes().isEmpty()) {
             return;
         }
@@ -731,6 +731,14 @@ public class ManagedRoute extends ManagedPerformanceCounter implements TimerList
         // check whether this is allowed
         Boolean enabled = context.getManagementStrategy().getManagementAgent().getUpdateRouteEnabled();
         return enabled != null ? enabled : false;
+    }
+
+    @Override
+    public boolean isRemoteEndpoint() {
+        if (route.getEndpoint() != null) {
+            return route.getEndpoint().isRemote();
+        }
+        return false;
     }
 
     @Override

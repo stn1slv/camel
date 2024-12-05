@@ -28,8 +28,10 @@ import org.apache.camel.component.kafka.MockConsumerInterceptor;
 import org.apache.camel.component.kafka.integration.common.KafkaAdminUtil;
 import org.apache.camel.component.kafka.testutil.CamelKafkaUtil;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.Uuid;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,12 +39,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Tags;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -53,14 +55,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Tags({ @Tag("breakOnFirstError") })
 @EnabledOnOs(value = { OS.LINUX, OS.MAC, OS.FREEBSD, OS.OPENBSD, OS.WINDOWS },
-             architectures = { "amd64", "aarch64", "s390x" },
-             disabledReason = "This test does not run reliably on ppc64le")
-@DisabledIfSystemProperty(named = "ci.env.name", matches = "github.com", disabledReason = "Too slow to run on Github CI")
-class KafkaBreakOnFirstErrorSeekIssueIT extends BaseExclusiveKafkaTestSupport {
+             architectures = { "amd64", "aarch64", "ppc64le" },
+             disabledReason = "This test does not run reliably on some platforms")
 
-    public static final String ROUTE_ID = "breakOnFirstError-19894";
-    public static final String TOPIC = "breakOnFirstError-19894";
+class KafkaBreakOnFirstErrorSeekIssueIT extends BaseKafkaTestSupport {
 
+    public static final String ROUTE_ID = "breakOnFirstError-19894" + Uuid.randomUuid().toString();
+    public static final String TOPIC = "breakOnFirstError-19894" + Uuid.randomUuid().toString();
+    public static final int PARTITION_COUNT = 2;
     private static final Logger LOG = LoggerFactory.getLogger(KafkaBreakOnFirstErrorSeekIssueIT.class);
 
     @EndpointInject("mock:result")
@@ -74,9 +76,16 @@ class KafkaBreakOnFirstErrorSeekIssueIT extends BaseExclusiveKafkaTestSupport {
             kafkaAdminClient = KafkaAdminUtil.createAdminClient(service);
         }
 
-        // create the topic w/ 2 partitions
-        final NewTopic mytopic = new NewTopic(TOPIC, 2, (short) 1);
-        kafkaAdminClient.createTopics(Collections.singleton(mytopic));
+        // create the topic w/ more than 1 partitions
+        final NewTopic mytopic = new NewTopic(TOPIC, PARTITION_COUNT, (short) 1);
+        CreateTopicsResult r = kafkaAdminClient.createTopics(Collections.singleton(mytopic));
+
+        // This wait is necessary to ensure that required number of partitions are actually created
+        Awaitility.await()
+                .timeout(180, TimeUnit.SECONDS)
+                .pollDelay(5, TimeUnit.SECONDS)
+                .untilAsserted(() -> assertTrue(r.numPartitions(TOPIC).isDone()));
+
     }
 
     @BeforeEach
@@ -95,36 +104,40 @@ class KafkaBreakOnFirstErrorSeekIssueIT extends BaseExclusiveKafkaTestSupport {
         }
         // clean all test topics
         kafkaAdminClient.deleteTopics(Collections.singletonList(TOPIC)).all();
+        // if more tests are added later, then also check DeleteTopicResult::all().isDone() to avoid concurrency issues
     }
 
     @Test
     void testCamel19894TestFix() throws Exception {
         to.reset();
-        // will consume the payloads from partition 0
-        // and will continually retry the payload with "5"
-        to.expectedMessageCount(4);
-        to.expectedBodiesReceived("1", "2", "3", "4");
+        // will consume the payloads from partition 0 & 1
+        // and will continually retry the payload with "7" and "3"
+        // 2 messages from partition 0 and 3 from partition 1 are read before exceptions are raised.
+        to.expectedMessageCount(5);
+
+        to.expectedBodiesReceivedInAnyOrder("5", "6", "7", "1", "2");
+        // Messages 1, 2 are read in-order from partition 0,
+        // and 5, 6, 7 are read in-order from partition 1
 
         contextExtension.getContext().getRouteController().stopRoute(ROUTE_ID);
+
+        assertEquals(PARTITION_COUNT, producer.partitionsFor(TOPIC).size());
+        //Test relies on multiple partitions but expects the poller to stop reading after the errored message
+        // Increase the delay in setupTopic if this assert fails too frequently
 
         this.publishMessagesToKafka();
 
         contextExtension.getContext().getRouteController().startRoute(ROUTE_ID);
 
-        // let test run for awhile
-        Awaitility.await()
-                .timeout(10, TimeUnit.SECONDS)
-                .pollDelay(8, TimeUnit.SECONDS)
-                .untilAsserted(() -> assertTrue(true));
-
-        // the replaying of the message with an error
-        // will prevent other paylods from being
+        // the replaying of the message 3 and 8 with an error
+        // will prevent other payloads from the same partition being
         // processed
-        to.assertIsSatisfied();
+        to.assertIsSatisfied(60000); //wait up to 60 sec (changed from a wait of fixed duration)
     }
 
     @Override
     protected RouteBuilder createRouteBuilder() {
+
         return new RouteBuilder() {
 
             @Override
@@ -136,6 +149,7 @@ class KafkaBreakOnFirstErrorSeekIssueIT extends BaseExclusiveKafkaTestSupport {
                      + "&allowManualCommit=true"
                      + "&breakOnFirstError=true"
                      + "&maxPollRecords=8"
+                     + "&consumersCount=" + PARTITION_COUNT //ensure the other partition is still read from, when one is stuck due to breakOnFirstError
                      + "&metadataMaxAgeMs=1000"
                      + "&pollTimeoutMs=1000"
                      + "&keyDeserializer=org.apache.kafka.common.serialization.StringDeserializer"
@@ -158,7 +172,8 @@ class KafkaBreakOnFirstErrorSeekIssueIT extends BaseExclusiveKafkaTestSupport {
     }
 
     private void ifIsFifthRecordThrowException(Exchange e) {
-        if (e.getMessage().getBody().equals("5")) {
+        if (e.getMessage().getBody().equals("8") || e.getMessage().getBody().equals("3")) {
+            //Message 3 from partition 0, and 8 from partition 1 will be retried indefinitely
             throw new RuntimeException("ERROR_TRIGGERED_BY_TEST");
         }
     }
@@ -167,15 +182,18 @@ class KafkaBreakOnFirstErrorSeekIssueIT extends BaseExclusiveKafkaTestSupport {
         final List<String> producedRecordsPartition1 = List.of("5", "6", "7", "8", "9", "10", "11");
         final List<String> producedRecordsPartition0 = List.of("1", "2", "3", "4");
 
-        producedRecordsPartition1.forEach(v -> {
-            ProducerRecord<String, String> data = new ProducerRecord<>(TOPIC, 1, null, null, v);
+        producedRecordsPartition0.forEach(v -> {
+            ProducerRecord<String, String> data = new ProducerRecord<>(TOPIC, 0, "k0", v); //CAMEL-20680: kept explicit partition 0, added key.
             producer.send(data);
         });
 
-        producedRecordsPartition0.forEach(v -> {
-            ProducerRecord<String, String> data = new ProducerRecord<>(TOPIC, 0, null, null, v);
+        producedRecordsPartition1.forEach(v -> {
+            ProducerRecord<String, String> data = new ProducerRecord<>(TOPIC, 1, "k1", v);
             producer.send(data);
-        });
+        });  //CAMEL-20680: restored loop that publishes to partition1, but with reduced execution time
+        // See changes in setupTopic() and testCamel19894TestFix just before publishMessagesToKafka().
+        // This loop is required by the original fix for CAMEL-19894
+
     }
 
 }
