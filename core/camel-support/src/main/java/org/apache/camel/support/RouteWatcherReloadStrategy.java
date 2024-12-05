@@ -301,6 +301,11 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
                     Route route = getCamelContext().getRoute(id);
                     if (route != null) {
                         ServiceStatus status = getCamelContext().getRouteController().getRouteStatus(id);
+                        if (status == null) {
+                            // undefined status of route (should not really happen)
+                            LOG.warn("Cannot get route status for route: {}. This route is skipped.", id);
+                            continue;
+                        }
                         if (ServiceStatus.Started.equals(status)) {
                             started++;
                         }
@@ -314,7 +319,7 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
                         lines.add(String.format("    %s %s (%s) (source: %s)", status, id, uri, loc));
                     }
                 }
-                LOG.info(String.format("Routes reloaded summary (total:%s started:%s)", total, started));
+                LOG.info("Routes reloaded summary (total:{} started:{})", total, started);
                 // if we are default/verbose then log each route line
                 if (getCamelContext().getStartupSummaryLevel() == StartupSummaryLevel.Default
                         || getCamelContext().getStartupSummaryLevel() == StartupSummaryLevel.Verbose) {
@@ -329,7 +334,9 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
             int total = ids.size();
             for (String id : ids) {
                 Route route = getCamelContext().getRoute(id);
-                EventHelper.notifyRouteReloaded(getCamelContext(), route, index++, total);
+                if (route != null) {
+                    EventHelper.notifyRouteReloaded(getCamelContext(), route, index++, total);
+                }
             }
 
             if (!removeAllRoutes) {
@@ -338,7 +345,7 @@ public class RouteWatcherReloadStrategy extends FileWatcherResourceReloadStrateg
                 StringJoiner sj = new StringJoiner("\n    ");
                 for (String id : ids) {
                     Route route = getCamelContext().getRoute(id);
-                    if (!route.isCustomId()) {
+                    if (route != null && !route.isCustomId()) {
                         sj.add(route.getEndpoint().getEndpointUri());
                     }
                 }

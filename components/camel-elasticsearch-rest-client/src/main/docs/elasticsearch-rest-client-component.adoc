@@ -80,13 +80,15 @@ You may also provide a header with the key `INDEX_SETTINGS` where the value is a
 |`DELETE_INDEX` | |Deletes the specified `indexName` and returns a `boolean` value as the message exchange body, indicating whether the operation was successful.
 You can set the name of the target index to create from the `indexName` URI parameter option, or by providing a message header with the key `INDEX_NAME`.
 
-|`SEARCH` |`Map (optional) |Search for content with either a `Map` of `String` keys & values of query criteria. Or a JSON string representation of the query. Matching documents are returned as a JSON string set on the message exchange body.
+|`SEARCH` |`Map` (optional) |Search for content with either a `Map` of `String` keys & values of query criteria. Or a JSON string representation of the query. Matching documents are returned as a JSON string set on the message exchange body.
 You can set the JSON query String by providing a message header with the key `SEARCH_QUERY`.
 You can set the message exchange body to a `Map` of `String` keys & values for the query criteria.
 
 |===
 
-== Index Content Example
+== Examples
+
+=== Index Content Example
 
 To index some content.
 
@@ -107,7 +109,7 @@ from("direct:index")
     .to("elasticsearch-rest-client://myCluster?operation=INDEX_OR_UPDATE&indexName=myIndex");
 ----
 
-== Get By ID Example
+=== Get By ID Example
 
 [source,java]
 ----
@@ -116,7 +118,7 @@ from("direct:getById")
     .to("elasticsearch-rest-client://myCluster?operation=GET_BY_ID&indexName=myIndex");
 ----
 
-== Delete Example
+=== Delete Example
 
 To delete indexed content, provide the `ID` message header.
 
@@ -127,7 +129,7 @@ from("direct:getById")
     .to("elasticsearch-rest-client://myCluster?operation=DELETE&indexName=myIndex");
 ----
 
-== Create Index Example
+=== Create Index Example
 
 To create a new index.
 
@@ -151,7 +153,7 @@ from("direct:createIndex")
     .to("elasticsearch-rest-client://myCluster?operation=CREATE_INDEX&indexName=myIndex");
 ----
 
-== Delete Index Example
+=== Delete Index Example
 
 To delete an index.
 
@@ -161,7 +163,7 @@ from("direct:deleteIndex")
     .to("elasticsearch-rest-client://myCluster?operation=DELETE_INDEX&indexName=myIndex");
 ----
 
-== Search Example
+=== Search Example
 
 Search with a JSON query.
 

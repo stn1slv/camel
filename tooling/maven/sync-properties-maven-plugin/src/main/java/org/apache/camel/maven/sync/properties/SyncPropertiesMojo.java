@@ -32,7 +32,9 @@ import java.util.stream.Stream;
 
 import org.apache.camel.tooling.util.FileUtil;
 import org.apache.camel.util.IOHelper;
+import org.apache.camel.util.ObjectHelper;
 import org.apache.maven.model.Model;
+import org.apache.maven.model.Parent;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -100,6 +102,22 @@ public class SyncPropertiesMojo extends AbstractMojo {
     private List<String> propertyIncludes;
 
     /**
+     * Check for invalid versions
+     *
+     * @since 4.9.0
+     */
+    @Parameter(defaultValue = "false")
+    private Boolean checkForInvalidVersions;
+
+    /**
+     * List of regular expressions with invalid versions
+     *
+     * @since 4.9.0
+     */
+    @Parameter(defaultValue = ".*[^\\-]version")
+    private List<String> propertyInvalidVersions;
+
+    /**
      * List of regular expressions to ignore from {@link #sourcePomXml}
      *
      * @since 4.0.0
@@ -152,6 +170,27 @@ public class SyncPropertiesMojo extends AbstractMojo {
 
         final Predicate<String> includes = toPredicate(propertyIncludes, true);
         final Predicate<String> excludes = toPredicate(propertyExcludes, false);
+        final Predicate<String> invalids = toPredicate(propertyInvalidVersions, true);
+
+        // Check for versions that do not fit the .*-version pattern and log an error
+        // Enforce the .*-version standard
+        if (checkForInvalidVersions.booleanValue()) {
+            List invalidProperties = Stream.concat(camelParentPomXmlModel.getProperties().entrySet().stream(),
+                    camelPomXmlModel.getProperties().entrySet().stream()
+                            .filter(property -> !(property.getKey().equals("jdk.version"))))
+                    .filter(property -> invalids.test((String) property.getKey()) && !excludes.test((String) property.getKey()))
+                    .map(property -> property.getKey())
+                    .sorted()
+                    .collect(Collectors.toList());
+
+            if (invalidProperties.size() > 0) {
+                throw new MojoExecutionException(
+                        "sync-properties-maven-plugin will only synchronize properties matching "
+                                                 + propertyIncludes + ".  " + "Properties were found that will not be synced "
+                                                 + invalidProperties.toString());
+            }
+        }
+
         final String properties = Stream.concat(
                 camelParentPomXmlModel.getProperties().entrySet().stream(),
                 camelPomXmlModel.getProperties().entrySet().stream()
@@ -161,8 +200,20 @@ public class SyncPropertiesMojo extends AbstractMojo {
                 .sorted()
                 .collect(Collectors.joining("\n        "));
 
+        final Parent parent = camelPomXmlModel.getParent();
+        if (parent == null || !parent.getGroupId().equals("org.apache") || !parent.getArtifactId().equals("apache")) {
+            throw new MojoExecutionException("Unexpected parent groupId / artifactId in parent " + camelPomXmlPath);
+        }
+
+        final String apacheParentVersion = parent.getVersion();
+        if (ObjectHelper.isEmpty(apacheParentVersion)) {
+            throw new MojoExecutionException(
+                    "Unable to determine the version of org.apache:apache parent from " + camelPomXmlPath);
+        }
+
         try {
             final String camelPropertiesContent = template
+                    .replace("@apache-parent-version@", apacheParentVersion)
                     .replace("@version@", version)
                     .replace("@properties@", properties);
 

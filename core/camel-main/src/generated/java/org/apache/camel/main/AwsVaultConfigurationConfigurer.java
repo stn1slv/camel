@@ -35,6 +35,12 @@ public class AwsVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "gcpVaultConfiguration": target.setGcpVaultConfiguration(property(camelContext, org.apache.camel.vault.GcpVaultConfiguration.class, value)); return true;
         case "hashicorpvaultconfiguration":
         case "hashicorpVaultConfiguration": target.setHashicorpVaultConfiguration(property(camelContext, org.apache.camel.vault.HashicorpVaultConfiguration.class, value)); return true;
+        case "kubernetesconfigmapvaultconfiguration":
+        case "kubernetesConfigMapVaultConfiguration": target.setKubernetesConfigMapVaultConfiguration(property(camelContext, org.apache.camel.vault.KubernetesConfigMapVaultConfiguration.class, value)); return true;
+        case "kubernetesvaultconfiguration":
+        case "kubernetesVaultConfiguration": target.setKubernetesVaultConfiguration(property(camelContext, org.apache.camel.vault.KubernetesVaultConfiguration.class, value)); return true;
+        case "overrideendpoint":
+        case "overrideEndpoint": target.setOverrideEndpoint(property(camelContext, boolean.class, value)); return true;
         case "profilecredentialsprovider":
         case "profileCredentialsProvider": target.setProfileCredentialsProvider(property(camelContext, boolean.class, value)); return true;
         case "profilename":
@@ -47,6 +53,12 @@ public class AwsVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "secretkey":
         case "secretKey": target.setSecretKey(property(camelContext, java.lang.String.class, value)); return true;
         case "secrets": target.setSecrets(property(camelContext, java.lang.String.class, value)); return true;
+        case "sqsqueueurl":
+        case "sqsQueueUrl": target.setSqsQueueUrl(property(camelContext, java.lang.String.class, value)); return true;
+        case "uriendpointoverride":
+        case "uriEndpointOverride": target.setUriEndpointOverride(property(camelContext, java.lang.String.class, value)); return true;
+        case "usesqsnotification":
+        case "useSqsNotification": target.setUseSqsNotification(property(camelContext, boolean.class, value)); return true;
         default: return false;
         }
     }
@@ -66,6 +78,12 @@ public class AwsVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "gcpVaultConfiguration": return org.apache.camel.vault.GcpVaultConfiguration.class;
         case "hashicorpvaultconfiguration":
         case "hashicorpVaultConfiguration": return org.apache.camel.vault.HashicorpVaultConfiguration.class;
+        case "kubernetesconfigmapvaultconfiguration":
+        case "kubernetesConfigMapVaultConfiguration": return org.apache.camel.vault.KubernetesConfigMapVaultConfiguration.class;
+        case "kubernetesvaultconfiguration":
+        case "kubernetesVaultConfiguration": return org.apache.camel.vault.KubernetesVaultConfiguration.class;
+        case "overrideendpoint":
+        case "overrideEndpoint": return boolean.class;
         case "profilecredentialsprovider":
         case "profileCredentialsProvider": return boolean.class;
         case "profilename":
@@ -78,6 +96,12 @@ public class AwsVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "secretkey":
         case "secretKey": return java.lang.String.class;
         case "secrets": return java.lang.String.class;
+        case "sqsqueueurl":
+        case "sqsQueueUrl": return java.lang.String.class;
+        case "uriendpointoverride":
+        case "uriEndpointOverride": return java.lang.String.class;
+        case "usesqsnotification":
+        case "useSqsNotification": return boolean.class;
         default: return null;
         }
     }
@@ -98,6 +122,12 @@ public class AwsVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "gcpVaultConfiguration": return target.getGcpVaultConfiguration();
         case "hashicorpvaultconfiguration":
         case "hashicorpVaultConfiguration": return target.getHashicorpVaultConfiguration();
+        case "kubernetesconfigmapvaultconfiguration":
+        case "kubernetesConfigMapVaultConfiguration": return target.getKubernetesConfigMapVaultConfiguration();
+        case "kubernetesvaultconfiguration":
+        case "kubernetesVaultConfiguration": return target.getKubernetesVaultConfiguration();
+        case "overrideendpoint":
+        case "overrideEndpoint": return target.isOverrideEndpoint();
         case "profilecredentialsprovider":
         case "profileCredentialsProvider": return target.isProfileCredentialsProvider();
         case "profilename":
@@ -110,6 +140,12 @@ public class AwsVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "secretkey":
         case "secretKey": return target.getSecretKey();
         case "secrets": return target.getSecrets();
+        case "sqsqueueurl":
+        case "sqsQueueUrl": return target.getSqsQueueUrl();
+        case "uriendpointoverride":
+        case "uriEndpointOverride": return target.getUriEndpointOverride();
+        case "usesqsnotification":
+        case "useSqsNotification": return target.isUseSqsNotification();
         default: return null;
         }
     }

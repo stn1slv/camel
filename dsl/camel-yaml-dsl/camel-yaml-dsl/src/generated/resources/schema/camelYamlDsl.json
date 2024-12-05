@@ -88,6 +88,9 @@
           "policy" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.PolicyDefinition"
           },
+          "poll" : {
+            "$ref" : "#/items/definitions/org.apache.camel.model.PollDefinition"
+          },
           "pollEnrich" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.PollEnrichDefinition"
           },
@@ -181,6 +184,9 @@
           "toD" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.ToDynamicDefinition"
           },
+          "tokenizer" : {
+            "$ref" : "#/items/definitions/org.apache.camel.model.TokenizerDefinition"
+          },
           "transacted" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.TransactedDefinition"
           },
@@ -215,6 +221,13 @@
         "additionalProperties" : false,
         "items" : {
           "$ref" : "#/items/definitions/org.apache.camel.model.BeanFactoryDefinition"
+        }
+      },
+      "org.apache.camel.dsl.yaml.deserializers.DataFormatsDefinitionDeserializer" : {
+        "type" : "array",
+        "additionalProperties" : false,
+        "items" : {
+          "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.DataFormatsDefinition"
         }
       },
       "org.apache.camel.dsl.yaml.deserializers.ErrorHandlerDeserializer" : {
@@ -1421,12 +1434,12 @@
           "variableReceive" : {
             "type" : "string",
             "title" : "Variable Receive",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current message, however the headers from the message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
           },
           "variableSend" : {
             "type" : "string",
             "title" : "Variable Send",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using receive variable then the received body is stored only in this variable and not on the current message."
           },
           "constant" : { },
           "csimple" : { },
@@ -2622,7 +2635,7 @@
             "logName" : {
               "type" : "string",
               "title" : "Log Name",
-              "description" : "Sets the name of the logger"
+              "description" : "Sets the name of the logger. The name is default the routeId or the source:line if source location is enabled. You can also specify the name using tokens: ${class} - the logger class name (org.apache.camel.processor.LogProcessor) ${contextId} - the camel context id ${routeId} - the route id ${groupId} - the route group id ${nodeId} - the node id ${nodePrefixId} - the node prefix id ${source} - the source:line (source location must be enabled) ${source.name} - the source filename (source location must be enabled) ${source.line} - the source line number (source location must be enabled) For example to use the route and node id you can specify the name as: ${routeId}/${nodeId}"
             },
             "logger" : {
               "type" : "string",
@@ -2837,6 +2850,8 @@
               }, {
                 "required" : [ "flatpack" ]
               }, {
+                "required" : [ "fury" ]
+              }, {
                 "required" : [ "grok" ]
               }, {
                 "required" : [ "gzipDeflater" ]
@@ -2864,6 +2879,8 @@
                 "required" : [ "protobuf" ]
               }, {
                 "required" : [ "rss" ]
+              }, {
+                "required" : [ "smooks" ]
               }, {
                 "required" : [ "soap" ]
               }, {
@@ -2992,6 +3009,14 @@
             }
           }, {
             "type" : "object",
+            "required" : [ "fury" ],
+            "properties" : {
+              "fury" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.FuryDataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
             "required" : [ "grok" ],
             "properties" : {
               "grok" : {
@@ -3100,6 +3125,14 @@
             "properties" : {
               "rss" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.RssDataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "smooks" ],
+            "properties" : {
+              "smooks" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.SmooksDataFormat"
               }
             }
           }, {
@@ -3235,12 +3268,12 @@
           "variableReceive" : {
             "type" : "string",
             "title" : "Variable Receive",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using receive variable then the received body is stored only in this variable and not on the current message."
           },
           "variableSend" : {
             "type" : "string",
             "title" : "Variable Send",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current message, however the headers from the message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
           },
           "asn1" : { },
           "avro" : { },
@@ -3255,6 +3288,7 @@
           "fhirJson" : { },
           "fhirXml" : { },
           "flatpack" : { },
+          "fury" : { },
           "grok" : { },
           "gzipDeflater" : { },
           "hl7" : { },
@@ -3269,6 +3303,7 @@
           "pgp" : { },
           "protobuf" : { },
           "rss" : { },
+          "smooks" : { },
           "soap" : { },
           "swiftMt" : { },
           "swiftMx" : { },
@@ -3334,7 +3369,8 @@
           "parallelAggregate" : {
             "type" : "boolean",
             "title" : "Parallel Aggregate",
-            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe."
+            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe.",
+            "deprecated" : true
           },
           "parallelProcessing" : {
             "type" : "boolean",
@@ -3806,6 +3842,53 @@
         },
         "required" : [ "ref" ]
       },
+      "org.apache.camel.model.PollDefinition" : {
+        "title" : "Poll",
+        "description" : "Polls a message from a static endpoint",
+        "oneOf" : [ {
+          "type" : "string"
+        }, {
+          "type" : "object",
+          "additionalProperties" : false,
+          "properties" : {
+            "description" : {
+              "type" : "string",
+              "title" : "Description",
+              "description" : "Sets the description of this node"
+            },
+            "disabled" : {
+              "type" : "boolean",
+              "title" : "Disabled",
+              "description" : "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime."
+            },
+            "id" : {
+              "type" : "string",
+              "title" : "Id",
+              "description" : "Sets the id of this node"
+            },
+            "parameters" : {
+              "type" : "object"
+            },
+            "timeout" : {
+              "type" : "string",
+              "title" : "Timeout",
+              "description" : "Timeout in millis when polling from the external service. The timeout has influence about the poll enrich behavior. It basically operations in three different modes: negative value - Waits until a message is available and then returns it. Warning that this method could block indefinitely if no messages are available. 0 - Attempts to receive a message exchange immediately without waiting and returning null if a message exchange is not available yet. positive value - Attempts to receive a message exchange, waiting up to the given timeout to expire if a message is not yet available. Returns null if timed out The default value is 20000 (20 seconds).",
+              "default" : "20000"
+            },
+            "uri" : {
+              "type" : "string",
+              "title" : "Uri",
+              "description" : "Sets the uri of the endpoint to poll from."
+            },
+            "variableReceive" : {
+              "type" : "string",
+              "title" : "Variable Receive",
+              "description" : "To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using receive variable then the received body is stored only in this variable and not on the current message."
+            }
+          }
+        } ],
+        "required" : [ "uri" ]
+      },
       "org.apache.camel.model.PollEnrichDefinition" : {
         "title" : "Poll Enrich",
         "description" : "Enriches messages with data polled from a secondary resource",
@@ -3944,7 +4027,7 @@
           "variableReceive" : {
             "type" : "string",
             "title" : "Variable Receive",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using receive variable then the received body is stored only in this variable and not on the current message."
           },
           "constant" : { },
           "csimple" : { },
@@ -4275,7 +4358,8 @@
           "parallelAggregate" : {
             "type" : "boolean",
             "title" : "Parallel Aggregate",
-            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe."
+            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe.",
+            "deprecated" : true
           },
           "parallelProcessing" : {
             "type" : "boolean",
@@ -6584,7 +6668,8 @@
           "parallelAggregate" : {
             "type" : "boolean",
             "title" : "Parallel Aggregate",
-            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe."
+            "description" : "If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance when the AggregationStrategy is implemented as thread-safe.",
+            "deprecated" : true
           },
           "parallelProcessing" : {
             "type" : "boolean",
@@ -7128,12 +7213,12 @@
             "variableReceive" : {
               "type" : "string",
               "title" : "Variable Receive",
-              "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+              "description" : "To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using receive variable then the received body is stored only in this variable and not on the current message."
             },
             "variableSend" : {
               "type" : "string",
               "title" : "Variable Send",
-              "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current Message , however the headers from the Message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
+              "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current message, however the headers from the message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
             }
           }
         } ],
@@ -7205,11 +7290,105 @@
             "variableSend" : {
               "type" : "string",
               "title" : "Variable Send",
-              "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+              "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current message, however the headers from the message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
             }
           }
         } ],
         "required" : [ "uri" ]
+      },
+      "org.apache.camel.model.TokenizerDefinition" : {
+        "title" : "Specialized tokenizer for AI applications",
+        "description" : "Represents a Camel tokenizer for AI.",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "title" : "Description",
+            "description" : "Sets the description of this node"
+          },
+          "disabled" : {
+            "type" : "boolean",
+            "title" : "Disabled",
+            "description" : "Whether to disable this EIP from the route during build time. Once an EIP has been disabled then it cannot be enabled later at runtime."
+          },
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "Sets the id of this node"
+          },
+          "langChain4jCharacterTokenizer" : { },
+          "langChain4jLineTokenizer" : { },
+          "langChain4jParagraphTokenizer" : { },
+          "langChain4jSentenceTokenizer" : { },
+          "langChain4jWordTokenizer" : { }
+        },
+        "anyOf" : [ {
+          "oneOf" : [ {
+            "type" : "object",
+            "required" : [ "langChain4jCharacterTokenizer" ],
+            "properties" : {
+              "langChain4jCharacterTokenizer" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.tokenizer.LangChain4jCharacterTokenizerDefinition"
+              }
+            }
+          }, {
+            "not" : {
+              "anyOf" : [ {
+                "required" : [ "langChain4jCharacterTokenizer" ]
+              }, {
+                "required" : [ "langChain4jLineTokenizer" ]
+              }, {
+                "required" : [ "langChain4jParagraphTokenizer" ]
+              }, {
+                "required" : [ "langChain4jSentenceTokenizer" ]
+              }, {
+                "required" : [ "langChain4jWordTokenizer" ]
+              } ]
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "langChain4jLineTokenizer" ],
+            "properties" : {
+              "langChain4jLineTokenizer" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.tokenizer.LangChain4jTokenizerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "langChain4jParagraphTokenizer" ],
+            "properties" : {
+              "langChain4jParagraphTokenizer" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.tokenizer.LangChain4jParagraphTokenizerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "langChain4jSentenceTokenizer" ],
+            "properties" : {
+              "langChain4jSentenceTokenizer" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.tokenizer.LangChain4jSentenceTokenizerDefinition"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "langChain4jWordTokenizer" ],
+            "properties" : {
+              "langChain4jWordTokenizer" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.tokenizer.LangChain4jWordTokenizerDefinition"
+              }
+            }
+          } ]
+        } ]
+      },
+      "org.apache.camel.model.TokenizerImplementationDefinition" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          }
+        }
       },
       "org.apache.camel.model.TransactedDefinition" : {
         "title" : "Transacted",
@@ -7445,12 +7624,12 @@
           "variableReceive" : {
             "type" : "string",
             "title" : "Variable Receive",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using receive variable then the received body is stored only in this variable and not on the current message."
           },
           "variableSend" : {
             "type" : "string",
             "title" : "Variable Send",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current message, however the headers from the message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
           },
           "asn1" : { },
           "avro" : { },
@@ -7465,6 +7644,7 @@
           "fhirJson" : { },
           "fhirXml" : { },
           "flatpack" : { },
+          "fury" : { },
           "grok" : { },
           "gzipDeflater" : { },
           "hl7" : { },
@@ -7479,6 +7659,7 @@
           "pgp" : { },
           "protobuf" : { },
           "rss" : { },
+          "smooks" : { },
           "soap" : { },
           "swiftMt" : { },
           "swiftMx" : { },
@@ -7532,6 +7713,8 @@
               }, {
                 "required" : [ "flatpack" ]
               }, {
+                "required" : [ "fury" ]
+              }, {
                 "required" : [ "grok" ]
               }, {
                 "required" : [ "gzipDeflater" ]
@@ -7559,6 +7742,8 @@
                 "required" : [ "protobuf" ]
               }, {
                 "required" : [ "rss" ]
+              }, {
+                "required" : [ "smooks" ]
               }, {
                 "required" : [ "soap" ]
               }, {
@@ -7687,6 +7872,14 @@
             }
           }, {
             "type" : "object",
+            "required" : [ "fury" ],
+            "properties" : {
+              "fury" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.FuryDataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
             "required" : [ "grok" ],
             "properties" : {
               "grok" : {
@@ -7795,6 +7988,14 @@
             "properties" : {
               "rss" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.RssDataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "smooks" ],
+            "properties" : {
+              "smooks" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.SmooksDataFormat"
               }
             }
           }, {
@@ -8398,7 +8599,7 @@
           "variableSend" : {
             "type" : "string",
             "title" : "Variable Send",
-            "description" : "To use a variable to store the received message body (only body, not headers). This is handy for easy access to the received message body via variables. Important: When using receive variable then the received body is stored only in this variable and not on the current org.apache.camel.Message ."
+            "description" : "To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to easily control what data to use for sending and receiving. Important: When using send variable then the message body is taken from this variable instead of the current message, however the headers from the message will still be used as well. In other words, the variable is used instead of the message body, but everything else is as usual."
           }
         },
         "required" : [ "uri" ]
@@ -10286,7 +10487,7 @@
             "quote" : {
               "type" : "string",
               "title" : "Quote",
-              "description" : "Sets the quote which by default is"
+              "description" : "Sets the quote to use which by default is double-quote character"
             },
             "quoteDisabled" : {
               "type" : "boolean",
@@ -10410,6 +10611,9 @@
           "flatpack" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.FlatpackDataFormat"
           },
+          "fury" : {
+            "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.FuryDataFormat"
+          },
           "grok" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.GrokDataFormat"
           },
@@ -10451,6 +10655,9 @@
           },
           "rss" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.RssDataFormat"
+          },
+          "smooks" : {
+            "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.SmooksDataFormat"
           },
           "soap" : {
             "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.SoapDataFormat"
@@ -10757,6 +10964,39 @@
             "type" : "string",
             "title" : "Text Qualifier",
             "description" : "If the text is qualified with a character. Uses quote character by default."
+          }
+        }
+      },
+      "org.apache.camel.model.dataformat.FuryDataFormat" : {
+        "title" : "Fury",
+        "description" : "Serialize and deserialize messages using Apache Fury",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "allowAutoWiredFury" : {
+            "type" : "boolean",
+            "title" : "Allow Auto Wired Fury",
+            "description" : "Whether to auto-discover Fury from the registry"
+          },
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "requireClassRegistration" : {
+            "type" : "boolean",
+            "title" : "Require Class Registration",
+            "description" : "Whether to require register classes"
+          },
+          "threadSafe" : {
+            "type" : "boolean",
+            "title" : "Thread Safe",
+            "description" : "Whether to use the threadsafe fury"
+          },
+          "unmarshalType" : {
+            "type" : "string",
+            "title" : "Unmarshal Type",
+            "description" : "Class of the java type to use when unmarshalling"
           }
         }
       },
@@ -11106,6 +11346,11 @@
             "type" : "string",
             "title" : "Collection Type",
             "description" : "Refers to a custom collection type to lookup in the registry to use. This option should rarely be used, but allows using different collection types than java.util.Collection based as default."
+          },
+          "combineUnicodeSurrogates" : {
+            "type" : "boolean",
+            "title" : "Combine Unicode Surrogates",
+            "description" : "Force generator that outputs JSON content to combine surrogate pairs (if any) into 4-byte characters. This should be preferred when using 4-byte characters such as Japanese."
           },
           "contentTypeHeader" : {
             "type" : "boolean",
@@ -11513,6 +11758,25 @@
             "description" : "The id of this node"
           }
         }
+      },
+      "org.apache.camel.model.dataformat.SmooksDataFormat" : {
+        "title" : "Smooks",
+        "description" : "Transform and bind XML as well as non-XML data, including EDI, CSV, JSON, and YAML using Smooks.",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "smooksConfig" : {
+            "type" : "string",
+            "title" : "Smooks Config",
+            "description" : "Path to the Smooks configuration file."
+          }
+        },
+        "required" : [ "smooksConfig" ]
       },
       "org.apache.camel.model.dataformat.SoapDataFormat" : {
         "title" : "SOAP",
@@ -14307,6 +14571,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -14420,6 +14689,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -14532,6 +14806,11 @@
             "type" : "boolean",
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
+          },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
           },
           "to" : {
             "title" : "To",
@@ -14860,6 +15139,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -14973,6 +15257,11 @@
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
           },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
+          },
           "to" : {
             "title" : "To",
             "description" : "The Camel endpoint this REST service will call, such as a direct endpoint to link to an existing route that handles this REST call.",
@@ -15085,6 +15374,11 @@
             "type" : "boolean",
             "title" : "Skip Binding On Error Code",
             "description" : "Whether to skip binding on output if there is a custom HTTP error code header. This allows to build custom error messages that do not bind to json / xml etc, as success messages otherwise will do. This option will override what may be configured on a parent level"
+          },
+          "streamCache" : {
+            "type" : "boolean",
+            "title" : "Stream Cache",
+            "description" : "Whether stream caching is enabled on this rest operation."
           },
           "to" : {
             "title" : "To",
@@ -15660,6 +15954,171 @@
         },
         "required" : [ "key" ]
       },
+      "org.apache.camel.model.tokenizer.LangChain4jCharacterTokenizerDefinition" : {
+        "title" : "LangChain4J Tokenizer with character splitter",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "maxOverlap" : {
+            "type" : "number",
+            "title" : "Max Overlap",
+            "description" : "Sets the maximum number of tokens that can overlap in each segment"
+          },
+          "maxTokens" : {
+            "type" : "number",
+            "title" : "Max Tokens",
+            "description" : "Sets the maximum number of tokens on each segment"
+          },
+          "tokenizerType" : {
+            "type" : "string",
+            "title" : "Tokenizer Type",
+            "description" : "Sets the tokenizer type",
+            "enum" : [ "OPEN_AI", "AZURE", "QWEN" ]
+          }
+        },
+        "required" : [ "maxOverlap", "maxTokens" ]
+      },
+      "org.apache.camel.model.tokenizer.LangChain4jLineTokenizerDefinition" : {
+        "title" : "LangChain4J Tokenizer with line splitter",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "maxOverlap" : {
+            "type" : "number",
+            "title" : "Max Overlap",
+            "description" : "Sets the maximum number of tokens that can overlap in each segment"
+          },
+          "maxTokens" : {
+            "type" : "number",
+            "title" : "Max Tokens",
+            "description" : "Sets the maximum number of tokens on each segment"
+          },
+          "tokenizerType" : {
+            "type" : "string",
+            "title" : "Tokenizer Type",
+            "description" : "Sets the tokenizer type",
+            "enum" : [ "OPEN_AI", "AZURE", "QWEN" ]
+          }
+        },
+        "required" : [ "maxOverlap", "maxTokens" ]
+      },
+      "org.apache.camel.model.tokenizer.LangChain4jParagraphTokenizerDefinition" : {
+        "title" : "LangChain4J Tokenizer with paragraph splitter",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "maxOverlap" : {
+            "type" : "number",
+            "title" : "Max Overlap",
+            "description" : "Sets the maximum number of tokens that can overlap in each segment"
+          },
+          "maxTokens" : {
+            "type" : "number",
+            "title" : "Max Tokens",
+            "description" : "Sets the maximum number of tokens on each segment"
+          },
+          "tokenizerType" : {
+            "type" : "string",
+            "title" : "Tokenizer Type",
+            "description" : "Sets the tokenizer type",
+            "enum" : [ "OPEN_AI", "AZURE", "QWEN" ]
+          }
+        },
+        "required" : [ "maxOverlap", "maxTokens" ]
+      },
+      "org.apache.camel.model.tokenizer.LangChain4jSentenceTokenizerDefinition" : {
+        "title" : "LangChain4J Tokenizer with sentence splitter",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "maxOverlap" : {
+            "type" : "number",
+            "title" : "Max Overlap",
+            "description" : "Sets the maximum number of tokens that can overlap in each segment"
+          },
+          "maxTokens" : {
+            "type" : "number",
+            "title" : "Max Tokens",
+            "description" : "Sets the maximum number of tokens on each segment"
+          },
+          "tokenizerType" : {
+            "type" : "string",
+            "title" : "Tokenizer Type",
+            "description" : "Sets the tokenizer type",
+            "enum" : [ "OPEN_AI", "AZURE", "QWEN" ]
+          }
+        },
+        "required" : [ "maxOverlap", "maxTokens" ]
+      },
+      "org.apache.camel.model.tokenizer.LangChain4jTokenizerDefinition" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "maxOverlap" : {
+            "type" : "number"
+          },
+          "maxTokens" : {
+            "type" : "number"
+          },
+          "tokenizerType" : {
+            "type" : "string",
+            "enum" : [ "OPEN_AI", "AZURE", "QWEN" ]
+          }
+        },
+        "required" : [ "maxOverlap", "maxTokens" ]
+      },
+      "org.apache.camel.model.tokenizer.LangChain4jWordTokenizerDefinition" : {
+        "title" : "LangChain4J Tokenizer with word splitter",
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "title" : "Id",
+            "description" : "The id of this node"
+          },
+          "maxOverlap" : {
+            "type" : "number",
+            "title" : "Max Overlap",
+            "description" : "Sets the maximum number of tokens that can overlap in each segment"
+          },
+          "maxTokens" : {
+            "type" : "number",
+            "title" : "Max Tokens",
+            "description" : "Sets the maximum number of tokens on each segment"
+          },
+          "tokenizerType" : {
+            "type" : "string",
+            "title" : "Tokenizer Type",
+            "description" : "Sets the tokenizer type",
+            "enum" : [ "OPEN_AI", "AZURE", "QWEN" ]
+          }
+        },
+        "required" : [ "maxOverlap", "maxTokens" ]
+      },
       "org.apache.camel.model.transformer.CustomTransformerDefinition" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -15725,6 +16184,8 @@
               }, {
                 "required" : [ "flatpack" ]
               }, {
+                "required" : [ "fury" ]
+              }, {
                 "required" : [ "grok" ]
               }, {
                 "required" : [ "gzipDeflater" ]
@@ -15752,6 +16213,8 @@
                 "required" : [ "protobuf" ]
               }, {
                 "required" : [ "rss" ]
+              }, {
+                "required" : [ "smooks" ]
               }, {
                 "required" : [ "soap" ]
               }, {
@@ -15880,6 +16343,14 @@
             }
           }, {
             "type" : "object",
+            "required" : [ "fury" ],
+            "properties" : {
+              "fury" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.FuryDataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
             "required" : [ "grok" ],
             "properties" : {
               "grok" : {
@@ -15988,6 +16459,14 @@
             "properties" : {
               "rss" : {
                 "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.RssDataFormat"
+              }
+            }
+          }, {
+            "type" : "object",
+            "required" : [ "smooks" ],
+            "properties" : {
+              "smooks" : {
+                "$ref" : "#/items/definitions/org.apache.camel.model.dataformat.SmooksDataFormat"
               }
             }
           }, {
@@ -16130,6 +16609,7 @@
           "fhirJson" : { },
           "fhirXml" : { },
           "flatpack" : { },
+          "fury" : { },
           "grok" : { },
           "gzipDeflater" : { },
           "hl7" : { },
@@ -16144,6 +16624,7 @@
           "pgp" : { },
           "protobuf" : { },
           "rss" : { },
+          "smooks" : { },
           "soap" : { },
           "swiftMt" : { },
           "swiftMx" : { },
@@ -16306,6 +16787,9 @@
     "properties" : {
       "beans" : {
         "$ref" : "#/items/definitions/org.apache.camel.dsl.yaml.deserializers.BeansDeserializer"
+      },
+      "dataFormats" : {
+        "$ref" : "#/items/definitions/org.apache.camel.dsl.yaml.deserializers.DataFormatsDefinitionDeserializer"
       },
       "errorHandler" : {
         "$ref" : "#/items/definitions/org.apache.camel.dsl.yaml.deserializers.ErrorHandlerDeserializer"

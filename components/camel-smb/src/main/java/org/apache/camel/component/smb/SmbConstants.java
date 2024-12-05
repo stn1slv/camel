@@ -22,4 +22,10 @@ public interface SmbConstants {
     @Metadata(label = "producer", description = "The expected behavior if the file already exists.",
               javaType = "org.apache.camel.component.file.GenericFileExist")
     String SMB_FILE_EXISTS = "CamelSmbFileExists";
+
+    @Metadata(label = "consumer", description = "The path of the file being processed within the share")
+    String SMB_FILE_PATH = "CamelSmbFilePath";
+
+    @Metadata(label = "consumer", description = "The UNC path of the file being processed within the share")
+    String SMB_UNC_PATH = "CamelSmbUncPath";
 }

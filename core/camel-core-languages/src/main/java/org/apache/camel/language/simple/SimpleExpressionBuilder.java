@@ -32,6 +32,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
 import org.apache.camel.InvalidPayloadException;
+import org.apache.camel.Predicate;
 import org.apache.camel.spi.ClassResolver;
 import org.apache.camel.spi.ExchangeFormatter;
 import org.apache.camel.spi.Language;
@@ -177,6 +178,41 @@ public final class SimpleExpressionBuilder {
     }
 
     /**
+     * A ternary condition expression
+     */
+    public static Expression iifExpression(final String predicate, final String trueValue, final String falseValue) {
+        return new ExpressionAdapter() {
+            private Predicate pred;
+            private Expression expTrue;
+            private Expression expFalse;
+
+            @Override
+            public void init(CamelContext context) {
+                pred = context.resolveLanguage("simple").createPredicate(predicate);
+                pred.init(context);
+                expTrue = context.resolveLanguage("simple").createExpression(trueValue);
+                expTrue.init(context);
+                expFalse = context.resolveLanguage("simple").createExpression(falseValue);
+                expFalse.init(context);
+            }
+
+            @Override
+            public Object evaluate(Exchange exchange) {
+                if (pred.matches(exchange)) {
+                    return expTrue.evaluate(exchange, Object.class);
+                } else {
+                    return expFalse.evaluate(exchange, Object.class);
+                }
+            }
+
+            @Override
+            public String toString() {
+                return "iif(" + predicate + "," + trueValue + "," + falseValue + ")";
+            }
+        };
+    }
+
+    /**
      * Joins together the values from the expression
      */
     public static Expression joinExpression(final String expression, final String separator, final String prefix) {
@@ -230,6 +266,46 @@ public final class SimpleExpressionBuilder {
             @Override
             public String toString() {
                 return "replace(" + expression + "," + from + "," + to + ")";
+            }
+        };
+    }
+
+    /**
+     * Substring string values from the expression
+     */
+    public static Expression substringExpression(final String expression, final String head, final String tail) {
+        return new ExpressionAdapter() {
+            private Expression exp;
+            private Expression exp1;
+            private Expression exp2;
+
+            @Override
+            public void init(CamelContext context) {
+                exp = context.resolveLanguage("simple").createExpression(expression);
+                exp.init(context);
+                exp1 = ExpressionBuilder.simpleExpression(head);
+                exp1.init(context);
+                exp2 = ExpressionBuilder.simpleExpression(tail);
+                exp2.init(context);
+            }
+
+            @Override
+            public Object evaluate(Exchange exchange) {
+                int num1 = exp1.evaluate(exchange, Integer.class);
+                int num2 = exp2.evaluate(exchange, Integer.class);
+                if (num1 < 0 && num2 == 0) {
+                    // if there is only one value and its negative then we want to clip from tail
+                    num2 = num1;
+                    num1 = 0;
+                }
+                num1 = Math.abs(num1);
+                num2 = Math.abs(num2);
+                return ExpressionBuilder.substring(exp, num1, num2).evaluate(exchange, Object.class);
+            }
+
+            @Override
+            public String toString() {
+                return "substring(" + expression + "," + head + "," + tail + ")";
             }
         };
     }
@@ -351,7 +427,7 @@ public final class SimpleExpressionBuilder {
     }
 
     /**
-     * Returns a uuid string based on the given generator (default, classic, short, simple)
+     * Returns an uuid string based on the given generator (default, classic, short, simple)
      */
     public static Expression uuidExpression(final String generator) {
         return new ExpressionAdapter() {
@@ -1070,7 +1146,7 @@ public final class SimpleExpressionBuilder {
     }
 
     /**
-     * Returns the expression for the exchanges exception invoking methods defined in a simple OGNL notation
+     * Returns the expression for the exchange's exception invoking methods defined in a simple OGNL notation
      *
      * @param ognl methods to invoke on the body in a simple OGNL syntax
      */

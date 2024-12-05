@@ -33,13 +33,20 @@ import org.apache.camel.xml.io.XMLWriter;
 
 public class BaseWriter {
 
+    public static final String DEFAULT_NAMESPACE = "http://camel.apache.org/schema/spring";
+
     protected final XMLWriter writer;
     protected final Deque<String> namespacesStack = new LinkedList<>();
     protected boolean namespaceWritten;
+    protected boolean skipCustomId = true;
 
     public BaseWriter(Writer writer, String namespace) throws IOException {
         this.writer = new XMLWriter(writer);
-        this.namespacesStack.push(namespace);
+        if (namespace != null && !namespace.isEmpty()) {
+            this.namespacesStack.push(namespace);
+        } else {
+            this.namespacesStack.push(DEFAULT_NAMESPACE);
+        }
     }
 
     protected void startElement(String name) throws IOException {
@@ -94,6 +101,9 @@ public class BaseWriter {
     }
 
     protected void attribute(String name, Object value) throws IOException {
+        if (skipCustomId && "customId".equals(name)) {
+            return;
+        }
         if (value != null) {
             writer.addAttribute(name, value.toString());
         }
@@ -118,10 +128,10 @@ public class BaseWriter {
             NodeList children = v.getChildNodes();
             for (int i = 0; i < children.getLength(); i++) {
                 Node item = children.item(i);
-                if (item instanceof Element) {
-                    domElement((Element) item);
-                } else if (item instanceof Text) {
-                    text(((Text) item).getWholeText());
+                if (item instanceof Element element) {
+                    domElement(element);
+                } else if (item instanceof Text text) {
+                    text(text.getWholeText());
                 }
             }
             endElement(v.getNamespaceURI());

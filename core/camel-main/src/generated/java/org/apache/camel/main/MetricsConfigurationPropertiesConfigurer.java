@@ -17,7 +17,25 @@ import org.apache.camel.main.MetricsConfigurationProperties;
  */
 @Generated("org.apache.camel.maven.packaging.GenerateConfigurerMojo")
 @SuppressWarnings("unchecked")
-public class MetricsConfigurationPropertiesConfigurer extends org.apache.camel.support.component.PropertyConfigurerSupport implements GeneratedPropertyConfigurer, PropertyConfigurerGetter {
+public class MetricsConfigurationPropertiesConfigurer extends org.apache.camel.support.component.PropertyConfigurerSupport implements GeneratedPropertyConfigurer, ExtendedPropertyConfigurerGetter {
+
+    private static final Map<String, Object> ALL_OPTIONS;
+    static {
+        Map<String, Object> map = new CaseInsensitiveMap();
+        map.put("Binders", java.lang.String.class);
+        map.put("ClearOnReload", boolean.class);
+        map.put("EnableExchangeEventNotifier", boolean.class);
+        map.put("EnableMessageHistory", boolean.class);
+        map.put("EnableRouteEventNotifier", boolean.class);
+        map.put("EnableRoutePolicy", boolean.class);
+        map.put("Enabled", boolean.class);
+        map.put("NamingStrategy", java.lang.String.class);
+        map.put("Path", java.lang.String.class);
+        map.put("RoutePolicyLevel", java.lang.String.class);
+        map.put("TextFormatVersion", java.lang.String.class);
+        ALL_OPTIONS = map;
+        ConfigurerStrategy.addBootstrapConfigurerClearer(MetricsConfigurationPropertiesConfigurer::clearBootstrapConfigurers);
+    }
 
     @Override
     public boolean configure(CamelContext camelContext, Object obj, String name, Object value, boolean ignoreCase) {
@@ -37,12 +55,22 @@ public class MetricsConfigurationPropertiesConfigurer extends org.apache.camel.s
         case "enabled": target.setEnabled(property(camelContext, boolean.class, value)); return true;
         case "namingstrategy":
         case "namingStrategy": target.setNamingStrategy(property(camelContext, java.lang.String.class, value)); return true;
+        case "path": target.setPath(property(camelContext, java.lang.String.class, value)); return true;
         case "routepolicylevel":
         case "routePolicyLevel": target.setRoutePolicyLevel(property(camelContext, java.lang.String.class, value)); return true;
         case "textformatversion":
         case "textFormatVersion": target.setTextFormatVersion(property(camelContext, java.lang.String.class, value)); return true;
         default: return false;
         }
+    }
+
+    @Override
+    public Map<String, Object> getAllOptions(Object target) {
+        return ALL_OPTIONS;
+    }
+
+    public static void clearBootstrapConfigurers() {
+        ALL_OPTIONS.clear();
     }
 
     @Override
@@ -62,6 +90,7 @@ public class MetricsConfigurationPropertiesConfigurer extends org.apache.camel.s
         case "enabled": return boolean.class;
         case "namingstrategy":
         case "namingStrategy": return java.lang.String.class;
+        case "path": return java.lang.String.class;
         case "routepolicylevel":
         case "routePolicyLevel": return java.lang.String.class;
         case "textformatversion":
@@ -88,6 +117,7 @@ public class MetricsConfigurationPropertiesConfigurer extends org.apache.camel.s
         case "enabled": return target.isEnabled();
         case "namingstrategy":
         case "namingStrategy": return target.getNamingStrategy();
+        case "path": return target.getPath();
         case "routepolicylevel":
         case "routePolicyLevel": return target.getRoutePolicyLevel();
         case "textformatversion":

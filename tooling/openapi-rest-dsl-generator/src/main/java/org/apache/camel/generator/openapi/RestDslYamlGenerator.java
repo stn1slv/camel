@@ -48,12 +48,12 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import io.apicurio.datamodels.models.openapi.OpenApiDocument;
-import io.apicurio.datamodels.models.openapi.OpenApiPathItem;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
 import org.apache.camel.CamelContext;
 import org.apache.camel.model.rest.RestsDefinition;
-import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.camel.xml.LwModelToXMLDumper;
 
 public class RestDslYamlGenerator extends RestDslGenerator<RestDslYamlGenerator> {
 
@@ -61,7 +61,7 @@ public class RestDslYamlGenerator extends RestDslGenerator<RestDslYamlGenerator>
     private static final String[] FIELD_ORDER
             = new String[] { "id", "path", "description", "consumes", "produces", "type", "outType", "param" };
 
-    RestDslYamlGenerator(final OpenApiDocument document) {
+    RestDslYamlGenerator(final OpenAPI document) {
         super(document);
     }
 
@@ -78,14 +78,14 @@ public class RestDslYamlGenerator extends RestDslGenerator<RestDslYamlGenerator>
                 dtoPackageName);
 
         if (document.getPaths() != null) {
-            for (String name : document.getPaths().getItemNames()) {
-                OpenApiPathItem item = document.getPaths().getItem(name);
+            for (String name : document.getPaths().keySet()) {
+                PathItem item = document.getPaths().get(name);
                 restDslStatement.visit(name, item);
             }
         }
 
         final RestsDefinition rests = emitter.result();
-        final String xml = PluginHelper.getModelToXMLDumper(context).dumpModelAsXml(context, rests);
+        final String xml = new LwModelToXMLDumper().dumpModelAsXml(context, rests);
 
         final DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
         builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);

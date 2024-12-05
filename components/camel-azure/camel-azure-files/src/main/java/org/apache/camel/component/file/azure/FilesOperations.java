@@ -24,8 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.EmptyStackException;
-import java.util.Stack;
 
 import com.azure.core.util.Context;
 import com.azure.identity.DefaultAzureCredentialBuilder;
@@ -37,6 +37,7 @@ import com.azure.storage.file.share.ShareServiceClientBuilder;
 import com.azure.storage.file.share.models.ShareFileItem;
 import com.azure.storage.file.share.models.ShareFileRange;
 import com.azure.storage.file.share.models.ShareStorageException;
+import com.azure.storage.file.share.models.ShareTokenIntent;
 import com.azure.storage.file.share.options.ShareDirectoryCreateOptions;
 import com.azure.storage.file.share.options.ShareFileRenameOptions;
 import com.azure.storage.file.share.options.ShareListFilesAndDirectoriesOptions;
@@ -79,7 +80,7 @@ public class FilesOperations extends NormalizedOperations {
     private final FilesToken token;
     private ShareServiceClient client;
     private ShareDirectoryClient root;
-    private Stack<ShareDirectoryClient> dirStack = new Stack<>();
+    private ArrayDeque<ShareDirectoryClient> dirStack = new ArrayDeque<>();
 
     FilesOperations(FilesEndpoint endpoint) {
         super(endpoint.getConfiguration());
@@ -129,7 +130,7 @@ public class FilesOperations extends NormalizedOperations {
         var ms = configuration.getConnectTimeout();
         root.forceCloseAllHandles(true, Duration.ofMillis(ms), Context.NONE);
         root = null;
-        dirStack = new Stack<>();
+        dirStack = new ArrayDeque<>();
     }
 
     @Override
@@ -157,7 +158,7 @@ public class FilesOperations extends NormalizedOperations {
 
     @SuppressWarnings("unchecked")
     void restore(Object backup) {
-        dirStack = (Stack<ShareDirectoryClient>) backup;
+        dirStack = (ArrayDeque<ShareDirectoryClient>) backup;
     }
 
     Object backup() {
@@ -641,7 +642,6 @@ public class FilesOperations extends NormalizedOperations {
         if (!isConnected()) {
             throw new GenericFileOperationFailedException("Cannot cd to the share root: not connected");
         }
-        dirStack.empty();
         dirStack.push(root);
     }
 
@@ -711,15 +711,14 @@ public class FilesOperations extends NormalizedOperations {
 
         var builder = new ShareServiceClientBuilder().endpoint(HTTPS + "://" + configuration.getHost());
         var sharedKey = configuration.getSharedKey();
-        if (configuration.getCredentialType().equals(CredentialType.SHARED_ACCOUNT_KEY)) {
-            if (sharedKey != null) {
-                var keyB64 = FilesURIStrings.reconstructBase64EncodedValue(sharedKey);
-                builder.credential(new StorageSharedKeyCredential(configuration.getAccount(), keyB64));
-            } else if (configuration.getCredentialType().equals(CredentialType.AZURE_SAS)) {
-                builder = builder.sasToken(token.toURIQuery());
-            } else if (configuration.getCredentialType().equals(CredentialType.AZURE_IDENTITY)) {
-                builder = builder.credential(new DefaultAzureCredentialBuilder().build());
-            }
+        if (configuration.getCredentialType().equals(CredentialType.SHARED_ACCOUNT_KEY) && sharedKey != null) {
+            var keyB64 = FilesURIStrings.reconstructBase64EncodedValue(sharedKey);
+            builder.credential(new StorageSharedKeyCredential(configuration.getAccount(), keyB64));
+        } else if (configuration.getCredentialType().equals(CredentialType.AZURE_SAS)) {
+            builder = builder.sasToken(token.toURIQuery());
+        } else if (configuration.getCredentialType().equals(CredentialType.AZURE_IDENTITY)) {
+            builder = builder.credential(new DefaultAzureCredentialBuilder().build());
+            builder.shareTokenIntent(ShareTokenIntent.BACKUP);
         }
         return builder.buildClient();
     }

@@ -145,6 +145,9 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
     private boolean failFast = true;
     @UriParam(label = "producer,advanced", defaultValue = "true")
     private boolean copyOnExchange = true;
+    @UriParam(label = "advanced", defaultValue = "100",
+              description = "Maximum number of messages to keep in memory available for browsing. Use 0 for unlimited.")
+    private int browseLimit = 100;
 
     public MockEndpoint() {
         reset();
@@ -210,11 +213,10 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
         Collection<Endpoint> endpoints = context.getEndpoints();
         for (Endpoint endpoint : endpoints) {
             // if the endpoint was intercepted, we should get the delegate
-            if (endpoint instanceof InterceptSendToEndpoint) {
-                endpoint = ((InterceptSendToEndpoint) endpoint).getOriginalEndpoint();
+            if (endpoint instanceof InterceptSendToEndpoint interceptSendToEndpoint) {
+                endpoint = interceptSendToEndpoint.getOriginalEndpoint();
             }
-            if (endpoint instanceof MockEndpoint) {
-                MockEndpoint mockEndpoint = (MockEndpoint) endpoint;
+            if (endpoint instanceof MockEndpoint mockEndpoint) {
                 mockEndpoint.assertIsSatisfied();
             }
         }
@@ -234,11 +236,10 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
         long millis = unit.toMillis(timeout);
         for (Endpoint endpoint : endpoints) {
             // if the endpoint was intercepted, we should get the delegate
-            if (endpoint instanceof InterceptSendToEndpoint) {
-                endpoint = ((InterceptSendToEndpoint) endpoint).getOriginalEndpoint();
+            if (endpoint instanceof InterceptSendToEndpoint interceptSendToEndpoint) {
+                endpoint = interceptSendToEndpoint.getOriginalEndpoint();
             }
-            if (endpoint instanceof MockEndpoint) {
-                MockEndpoint mockEndpoint = (MockEndpoint) endpoint;
+            if (endpoint instanceof MockEndpoint mockEndpoint) {
                 mockEndpoint.setResultWaitTime(millis);
                 mockEndpoint.assertIsSatisfied();
             }
@@ -257,11 +258,10 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
         Collection<Endpoint> endpoints = context.getEndpoints();
         for (Endpoint endpoint : endpoints) {
             // if the endpoint was intercepted, we should get the delegate
-            if (endpoint instanceof InterceptSendToEndpoint) {
-                endpoint = ((InterceptSendToEndpoint) endpoint).getOriginalEndpoint();
+            if (endpoint instanceof InterceptSendToEndpoint interceptSendToEndpoint) {
+                endpoint = interceptSendToEndpoint.getOriginalEndpoint();
             }
-            if (endpoint instanceof MockEndpoint) {
-                MockEndpoint mockEndpoint = (MockEndpoint) endpoint;
+            if (endpoint instanceof MockEndpoint mockEndpoint) {
                 mockEndpoint.setAssertPeriod(period);
             }
         }
@@ -277,11 +277,10 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
         Collection<Endpoint> endpoints = context.getEndpoints();
         for (Endpoint endpoint : endpoints) {
             // if the endpoint was intercepted, we should get the delegate
-            if (endpoint instanceof InterceptSendToEndpoint) {
-                endpoint = ((InterceptSendToEndpoint) endpoint).getOriginalEndpoint();
+            if (endpoint instanceof InterceptSendToEndpoint interceptSendToEndpoint) {
+                endpoint = interceptSendToEndpoint.getOriginalEndpoint();
             }
-            if (endpoint instanceof MockEndpoint) {
-                MockEndpoint mockEndpoint = (MockEndpoint) endpoint;
+            if (endpoint instanceof MockEndpoint mockEndpoint) {
                 mockEndpoint.reset();
             }
         }
@@ -507,6 +506,38 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
             } else {
                 LOG.info("Caught expected failure: {}", e.getMessage());
             }
+        }
+        if (failed) {
+            // fail() throws the AssertionError to indicate the test failed.
+            fail("Expected assertion failure but test succeeded!");
+        }
+    }
+
+    /**
+     * Validates that the assertions fail on this endpoint with the expected error message
+     *
+     * @param expectedErrorString the message of the assertion failure error
+     */
+    public void assertIsNotSatisfied(String expectedErrorString) throws InterruptedException {
+        boolean failed = false;
+        try {
+            assertIsSatisfied();
+            // did not throw error... fail!
+            failed = true;
+        } catch (AssertionError e) {
+            String actualErrorString = e.getMessage();
+            if (actualErrorString.contains(expectedErrorString)) {
+                if (LOG.isDebugEnabled()) {
+                    // log incl stacktrace
+                    LOG.debug("Caught expected failure: {}", e.getMessage(), e);
+                } else {
+                    LOG.info("Caught expected failure: {}", e.getMessage());
+                }
+            } else {
+                // did not throw expected error... fail!
+                fail(e);
+            }
+
         }
         if (failed) {
             // fail() throws the AssertionError to indicate the test failed.
@@ -1655,6 +1686,16 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
         this.failFast = failFast;
     }
 
+    @Override
+    public int getBrowseLimit() {
+        return browseLimit;
+    }
+
+    @Override
+    public void setBrowseLimit(int browseLimit) {
+        this.browseLimit = browseLimit;
+    }
+
     // Implementation methods
     // -------------------------------------------------------------------------
 
@@ -1967,8 +2008,7 @@ public class MockEndpoint extends DefaultEndpoint implements BrowsableEndpoint, 
                 LOG.debug("{} failed and received[{}]: {}", getEndpointUri(), ++index, exchange);
             }
         }
-        if (message instanceof Throwable) {
-            Throwable cause = (Throwable) message;
+        if (message instanceof Throwable cause) {
             String msg = "Caught exception on " + getEndpointUri() + " due to: " + cause.getMessage();
             throw new AssertionError(msg, cause);
         } else {

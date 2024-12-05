@@ -52,7 +52,7 @@ public class AWS2S3Configuration implements Cloneable {
     private String doneFileName;
     @UriParam(label = "consumer", defaultValue = "true")
     private boolean includeFolders = true;
-    @UriParam(enums = "ap-south-2,ap-south-1,eu-south-1,eu-south-2,us-gov-east-1,me-central-1,il-central-1,ca-central-1,eu-central-1,us-iso-west-1,eu-central-2,us-west-1,us-west-2,af-south-1,eu-north-1,eu-west-3,eu-west-2,eu-west-1,ap-northeast-3,ap-northeast-2,ap-northeast-1,me-south-1,sa-east-1,ap-east-1,cn-north-1,us-gov-west-1,ap-southeast-1,ap-southeast-2,us-iso-east-1,ap-southeast-3,ap-southeast-4,us-east-1,us-east-2,cn-northwest-1,us-isob-east-1,aws-global,aws-cn-global,aws-us-gov-global,aws-iso-global,aws-iso-b-global")
+    @UriParam(enums = "ap-south-2,ap-south-1,eu-south-1,eu-south-2,us-gov-east-1,me-central-1,il-central-1,ca-central-1,eu-central-1,us-iso-west-1,eu-central-2,eu-isoe-west-1,us-west-1,us-west-2,af-south-1,eu-north-1,eu-west-3,eu-west-2,eu-west-1,ap-northeast-3,ap-northeast-2,ap-northeast-1,me-south-1,sa-east-1,ap-east-1,cn-north-1,ca-west-1,us-gov-west-1,ap-southeast-1,ap-southeast-2,us-iso-east-1,ap-southeast-3,ap-southeast-4,us-east-1,us-east-2,cn-northwest-1,us-isob-east-1,aws-global,aws-cn-global,aws-us-gov-global,aws-iso-global,aws-iso-b-global")
     private String region;
     @UriParam
     private boolean forcePathStyle;
@@ -85,10 +85,9 @@ public class AWS2S3Configuration implements Cloneable {
     private Integer proxyPort;
     @UriParam(label = "consumer", defaultValue = "true")
     private boolean includeBody = true;
-    @UriParam(label = "consumer", defaultValue = "false")
+    @UriParam(label = "common", defaultValue = "false")
     private boolean ignoreBody;
-    @UriParam(label = "producer",
-              enums = "copyObject,listObjects,deleteObject,deleteBucket,listBuckets,getObject,getObjectRange,createDownloadLink")
+    @UriParam(label = "producer")
     private AWS2S3Operations operation;
     @UriParam(label = "consumer,advanced", defaultValue = "true")
     private boolean autocloseBody = true;
@@ -108,6 +107,8 @@ public class AWS2S3Configuration implements Cloneable {
     private String customerAlgorithm;
     @UriParam(label = "producer,advanced", defaultValue = "false")
     private boolean useSSES3;
+    @UriParam(label = "producer,advanced", defaultValue = "false")
+    private boolean conditionalWritesEnabled;
     @UriParam(label = "security")
     private boolean useDefaultCredentialsProvider;
     @UriParam(label = "security")
@@ -763,6 +764,17 @@ public class AWS2S3Configuration implements Cloneable {
      */
     public void setProfileCredentialsName(String profileCredentialsName) {
         this.profileCredentialsName = profileCredentialsName;
+    }
+
+    public boolean isConditionalWritesEnabled() {
+        return conditionalWritesEnabled;
+    }
+
+    /**
+     * Uploads the object only if the object key name does not already exist in the bucket specified.
+     */
+    public void setConditionalWritesEnabled(boolean conditionalWritesEnabled) {
+        this.conditionalWritesEnabled = conditionalWritesEnabled;
     }
 
     public AWS2S3Configuration copy() {

@@ -27,6 +27,10 @@ public class JsonValidatorComponentConfigurer extends PropertyConfigurerSupport 
         case "autowiredEnabled": target.setAutowiredEnabled(property(camelContext, boolean.class, value)); return true;
         case "lazystartproducer":
         case "lazyStartProducer": target.setLazyStartProducer(property(camelContext, boolean.class, value)); return true;
+        case "objectmapper":
+        case "objectMapper": target.setObjectMapper(property(camelContext, java.lang.String.class, value)); return true;
+        case "usedefaultobjectmapper":
+        case "useDefaultObjectMapper": target.setUseDefaultObjectMapper(property(camelContext, boolean.class, value)); return true;
         default: return false;
         }
     }
@@ -38,6 +42,10 @@ public class JsonValidatorComponentConfigurer extends PropertyConfigurerSupport 
         case "autowiredEnabled": return boolean.class;
         case "lazystartproducer":
         case "lazyStartProducer": return boolean.class;
+        case "objectmapper":
+        case "objectMapper": return java.lang.String.class;
+        case "usedefaultobjectmapper":
+        case "useDefaultObjectMapper": return boolean.class;
         default: return null;
         }
     }
@@ -50,6 +58,10 @@ public class JsonValidatorComponentConfigurer extends PropertyConfigurerSupport 
         case "autowiredEnabled": return target.isAutowiredEnabled();
         case "lazystartproducer":
         case "lazyStartProducer": return target.isLazyStartProducer();
+        case "objectmapper":
+        case "objectMapper": return target.getObjectMapper();
+        case "usedefaultobjectmapper":
+        case "useDefaultObjectMapper": return target.isUseDefaultObjectMapper();
         default: return null;
         }
     }

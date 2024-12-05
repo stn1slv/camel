@@ -34,11 +34,14 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlTransient;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Endpoint;
 import org.apache.camel.RuntimeCamelException;
+import org.apache.camel.builder.EndpointProducerBuilder;
 import org.apache.camel.model.OptionalIdentifiedDefinition;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.StopDefinition;
 import org.apache.camel.model.ToDefinition;
+import org.apache.camel.spi.AsEndpointUri;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.NodeIdFactory;
 import org.apache.camel.spi.Resource;
@@ -778,6 +781,44 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
     }
 
     /**
+     * Sends the exchange to the given endpoint
+     *
+     * @param  endpoint the endpoint to send to
+     * @return          the builder
+     */
+    public RestDefinition to(Endpoint endpoint) {
+        // add to last verb
+        if (getVerbs().isEmpty()) {
+            throw new IllegalArgumentException(MISSING_VERB);
+        }
+
+        ToDefinition to = new ToDefinition(endpoint);
+
+        VerbDefinition verb = getVerbs().get(getVerbs().size() - 1);
+        verb.setTo(to);
+        return this;
+    }
+
+    /**
+     * Sends the exchange to the given endpoint
+     *
+     * @param  endpoint the endpoint to send to
+     * @return          the builder
+     */
+    public RestDefinition to(@AsEndpointUri EndpointProducerBuilder endpoint) {
+        // add to last verb
+        if (getVerbs().isEmpty()) {
+            throw new IllegalArgumentException(MISSING_VERB);
+        }
+
+        ToDefinition to = new ToDefinition(endpoint);
+
+        VerbDefinition verb = getVerbs().get(getVerbs().size() - 1);
+        verb.setTo(to);
+        return this;
+    }
+
+    /**
      * Build the from endpoint uri for the verb
      */
     public String buildFromUri(CamelContext camelContext, VerbDefinition verb) {
@@ -893,7 +934,7 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
         for (VerbDefinition verb : verbs) {
             ToDefinition to = verb.getTo();
             if (to != null) {
-                String uri = to.getUri();
+                String uri = to.getEndpointUri();
                 if (uri.startsWith("direct:")) {
                     if (!directs.add(uri)) {
                         throw new IllegalArgumentException("Duplicate to in rest-dsl: " + uri);
@@ -1064,6 +1105,9 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
             if (verb.getRouteId() != null) {
                 route.routeId(parseText(camelContext, verb.getRouteId()));
             }
+            if (verb.getStreamCache() != null) {
+                route.streamCache(parseText(camelContext, verb.getStreamCache()));
+            }
             route.getOutputs().add(verb.getTo());
 
             // add the binding
@@ -1223,9 +1267,6 @@ public class RestDefinition extends OptionalIdentifiedDefinition<RestDefinition>
 
             if (verb.getType() != null) {
                 String bodyType = parseText(camelContext, verb.getType());
-                if (bodyType.endsWith("[]")) {
-                    bodyType = "List[" + bodyType.substring(0, bodyType.length() - 2) + "]";
-                }
                 ParamDefinition param = findParam(verb, RestParamType.body.name());
                 if (param == null) {
                     // must be body type and set the model class as data type

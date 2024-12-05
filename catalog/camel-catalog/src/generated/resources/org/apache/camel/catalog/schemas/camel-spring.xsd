@@ -572,6 +572,15 @@ Act as a message source as input to a route
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:element name="fury" type="tns:furyDataFormat">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+Serialize and deserialize messages using Apache Fury
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:element name="get" type="tns:getDefinition">
     <xs:annotation>
       <xs:documentation xml:lang="en">
@@ -853,6 +862,51 @@ Key store facility for cryptographic keys and certificates
       <xs:documentation xml:lang="en">
 <![CDATA[
 Deprecated: null
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="langChain4jCharacterTokenizer" type="tns:langChain4JCharacterTokenizerDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+null
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="langChain4jLineTokenizer" type="tns:langChain4JLineTokenizerDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+null
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="langChain4jParagraphTokenizer" type="tns:langChain4JParagraphTokenizerDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+null
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="langChain4jSentenceTokenizer" type="tns:langChain4JSentenceTokenizerDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+null
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="langChain4jWordTokenizer" type="tns:langChain4JWordTokenizerDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+null
 ]]>
       </xs:documentation>
     </xs:annotation>
@@ -1146,6 +1200,15 @@ Routes the message to a sequence of processors.
       <xs:documentation xml:lang="en">
 <![CDATA[
 Defines a policy the route will use
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="poll" type="tns:pollDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+Polls a message from a static endpoint
 ]]>
       </xs:documentation>
     </xs:annotation>
@@ -1799,6 +1862,15 @@ Evaluates a Camel simple expression.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:element name="smooks" type="tns:smooksDataFormat">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+Transform and bind XML as well as non-XML data, including EDI, CSV, JSON, and YAML using Smooks.
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:element name="soap" type="tns:soapDataFormat">
     <xs:annotation>
       <xs:documentation xml:lang="en">
@@ -2074,6 +2146,15 @@ Sends the message to a dynamic endpoint
       <xs:documentation xml:lang="en">
 <![CDATA[
 Tokenize text payloads using delimiter patterns.
+]]>
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:element name="tokenizer" type="tns:tokenizerDefinition">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">
+<![CDATA[
+Represents a Camel tokenizer for AI.
 ]]>
       </xs:documentation>
     </xs:annotation>
@@ -3042,11 +3123,11 @@ If the location is optional. Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To enable using supervising route controller which allows Camel to startup and then the controller takes care of
-starting the routes in a safe manner. This can be used when you want to startup Camel despite a route may otherwise fail
-fast during startup and cause Camel to fail to startup as well. By delegating the route startup to the supervising route
-controller then its manages the startup using a background thread. The controller allows to be configured with various
-settings to attempt to restart failing routes. Default value: false
+To enable using supervising route controller which allows Camel to start up and then, the controller takes care of
+starting the routes in a safe manner. This can be used when you want to start up Camel despite a route may otherwise
+fail fast during startup and cause Camel to fail to start up as well. By delegating the route startup to the supervising
+route controller then its manages the startup using a background thread. The controller allows to be configured with
+various settings to attempt to restart failing routes. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -3290,7 +3371,7 @@ separated by comma.
             <xs:documentation xml:lang="en">
 <![CDATA[
 Sets the buffer size to use when allocating in-memory buffers used for in-memory stream caches. The default size is
-org.apache.camel.util.IOHelper#DEFAULT_BUFFER_SIZE. Default value: 4096
+org.apache.camel.util.IOHelper#DEFAULT_BUFFER_SIZE. Default value: 16384
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -3352,12 +3433,14 @@ the rules must return true. Default value: false
     <xs:complexContent>
       <xs:extension base="tns:abstractJsseUtilFactoryBean">
         <xs:sequence/>
-        <xs:attribute name="type" type="xs:string">
+        <xs:attribute name="resource" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The optional type of the key store to load. See Appendix A in the Java Cryptography Architecture Standard Algorithm Name
-Documentation for more information on standard names.
+The keystore to load. The keystore is by default loaded from classpath. If you must load from file system, then use
+file: as prefix. file:nameOfFile (to refer to the file system) classpath:nameOfFile (to refer to the classpath; default)
+http:uri (to load the resource using HTTP) ref:nameOfBean (to lookup an existing KeyStore instance from the registry,
+for example for testing and development).
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -3366,7 +3449,17 @@ Documentation for more information on standard names.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The optional password for reading/opening/verifying the key store.
+The password for reading/opening/verifying the key store.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="type" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+The type of the key store to create and load. See
+https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -3375,16 +3468,16 @@ The optional password for reading/opening/verifying the key store.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The optional provider identifier for instantiating the key store.
+The provider identifier for instantiating the key store.
 ]]>
             </xs:documentation>
           </xs:annotation>
         </xs:attribute>
-        <xs:attribute name="resource" type="xs:string">
+        <xs:attribute name="keyStore" type="xs:string">
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The optional file path, class path resource, or URL of the resource used to load the key store.
+To lookup an existing KeyStore instance from the registry, for example for testing and development.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -3401,8 +3494,8 @@ The optional file path, class path resource, or URL of the resource used to load
             <xs:documentation xml:lang="en">
 <![CDATA[
 The Random Number Generator algorithm identifier for the SecureRandom factory method used to create the SecureRandom
-represented by this object's configuration. See Appendix A in the Java Cryptography Architecture API Specification and
-Reference guide for information about standard RNG algorithm names.
+represented by this object's configuration. See
+https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -3411,8 +3504,8 @@ Reference guide for information about standard RNG algorithm names.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The optional provider identifier for the SecureRandom factory method used to create the SecureRandom represented by this
-object's configuration.
+The provider identifier for the SecureRandom factory method used to create the SecureRandom represented by this object's
+configuration.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -3583,6 +3676,7 @@ will fallback to use the fixed value if the Expression result was null or 0.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -3615,6 +3709,7 @@ will fallback to use the fixed value if the Expression result was null or 0.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -4224,6 +4319,7 @@ controlling whether a thrown exception should be intercepted by this exception t
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -4256,6 +4352,7 @@ controlling whether a thrown exception should be intercepted by this exception t
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -4334,6 +4431,7 @@ controlling whether a thrown exception should be intercepted by this exception t
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -4366,6 +4464,7 @@ controlling whether a thrown exception should be intercepted by this exception t
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -4435,6 +4534,7 @@ during startup to keep at runtime only the branch that matched. Default value: f
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -4467,6 +4567,7 @@ during startup to keep at runtime only the branch that matched. Default value: f
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -4519,6 +4620,7 @@ during startup to keep at runtime only the branch that matched. Default value: f
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -4551,6 +4653,7 @@ during startup to keep at runtime only the branch that matched. Default value: f
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -4992,6 +5095,7 @@ References to a custom thread pool to use when bulkhead is enabled.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -5024,6 +5128,7 @@ References to a custom thread pool to use when bulkhead is enabled.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -5474,9 +5579,9 @@ reduce memory usage to avoid storing too many non frequent used producers.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for
+user data and to easily control what data to use for sending and receiving. Important: When using receive variable then
+the received body is stored only in this variable and not on the current message.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -5485,9 +5590,10 @@ this variable and not on the current org.apache.camel.Message .
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to
+easily control what data to use for sending and receiving. Important: When using send variable then the message body is
+taken from this variable instead of the current message, however the headers from the message will still be used as
+well. In other words, the variable is used instead of the message body, but everything else is as usual.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -6161,6 +6267,7 @@ Sets the logging level to use for logging transactional rollback. This option is
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -6193,6 +6300,7 @@ Sets the logging level to use for logging transactional rollback. This option is
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -6252,6 +6360,7 @@ predicate evaluated as true or false.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -6284,6 +6393,7 @@ predicate evaluated as true or false.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -6414,6 +6524,7 @@ Global option value.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -6446,6 +6557,7 @@ Global option value.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -6575,6 +6687,7 @@ Whether if validation is required for this input type. Default value: false
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -6607,6 +6720,7 @@ Whether if validation is required for this input type. Default value: false
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -6673,6 +6787,7 @@ intercepted.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -6705,6 +6820,7 @@ intercepted.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -6782,6 +6898,7 @@ After sending to the endpoint then send the message to this uri which allows to 
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -6814,6 +6931,7 @@ After sending to the endpoint then send the message to this uri which allows to 
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -6882,6 +7000,7 @@ mynamecount=4&type=gold.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -6914,6 +7033,7 @@ mynamecount=4&type=gold.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -7104,7 +7224,12 @@ Sets the logging level. The default value is INFO. Default value: INFO
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Sets the name of the logger.
+Sets the name of the logger. The name is default the routeId or the source:line if source location is enabled. You can
+also specify the name using tokens: ${class} - the logger class name (org.apache.camel.processor.LogProcessor)
+${contextId} - the camel context id ${routeId} - the route id ${groupId} - the route group id ${nodeId} - the node id
+${nodePrefixId} - the node prefix id ${source} - the source:line (source location must be enabled) ${source.name} - the
+source filename (source location must be enabled) ${source.line} - the source line number (source location must be
+enabled) For example to use the route and node id you can specify the name as: ${routeId}/${nodeId}.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -7196,6 +7321,7 @@ To refer to a custom logger instance to lookup from the registry.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -7228,6 +7354,7 @@ To refer to a custom logger instance to lookup from the registry.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -7288,6 +7415,7 @@ down. Default value: false
             <xs:element ref="tns:fhirJson"/>
             <xs:element ref="tns:fhirXml"/>
             <xs:element ref="tns:flatpack"/>
+            <xs:element ref="tns:fury"/>
             <xs:element ref="tns:grok"/>
             <xs:element ref="tns:gzipDeflater"/>
             <xs:element ref="tns:hl7"/>
@@ -7301,6 +7429,7 @@ down. Default value: false
             <xs:element ref="tns:parquetAvro"/>
             <xs:element ref="tns:protobuf"/>
             <xs:element ref="tns:rss"/>
+            <xs:element ref="tns:smooks"/>
             <xs:element ref="tns:soap"/>
             <xs:element ref="tns:swiftMt"/>
             <xs:element ref="tns:swiftMx"/>
@@ -7322,9 +7451,10 @@ down. Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to
+easily control what data to use for sending and receiving. Important: When using send variable then the message body is
+taken from this variable instead of the current message, however the headers from the message will still be used as
+well. In other words, the variable is used instead of the message body, but everything else is as usual.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -7333,9 +7463,9 @@ this variable and not on the current org.apache.camel.Message .
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for
+user data and to easily control what data to use for sending and receiving. Important: When using receive variable then
+the received body is stored only in this variable and not on the current message.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -8128,7 +8258,7 @@ Used to disable quotes. Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Sets the quote which by default is.
+Sets the quote to use which by default is double-quote character.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -8571,6 +8701,49 @@ References to a custom parser factory to lookup in the registry.
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="furyDataFormat">
+    <xs:complexContent>
+      <xs:extension base="tns:dataFormat">
+        <xs:sequence/>
+        <xs:attribute name="unmarshalType" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Class of the java type to use when unmarshalling.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="requireClassRegistration" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to require register classes. Default value: true
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="threadSafe" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to use the threadsafe fury. Default value: true
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="allowAutoWiredFury" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether to auto-discover Fury from the registry. Default value: true
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="grokDataFormat">
     <xs:complexContent>
       <xs:extension base="tns:dataFormat">
@@ -8870,7 +9043,7 @@ value: 0
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To enable pretty printing output nicely formatted. Is by default false. Default value: false
+To enable pretty printing output nicely formatted. Is by default false. Default value: true
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -8880,7 +9053,7 @@ To enable pretty printing output nicely formatted. Is by default false. Default 
             <xs:documentation xml:lang="en">
 <![CDATA[
 Whether to allow using ObjectFactory classes to create the POJO classes during marshalling. This only applies to POJO
-classes that has not been annotated with JAXB and providing jaxb.index descriptor files. Default value: false
+classes that has not been annotated with JAXB and providing jaxb.index descriptor files. Default value: true
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -8889,7 +9062,7 @@ classes that has not been annotated with JAXB and providing jaxb.index descripto
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-Whether to ignore JAXBElement elements - only needed to be set to false in very special use-cases. Default value: false
+Whether to ignore JAXBElement elements - only needed to be set to false in very special use-cases. Default value: true
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -9070,6 +9243,16 @@ To enable pretty printing output nicely formatted. Is by default false. Default 
             <xs:documentation xml:lang="en">
 <![CDATA[
 Which json library to use. Default value: Jackson
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="combineUnicodeSurrogates" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Force generator that outputs JSON content to combine surrogate pairs (if any) into 4-byte characters. This should be
+preferred when using 4-byte characters such as Japanese. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -9594,6 +9777,22 @@ value: true
     <xs:complexContent>
       <xs:extension base="tns:dataFormat">
         <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="smooksDataFormat">
+    <xs:complexContent>
+      <xs:extension base="tns:dataFormat">
+        <xs:sequence/>
+        <xs:attribute name="smooksConfig" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Path to the Smooks configuration file.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
@@ -10604,6 +10803,7 @@ maximum decompressed size. Default value: 1073741824
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -10636,6 +10836,7 @@ maximum decompressed size. Default value: 1073741824
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -10680,10 +10881,10 @@ Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require
-the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel
-synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance
-when the AggregationStrategy is implemented as thread-safe. Default value: false
+Deprecated: If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this
+would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false
+meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive
+higher performance when the AggregationStrategy is implemented as thread-safe. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -10828,6 +11029,7 @@ controlling whether a completion callback should be invoked or not.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -10860,6 +11062,7 @@ controlling whether a completion callback should be invoked or not.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -11027,6 +11230,7 @@ its considered handled as well.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -11059,6 +11263,7 @@ its considered handled as well.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -11286,6 +11491,7 @@ one of the available events. Implementations should not assume the predicate to 
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -11318,6 +11524,7 @@ one of the available events. Implementations should not assume the predicate to 
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -11367,6 +11574,7 @@ one of the available events. Implementations should not assume the predicate to 
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -11399,6 +11607,7 @@ one of the available events. Implementations should not assume the predicate to 
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -11413,6 +11622,47 @@ one of the available events. Implementations should not assume the predicate to 
             <xs:documentation xml:lang="en">
 <![CDATA[
 Sets a reference to use for lookup the policy in the registry.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="pollDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:noOutputDefinition">
+        <xs:sequence/>
+        <xs:attribute name="variableReceive" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for
+user data and to easily control what data to use for sending and receiving. Important: When using receive variable then
+the received body is stored only in this variable and not on the current message.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="uri" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Sets the uri of the endpoint to poll from.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="timeout" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Timeout in millis when polling from the external service. The timeout has influence about the poll enrich behavior. It
+basically operations in three different modes: negative value - Waits until a message is available and then returns it.
+Warning that this method could block indefinitely if no messages are available. 0 - Attempts to receive a message
+exchange immediately without waiting and returning null if a message exchange is not available yet. positive value -
+Attempts to receive a message exchange, waiting up to the given timeout to expire if a message is not yet available.
+Returns null if timed out The default value is 20000 (20 seconds). Default value: 20000
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -11456,9 +11706,9 @@ Sets a reference to use for lookup the policy in the registry.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for
+user data and to easily control what data to use for sending and receiving. Important: When using receive variable then
+the received body is stored only in this variable and not on the current message.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -11701,10 +11951,10 @@ Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require
-the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel
-synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance
-when the AggregationStrategy is implemented as thread-safe. Default value: false
+Deprecated: If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this
+would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false
+meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive
+higher performance when the AggregationStrategy is implemented as thread-safe. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -12000,6 +12250,7 @@ Name of variable to remove.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -12032,6 +12283,7 @@ Name of variable to remove.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -12350,6 +12602,7 @@ Reference to the routes in the xml dsl.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -12382,6 +12635,7 @@ Reference to the routes in the xml dsl.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -12788,6 +13042,7 @@ actions. Option values will be transformed into input headers of the compensatio
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -12820,6 +13075,7 @@ actions. Option values will be transformed into input headers of the compensatio
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -13246,6 +13502,7 @@ Sets the comparator to use for sorting.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -13278,6 +13535,7 @@ Sets the comparator to use for sorting.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -13333,10 +13591,10 @@ Default value: false
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this would require
-the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false meaning that Camel
-synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive higher performance
-when the AggregationStrategy is implemented as thread-safe. Default value: false
+Deprecated: If enabled then the aggregate method on AggregationStrategy can be called concurrently. Notice that this
+would require the implementation of AggregationStrategy to be implemented as thread-safe. By default this is false
+meaning that Camel synchronizes the call to the aggregate method. Though in some use-cases this can be used to archive
+higher performance when the AggregationStrategy is implemented as thread-safe. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -13477,6 +13735,7 @@ individual unit of work. Default value: false
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -13509,6 +13768,7 @@ individual unit of work. Default value: false
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -13934,7 +14194,7 @@ Reference to the exception instance to lookup from the registry to throw.
 <![CDATA[
 To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to
 easily control what data to use for sending and receiving. Important: When using send variable then the message body is
-taken from this variable instead of the current Message , however the headers from the Message will still be used as
+taken from this variable instead of the current message, however the headers from the message will still be used as
 well. In other words, the variable is used instead of the message body, but everything else is as usual.
 ]]>
             </xs:documentation>
@@ -13944,9 +14204,9 @@ well. In other words, the variable is used instead of the message body, but ever
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for
+user data and to easily control what data to use for sending and receiving. Important: When using receive variable then
+the received body is stored only in this variable and not on the current message.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -13981,9 +14241,10 @@ org.apache.camel.language.simple.SimpleLanguage expression.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to
+easily control what data to use for sending and receiving. Important: When using send variable then the message body is
+taken from this variable instead of the current message, however the headers from the message will still be used as
+well. In other words, the variable is used instead of the message body, but everything else is as usual.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -14056,6 +14317,90 @@ Whether to auto startup components when toD is starting up. Default value: true
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="tokenizerDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:noOutputDefinition">
+        <xs:sequence>
+          <xs:choice minOccurs="0">
+            <xs:element ref="tns:langChain4jCharacterTokenizer"/>
+            <xs:element name="langChain4jLineTokenizer" type="tns:langChain4jTokenizerImplementation"/>
+            <xs:element ref="tns:langChain4jParagraphTokenizer"/>
+            <xs:element ref="tns:langChain4jSentenceTokenizer"/>
+            <xs:element ref="tns:langChain4jWordTokenizer"/>
+          </xs:choice>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="langChain4JCharacterTokenizerDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:langChain4jTokenizerImplementation">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="langChain4jTokenizerImplementation">
+    <xs:complexContent>
+      <xs:extension base="tns:tokenizerImplementation">
+        <xs:sequence/>
+        <xs:attribute name="tokenizerType" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Sets the tokenizer type.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maxTokens" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Sets the maximum number of tokens on each segment.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maxOverlap" type="xs:string" use="required">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Sets the maximum number of tokens that can overlap in each segment.
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="tokenizerImplementation">
+    <xs:complexContent>
+      <xs:extension base="tns:identifiedType">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="langChain4JParagraphTokenizerDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:langChain4jTokenizerImplementation">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="langChain4JSentenceTokenizerDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:langChain4jTokenizerImplementation">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="langChain4JWordTokenizerDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:langChain4jTokenizerImplementation">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="transactedDefinition">
     <xs:complexContent>
       <xs:extension base="tns:output">
@@ -14093,6 +14438,7 @@ Whether to auto startup components when toD is starting up. Default value: true
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -14125,6 +14471,7 @@ Whether to auto startup components when toD is starting up. Default value: true
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -14236,6 +14583,7 @@ To type used as a target data type in the transformation.
             <xs:element ref="tns:pausable"/>
             <xs:element ref="tns:pipeline"/>
             <xs:element ref="tns:policy"/>
+            <xs:element ref="tns:poll"/>
             <xs:element ref="tns:pollEnrich"/>
             <xs:element ref="tns:process"/>
             <xs:element ref="tns:recipientList"/>
@@ -14268,6 +14616,7 @@ To type used as a target data type in the transformation.
             <xs:element ref="tns:throwException"/>
             <xs:element ref="tns:to"/>
             <xs:element ref="tns:toD"/>
+            <xs:element ref="tns:tokenizer"/>
             <xs:element ref="tns:transacted"/>
             <xs:element ref="tns:transform"/>
             <xs:element ref="tns:doTry"/>
@@ -14298,6 +14647,7 @@ To type used as a target data type in the transformation.
             <xs:element ref="tns:fhirJson"/>
             <xs:element ref="tns:fhirXml"/>
             <xs:element ref="tns:flatpack"/>
+            <xs:element ref="tns:fury"/>
             <xs:element ref="tns:grok"/>
             <xs:element ref="tns:gzipDeflater"/>
             <xs:element ref="tns:hl7"/>
@@ -14311,6 +14661,7 @@ To type used as a target data type in the transformation.
             <xs:element ref="tns:parquetAvro"/>
             <xs:element ref="tns:protobuf"/>
             <xs:element ref="tns:rss"/>
+            <xs:element ref="tns:smooks"/>
             <xs:element ref="tns:soap"/>
             <xs:element ref="tns:swiftMt"/>
             <xs:element ref="tns:swiftMx"/>
@@ -14332,9 +14683,10 @@ To type used as a target data type in the transformation.
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable as the source for the message body to send. This makes it handy to use variables for user data and to
+easily control what data to use for sending and receiving. Important: When using send variable then the message body is
+taken from this variable instead of the current message, however the headers from the message will still be used as
+well. In other words, the variable is used instead of the message body, but everything else is as usual.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -14343,9 +14695,9 @@ this variable and not on the current org.apache.camel.Message .
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-To use a variable to store the received message body (only body, not headers). This is handy for easy access to the
-received message body via variables. Important: When using receive variable then the received body is stored only in
-this variable and not on the current org.apache.camel.Message .
+To use a variable to store the received message body (only body, not headers). This makes it handy to use variables for
+user data and to easily control what data to use for sending and receiving. Important: When using receive variable then
+the received body is stored only in this variable and not on the current message.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -14486,6 +14838,21 @@ List of bean.
       </xs:element>
       <xs:any maxOccurs="unbounded" minOccurs="0" namespace="##other" processContents="skip"/>
       <xs:any maxOccurs="unbounded" minOccurs="0" namespace="##other" processContents="skip"/>
+      <xs:element minOccurs="0" name="dataFormats">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" name="dataFormat" type="tns:dataFormat">
+              <xs:annotation>
+                <xs:documentation xml:lang="en">
+<![CDATA[
+Camel data formats.
+]]>
+                </xs:documentation>
+              </xs:annotation>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element maxOccurs="unbounded" minOccurs="0" ref="tns:restConfiguration"/>
       <xs:element maxOccurs="unbounded" minOccurs="0" ref="tns:rest"/>
       <xs:element maxOccurs="unbounded" minOccurs="0" ref="tns:routeConfiguration"/>
@@ -15357,6 +15724,15 @@ Whether to include or exclude this rest operation in API documentation. The defa
             <xs:documentation xml:lang="en">
 <![CDATA[
 Marks this rest operation as deprecated in OpenApi documentation. Default value: false
+]]>
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="streamCache" type="xs:string">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">
+<![CDATA[
+Whether stream caching is enabled on this rest operation. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -16476,6 +16852,7 @@ Set a reference to a custom Expression to use.
         <xs:element ref="tns:fhirJson"/>
         <xs:element ref="tns:fhirXml"/>
         <xs:element ref="tns:flatpack"/>
+        <xs:element ref="tns:fury"/>
         <xs:element ref="tns:grok"/>
         <xs:element ref="tns:gzipDeflater"/>
         <xs:element ref="tns:hl7"/>
@@ -16490,6 +16867,7 @@ Set a reference to a custom Expression to use.
         <xs:element ref="tns:pgp"/>
         <xs:element ref="tns:protobuf"/>
         <xs:element ref="tns:rss"/>
+        <xs:element ref="tns:smooks"/>
         <xs:element ref="tns:soap"/>
         <xs:element ref="tns:swiftMt"/>
         <xs:element ref="tns:swiftMx"/>
@@ -17223,6 +17601,13 @@ Sets the component name that this definition will apply to.
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="langChain4JLineTokenizerDefinition">
+    <xs:complexContent>
+      <xs:extension base="tns:langChain4jTokenizerImplementation">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="customTransformer">
     <xs:complexContent>
       <xs:extension base="tns:transformer">
@@ -17257,6 +17642,7 @@ Sets the component name that this definition will apply to.
             <xs:element ref="tns:fhirJson"/>
             <xs:element ref="tns:fhirXml"/>
             <xs:element ref="tns:flatpack"/>
+            <xs:element ref="tns:fury"/>
             <xs:element ref="tns:grok"/>
             <xs:element ref="tns:gzipDeflater"/>
             <xs:element ref="tns:hl7"/>
@@ -17270,6 +17656,7 @@ Sets the component name that this definition will apply to.
             <xs:element ref="tns:parquetAvro"/>
             <xs:element ref="tns:protobuf"/>
             <xs:element ref="tns:rss"/>
+            <xs:element ref="tns:smooks"/>
             <xs:element ref="tns:soap"/>
             <xs:element ref="tns:swiftMt"/>
             <xs:element ref="tns:swiftMx"/>
@@ -17566,9 +17953,9 @@ Sets whether message history is enabled or not. Default value: false
             <xs:documentation xml:lang="en">
 <![CDATA[
 Whether to capture precise source location:line-number for all EIPs in Camel routes. Enabling this will impact parsing
-Java based routes (also Groovy, Kotlin, etc.) on startup as this uses JDK StackTraceElement to calculate the location
-from the Camel route, which comes with a performance cost. This only impact startup, not the performance of the routes
-at runtime. Default value: false
+Java based routes (also Groovy, etc.) on startup as this uses JDK StackTraceElement to calculate the location from the
+Camel route, which comes with a performance cost. This only impact startup, not the performance of the routes at
+runtime. Default value: false
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -17706,8 +18093,8 @@ Set whether breadcrumb is enabled.
 Can be used to turn off bean post processing. Be careful to turn this off, as this means that beans that use Camel
 annotations such as org.apache.camel.EndpointInject , org.apache.camel.ProducerTemplate , org.apache.camel.Produce ,
 org.apache.camel.Consume etc will not be injected and in use. Turning this off should only be done if you are sure you
-do not use any of these Camel features. Not all runtimes allow turning this off (such as camel-blueprint or camel-cdi
-with XML). The default value is true (enabled). Default value: true
+do not use any of these Camel features. Not all runtimes allow turning this off. The default value is true (enabled).
+Default value: true
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -17811,10 +18198,7 @@ converter classes. Default value: false
             <xs:documentation xml:lang="en">
 <![CDATA[
 Sets whether or not type converter statistics is enabled. By default the type converter utilization statistics is
-disabled. Notice: If enabled then there is a slight performance impact under very heavy load. You can enable/disable the
-statistics at runtime using the
-org.apache.camel.spi.TypeConverterRegistry#getStatistics()#setTypeConverterStatisticsEnabled(Boolean) method, or from
-JMX on the org.apache.camel.api.management.mbean.ManagedTypeConverterRegistryMBean mbean.
+disabled. Notice: If enabled then there is a slight performance impact under very heavy load.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -18014,7 +18398,7 @@ The optional SSLSessionContext timeout time for javax.net.ssl.SSLSession in seco
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The optional provider identifier for the JSSE implementation to use when constructing an SSLContext.
+The provider identifier for the JSSE implementation to use when constructing an SSLContext.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -18023,8 +18407,8 @@ The optional provider identifier for the JSSE implementation to use when constru
           <xs:annotation>
             <xs:documentation xml:lang="en">
 <![CDATA[
-The optional protocol for the secure sockets created by the SSLContext represented by this instance's configuration. See
-Appendix A in the Java Secure Socket Extension Reference Guide for information about standard protocol names.
+The protocol for the secure sockets created by the SSLContext represented by this instance's configuration. See
+https://docs.oracle.com/en/java/javase/17/docs/specs/security/standard-names.html.
 ]]>
             </xs:documentation>
           </xs:annotation>
@@ -18279,6 +18663,13 @@ An optional certificate alias to use. This is useful when the keystore has multi
       <xs:enumeration value="BOOLEAN"/>
       <xs:enumeration value="NODESET"/>
       <xs:enumeration value="NODE"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="tokenizerType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="OPEN_AI"/>
+      <xs:enumeration value="AZURE"/>
+      <xs:enumeration value="QWEN"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="springErrorHandlerType">

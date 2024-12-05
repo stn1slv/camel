@@ -151,22 +151,22 @@ public final class JmsMessageHelper {
         if (value == null) {
             return;
         }
-        if (value instanceof Byte) {
-            jmsMessage.setByteProperty(name, (Byte) value);
-        } else if (value instanceof Boolean) {
-            jmsMessage.setBooleanProperty(name, (Boolean) value);
-        } else if (value instanceof Double) {
-            jmsMessage.setDoubleProperty(name, (Double) value);
-        } else if (value instanceof Float) {
-            jmsMessage.setFloatProperty(name, (Float) value);
-        } else if (value instanceof Integer) {
-            jmsMessage.setIntProperty(name, (Integer) value);
-        } else if (value instanceof Long) {
-            jmsMessage.setLongProperty(name, (Long) value);
-        } else if (value instanceof Short) {
-            jmsMessage.setShortProperty(name, (Short) value);
-        } else if (value instanceof String) {
-            jmsMessage.setStringProperty(name, (String) value);
+        if (value instanceof Byte aByte) {
+            jmsMessage.setByteProperty(name, aByte);
+        } else if (value instanceof Boolean aBoolean) {
+            jmsMessage.setBooleanProperty(name, aBoolean);
+        } else if (value instanceof Double aDouble) {
+            jmsMessage.setDoubleProperty(name, aDouble);
+        } else if (value instanceof Float aFloat) {
+            jmsMessage.setFloatProperty(name, aFloat);
+        } else if (value instanceof Integer integer) {
+            jmsMessage.setIntProperty(name, integer);
+        } else if (value instanceof Long aLong) {
+            jmsMessage.setLongProperty(name, aLong);
+        } else if (value instanceof Short aShort) {
+            jmsMessage.setShortProperty(name, aShort);
+        } else if (value instanceof String string) {
+            jmsMessage.setStringProperty(name, string);
         } else {
             // fallback to Object
             jmsMessage.setObjectProperty(name, value);
@@ -413,13 +413,14 @@ public final class JmsMessageHelper {
      * @param  exchange                 the exchange
      * @param  message                  the message
      * @param  deliveryMode             the delivery mode, either as a String or integer
+     * @param  preserveMessageQos       whether the option preserveMessageQos has been enabled
      * @throws jakarta.jms.JMSException is thrown if error setting the delivery mode
      */
-    public static void setJMSDeliveryMode(Exchange exchange, Message message, Object deliveryMode) throws JMSException {
+    public static void setJMSDeliveryMode(Exchange exchange, Message message, Object deliveryMode, boolean preserveMessageQos)
+            throws JMSException {
         Integer mode = null;
 
-        if (deliveryMode instanceof String) {
-            String s = (String) deliveryMode;
+        if (deliveryMode instanceof String s) {
             if ("PERSISTENT".equalsIgnoreCase(s)) {
                 mode = DeliveryMode.PERSISTENT;
             } else if ("NON_PERSISTENT".equalsIgnoreCase(s)) {
@@ -443,7 +444,9 @@ public final class JmsMessageHelper {
 
         if (mode != null) {
             message.setJMSDeliveryMode(mode);
-            message.setIntProperty(JmsConstants.JMS_DELIVERY_MODE, mode);
+            if (preserveMessageQos) {
+                message.setIntProperty(JmsConstants.JMS_DELIVERY_MODE, mode);
+            }
         }
     }
 

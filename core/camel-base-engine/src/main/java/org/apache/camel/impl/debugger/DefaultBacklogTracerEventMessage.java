@@ -19,17 +19,24 @@ package org.apache.camel.impl.debugger;
 import java.text.SimpleDateFormat;
 import java.util.Map;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.spi.BacklogTracerEventMessage;
+import org.apache.camel.support.MessageHelper;
 import org.apache.camel.util.StopWatch;
+import org.apache.camel.util.StringHelper;
+import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsonable;
 import org.apache.camel.util.json.Jsoner;
+
+import static org.apache.camel.support.MessageHelper.dumpExceptionAsJSonObject;
 
 /**
  * An event message holding the traced message by the {@link BacklogTracer}.
  */
 public final class DefaultBacklogTracerEventMessage implements BacklogTracerEventMessage {
 
+    private final CamelContext camelContext;
     private final StopWatch watch;
     private final boolean first;
     private final boolean last;
@@ -47,17 +54,20 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
     private Map<String, String> endpointServiceMetadata;
     private final boolean rest;
     private final boolean template;
-    private final String messageAsXml;
-    private final String messageAsJSon;
-    private String exceptionAsXml;
-    private String exceptionAsJSon;
+    private final JsonObject data;
+    private volatile String dataAsJson;
+    private volatile String dataAsXml;
+    private Throwable exception;
+    private volatile JsonObject exceptionAsJsonObject;
+    private volatile String exceptionAsXml;
+    private volatile String exceptionAsJSon;
     private long duration;
     private boolean done;
 
-    public DefaultBacklogTracerEventMessage(boolean first, boolean last, long uid, long timestamp,
+    public DefaultBacklogTracerEventMessage(CamelContext camelContext, boolean first, boolean last, long uid, long timestamp,
                                             String location, String routeId, String toNode, String exchangeId,
-                                            boolean rest, boolean template,
-                                            String messageAsXml, String messageAsJSon) {
+                                            boolean rest, boolean template, JsonObject data) {
+        this.camelContext = camelContext;
         this.watch = new StopWatch();
         this.first = first;
         this.last = last;
@@ -69,9 +79,8 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
         this.exchangeId = exchangeId;
         this.rest = rest;
         this.template = template;
-        this.messageAsXml = messageAsXml;
-        this.messageAsJSon = messageAsJSon;
         this.threadName = Thread.currentThread().getName();
+        this.data = data;
     }
 
     /**
@@ -139,12 +148,18 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
 
     @Override
     public String getMessageAsXml() {
-        return messageAsXml;
+        if (dataAsXml == null) {
+            dataAsXml = toXML(data, 4);
+        }
+        return dataAsXml;
     }
 
     @Override
     public String getMessageAsJSon() {
-        return messageAsJSon;
+        if (dataAsJson == null) {
+            dataAsJson = data.toJson();
+        }
+        return dataAsJson;
     }
 
     @Override
@@ -167,27 +182,28 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
 
     @Override
     public boolean hasException() {
-        return exceptionAsXml != null || exceptionAsJSon != null;
+        return exception != null;
+    }
+
+    @Override
+    public void setException(Throwable exception) {
+        this.exception = exception;
     }
 
     @Override
     public String getExceptionAsXml() {
+        if (exceptionAsXml == null && exception != null) {
+            exceptionAsXml = MessageHelper.dumpExceptionAsXML(exception, 4);
+        }
         return exceptionAsXml;
     }
 
     @Override
-    public void setExceptionAsXml(String exceptionAsXml) {
-        this.exceptionAsXml = exceptionAsXml;
-    }
-
-    @Override
     public String getExceptionAsJSon() {
+        if (exceptionAsJSon == null && exception != null) {
+            exceptionAsJSon = MessageHelper.dumpExceptionAsJSon(exception, 4, true);
+        }
         return exceptionAsJSon;
-    }
-
-    @Override
-    public void setExceptionAsJSon(String exceptionAsJSon) {
-        this.exceptionAsJSon = exceptionAsJSon;
     }
 
     public String getEndpointUri() {
@@ -205,6 +221,9 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
 
     public void setEndpointUri(String endpointUri) {
         this.endpointUri = endpointUri;
+        // dirty flag
+        this.dataAsJson = null;
+        this.dataAsXml = null;
     }
 
     public String getEndpointServiceUrl() {
@@ -213,6 +232,9 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
 
     public void setEndpointServiceUrl(String endpointServiceUrl) {
         this.endpointServiceUrl = endpointServiceUrl;
+        // dirty flag
+        this.dataAsJson = null;
+        this.dataAsXml = null;
     }
 
     public String getEndpointServiceProtocol() {
@@ -221,6 +243,9 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
 
     public void setEndpointServiceProtocol(String endpointServiceProtocol) {
         this.endpointServiceProtocol = endpointServiceProtocol;
+        // dirty flag
+        this.dataAsJson = null;
+        this.dataAsXml = null;
     }
 
     public Map<String, String> getEndpointServiceMetadata() {
@@ -229,6 +254,9 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
 
     public void setEndpointServiceMetadata(Map<String, String> endpointServiceMetadata) {
         this.endpointServiceMetadata = endpointServiceMetadata;
+        // dirty flag
+        this.dataAsJson = null;
+        this.dataAsXml = null;
     }
 
     @Override
@@ -245,10 +273,9 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
      */
     @Override
     public String toXml(int indent) {
-        StringBuilder prefix = new StringBuilder();
-        prefix.append(" ".repeat(indent));
+        final String prefix = " ".repeat(indent);
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(512);
         sb.append(prefix).append("<").append(ROOT_TAG).append(">\n");
         sb.append(prefix).append("  <uid>").append(uid).append("</uid>\n");
         sb.append(prefix).append("  <first>").append(first).append("</first>\n");
@@ -293,11 +320,147 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
             }
             sb.append(prefix).append("  </endpointService>\n");
         }
-        sb.append(prefix).append(messageAsXml).append("\n");
-        if (exceptionAsXml != null) {
-            sb.append(prefix).append(exceptionAsXml).append("\n");
+        sb.append(prefix).append(getMessageAsXml()).append("\n");
+        if (getExceptionAsXml() != null) {
+            sb.append(prefix).append(getExceptionAsXml()).append("\n");
         }
         sb.append(prefix).append("</").append(ROOT_TAG).append(">");
+        return sb.toString();
+    }
+
+    private String toXML(JsonObject data, int indent) {
+        StringBuilder sb = new StringBuilder(1024);
+
+        final String prefix = " ".repeat(indent);
+
+        JsonObject root = data.getMap("message");
+
+        // include exchangeId/exchangePattern/type as attribute on the <message> tag
+        sb.append(prefix);
+        sb.append("<message exchangeId=\"").append(root.getString("exchangeId"))
+                .append("\" exchangePattern=\"").append(root.getString("exchangePattern"))
+                .append("\" exchangeType=\"").append(root.getString("exchangeType"))
+                .append("\" messageType=\"").append(root.getString("messageType")).append("\">\n");
+
+        // exchange variables
+        JsonArray arr = root.getCollection("exchangeVariables");
+        if (arr != null && !arr.isEmpty()) {
+            sb.append(prefix);
+            sb.append("  <exchangeVariables>\n");
+            for (var entry : arr) {
+                JsonObject jo = (JsonObject) entry;
+                sb.append(prefix);
+                sb.append("    <exchangeVariable key=\"").append(jo.getString("key")).append("\"");
+                String type = jo.getString("type");
+                if (type != null) {
+                    sb.append(" type=\"").append(type).append("\"");
+                }
+                sb.append(">");
+                Object value = jo.get("value");
+                if (value != null) {
+                    try {
+                        String text = camelContext.getTypeConverter().tryConvertTo(String.class, value);
+                        // must always xml encode
+                        sb.append(StringHelper.xmlEncode(text));
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+                sb.append("</exchangeVariable>\n");
+            }
+            sb.append(prefix);
+            sb.append("  </exchangeVariables>\n");
+        }
+        // exchange properties
+        arr = root.getCollection("exchangeProperties");
+        if (arr != null && !arr.isEmpty()) {
+            sb.append(prefix);
+            sb.append("  <exchangeProperties>\n");
+            for (var entry : arr) {
+                JsonObject jo = (JsonObject) entry;
+                sb.append(prefix);
+                sb.append("    <exchangeProperty key=\"").append(jo.getString("key")).append("\"");
+                String type = jo.getString("type");
+                if (type != null) {
+                    sb.append(" type=\"").append(type).append("\"");
+                }
+                sb.append(">");
+                Object value = jo.get("value");
+                if (value != null) {
+                    try {
+                        String text = camelContext.getTypeConverter().tryConvertTo(String.class, value);
+                        // must always xml encode
+                        sb.append(StringHelper.xmlEncode(text));
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+                sb.append("</exchangeProperty>\n");
+            }
+            sb.append(prefix);
+            sb.append("  </exchangeProperties>\n");
+        }
+        // headers
+        arr = root.getCollection("headers");
+        if (arr != null && !arr.isEmpty()) {
+            sb.append(prefix);
+            sb.append("  <headers>\n");
+            for (var entry : arr) {
+                JsonObject jo = (JsonObject) entry;
+                sb.append(prefix);
+                sb.append("    <header key=\"").append(jo.getString("key")).append("\"");
+                String type = jo.getString("type");
+                if (type != null) {
+                    sb.append(" type=\"").append(type).append("\"");
+                }
+                sb.append(">");
+                Object value = jo.get("value");
+                if (value != null) {
+                    try {
+                        String text = camelContext.getTypeConverter().tryConvertTo(String.class, value);
+                        // must always xml encode
+                        sb.append(StringHelper.xmlEncode(text));
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
+                sb.append("</header>\n");
+            }
+            sb.append(prefix);
+            sb.append("  </headers>\n");
+        }
+        JsonObject jo = root.getMap("body");
+        if (jo != null) {
+            sb.append(prefix);
+            sb.append("  <body");
+            String type = jo.getString("type");
+            if (type != null) {
+                sb.append(" type=\"").append(type).append("\"");
+            }
+            Long size = jo.getLong("size");
+            if (size != null) {
+                sb.append(" size=\"").append(size).append("\"");
+            }
+            Long position = jo.getLong("position");
+            if (position != null) {
+                sb.append(" position=\"").append(position).append("\"");
+            }
+            sb.append(">");
+            Object value = jo.get("value");
+            if (value != null) {
+                try {
+                    String text = camelContext.getTypeConverter().tryConvertTo(String.class, value);
+                    // must always xml encode
+                    sb.append(StringHelper.xmlEncode(text));
+                } catch (Exception e) {
+                    // ignore
+                }
+            }
+            sb.append("</body>\n");
+        }
+
+        sb.append(prefix);
+        sb.append("</message>");
         return sb.toString();
     }
 
@@ -353,28 +516,17 @@ public final class DefaultBacklogTracerEventMessage implements BacklogTracerEven
             }
             jo.put("endpointService", es);
         }
-        try {
-            // parse back to json object and avoid double message root
-            JsonObject msg = (JsonObject) Jsoner.deserialize(messageAsJSon);
-            msg = msg.getMap("message");
-            jo.put("message", msg);
-
-            // [Body is null] -> null
-            msg = msg.getMap("body");
-            Object body = msg.get("value");
-            if ("[Body is null]".equals(body)) {
-                msg.replace("value", null);
+        jo.put("message", data.getMap("message"));
+        if (exception != null) {
+            if (exceptionAsJsonObject == null) {
+                try {
+                    exceptionAsJsonObject = dumpExceptionAsJSonObject(exception);
+                } catch (Exception e) {
+                    // ignore
+                }
             }
-        } catch (Exception e) {
-            // ignore
-        }
-        if (exceptionAsJSon != null) {
-            try {
-                // parse back to json object and avoid double message root
-                JsonObject msg = (JsonObject) Jsoner.deserialize(exceptionAsJSon);
-                jo.put("exception", msg.get("exception"));
-            } catch (Exception e) {
-                // ignore
+            if (exceptionAsJsonObject != null) {
+                jo.put("exception", exceptionAsJsonObject.get("exception"));
             }
         }
         return jo;

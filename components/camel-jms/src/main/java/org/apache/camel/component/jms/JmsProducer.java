@@ -78,7 +78,8 @@ public class JmsProducer extends DefaultAsyncProducer {
 
     protected void initReplyManager() {
         if (!started.get()) {
-            synchronized (this) {
+            lock.lock();
+            try {
                 if (started.get()) {
                     return;
                 }
@@ -119,6 +120,8 @@ public class JmsProducer extends DefaultAsyncProducer {
                     Thread.currentThread().setContextClassLoader(oldClassLoader);
                 }
                 started.set(true);
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -368,8 +371,7 @@ public class JmsProducer extends DefaultAsyncProducer {
 
                 // the reply to is a String, so we need to look up its Destination instance
                 // and if needed create the destination using the session if needed to
-                if (jmsReplyTo instanceof String) {
-                    String replyTo = (String) jmsReplyTo;
+                if (jmsReplyTo instanceof String replyTo) {
                     // we need to null it as we use the String to resolve it as a Destination instance
                     jmsReplyTo = resolveOrCreateDestination(replyTo, session);
                 }
@@ -379,8 +381,8 @@ public class JmsProducer extends DefaultAsyncProducer {
                 String replyToOverride = endpoint.getConfiguration().getReplyToOverride();
                 if (replyToOverride != null) {
                     replyTo = resolveOrCreateDestination(replyToOverride, session);
-                } else if (jmsReplyTo instanceof Destination) {
-                    replyTo = (Destination) jmsReplyTo;
+                } else if (jmsReplyTo instanceof Destination destinationD) {
+                    replyTo = destinationD;
                 }
                 if (replyTo != null) {
                     LOG.debug("Using JMSReplyTo destination: {}", replyTo);

@@ -21,7 +21,7 @@ import javax.annotation.processing.Generated;
 import org.apache.camel.Component;
 import org.apache.camel.builder.component.AbstractComponentBuilder;
 import org.apache.camel.builder.component.ComponentBuilder;
-import org.apache.camel.component.debezium.DebeziumMongodbComponent;
+import org.apache.camel.component.debezium.mongodb.DebeziumMongodbComponent;
 
 /**
  * Capture changes from a MongoDB database.
@@ -103,14 +103,14 @@ public interface DebeziumMongodbComponentBuilderFactory {
          * Allow pre-configured Configurations to be set.
          * 
          * The option is a:
-         * &lt;code&gt;org.apache.camel.component.debezium.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration&lt;/code&gt; type.
+         * &lt;code&gt;org.apache.camel.component.debezium.mongodb.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration&lt;/code&gt; type.
          * 
          * Group: consumer
          * 
          * @param configuration the value to set
          * @return the dsl builder
          */
-        default DebeziumMongodbComponentBuilder configuration(org.apache.camel.component.debezium.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration configuration) {
+        default DebeziumMongodbComponentBuilder configuration(org.apache.camel.component.debezium.mongodb.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration configuration) {
             doSetProperty("configuration", configuration);
             return this;
         }
@@ -1290,6 +1290,24 @@ public interface DebeziumMongodbComponentBuilderFactory {
     
         
         /**
+         * A delay period after the snapshot is completed and the streaming
+         * begins, given in milliseconds. Defaults to 0 ms.
+         * 
+         * The option is a: &lt;code&gt;long&lt;/code&gt; type.
+         * 
+         * Default: 0ms
+         * Group: mongodb
+         * 
+         * @param streamingDelayMs the value to set
+         * @return the dsl builder
+         */
+        default DebeziumMongodbComponentBuilder streamingDelayMs(long streamingDelayMs) {
+            doSetProperty("streamingDelayMs", streamingDelayMs);
+            return this;
+        }
+    
+        
+        /**
          * Whether delete operations should be represented by a delete event and
          * a subsequent tombstone event (true) or only by a delete event
          * (false). Emitting the tombstone event (the default behavior) allows
@@ -1347,6 +1365,24 @@ public interface DebeziumMongodbComponentBuilderFactory {
             doSetProperty("topicPrefix", topicPrefix);
             return this;
         }
+    
+        
+        /**
+         * Class to make transaction context &amp; transaction struct/schemas.
+         * 
+         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
+         * 
+         * Default:
+         * io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory
+         * Group: mongodb
+         * 
+         * @param transactionMetadataFactory the value to set
+         * @return the dsl builder
+         */
+        default DebeziumMongodbComponentBuilder transactionMetadataFactory(java.lang.String transactionMetadataFactory) {
+            doSetProperty("transactionMetadataFactory", transactionMetadataFactory);
+            return this;
+        }
     }
 
     class DebeziumMongodbComponentBuilderImpl
@@ -1356,9 +1392,9 @@ public interface DebeziumMongodbComponentBuilderFactory {
         protected DebeziumMongodbComponent buildConcreteComponent() {
             return new DebeziumMongodbComponent();
         }
-        private org.apache.camel.component.debezium.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration getOrCreateConfiguration(DebeziumMongodbComponent component) {
+        private org.apache.camel.component.debezium.mongodb.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration getOrCreateConfiguration(DebeziumMongodbComponent component) {
             if (component.getConfiguration() == null) {
-                component.setConfiguration(new org.apache.camel.component.debezium.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration());
+                component.setConfiguration(new org.apache.camel.component.debezium.mongodb.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration());
             }
             return component.getConfiguration();
         }
@@ -1370,7 +1406,7 @@ public interface DebeziumMongodbComponentBuilderFactory {
             switch (name) {
             case "additionalProperties": getOrCreateConfiguration((DebeziumMongodbComponent) component).setAdditionalProperties((java.util.Map) value); return true;
             case "bridgeErrorHandler": ((DebeziumMongodbComponent) component).setBridgeErrorHandler((boolean) value); return true;
-            case "configuration": ((DebeziumMongodbComponent) component).setConfiguration((org.apache.camel.component.debezium.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration) value); return true;
+            case "configuration": ((DebeziumMongodbComponent) component).setConfiguration((org.apache.camel.component.debezium.mongodb.configuration.MongoDbConnectorEmbeddedDebeziumConfiguration) value); return true;
             case "internalKeyConverter": getOrCreateConfiguration((DebeziumMongodbComponent) component).setInternalKeyConverter((java.lang.String) value); return true;
             case "internalValueConverter": getOrCreateConfiguration((DebeziumMongodbComponent) component).setInternalValueConverter((java.lang.String) value); return true;
             case "offsetCommitPolicy": getOrCreateConfiguration((DebeziumMongodbComponent) component).setOffsetCommitPolicy((java.lang.String) value); return true;
@@ -1437,9 +1473,11 @@ public interface DebeziumMongodbComponentBuilderFactory {
             case "snapshotModeConfigurationBasedStartStream": getOrCreateConfiguration((DebeziumMongodbComponent) component).setSnapshotModeConfigurationBasedStartStream((boolean) value); return true;
             case "snapshotModeCustomName": getOrCreateConfiguration((DebeziumMongodbComponent) component).setSnapshotModeCustomName((java.lang.String) value); return true;
             case "sourceinfoStructMaker": getOrCreateConfiguration((DebeziumMongodbComponent) component).setSourceinfoStructMaker((java.lang.String) value); return true;
+            case "streamingDelayMs": getOrCreateConfiguration((DebeziumMongodbComponent) component).setStreamingDelayMs((long) value); return true;
             case "tombstonesOnDelete": getOrCreateConfiguration((DebeziumMongodbComponent) component).setTombstonesOnDelete((boolean) value); return true;
             case "topicNamingStrategy": getOrCreateConfiguration((DebeziumMongodbComponent) component).setTopicNamingStrategy((java.lang.String) value); return true;
             case "topicPrefix": getOrCreateConfiguration((DebeziumMongodbComponent) component).setTopicPrefix((java.lang.String) value); return true;
+            case "transactionMetadataFactory": getOrCreateConfiguration((DebeziumMongodbComponent) component).setTransactionMetadataFactory((java.lang.String) value); return true;
             default: return false;
             }
         }

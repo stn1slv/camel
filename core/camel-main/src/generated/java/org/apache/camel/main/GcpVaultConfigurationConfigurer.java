@@ -31,6 +31,10 @@ public class GcpVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "gcpVaultConfiguration": target.setGcpVaultConfiguration(property(camelContext, org.apache.camel.vault.GcpVaultConfiguration.class, value)); return true;
         case "hashicorpvaultconfiguration":
         case "hashicorpVaultConfiguration": target.setHashicorpVaultConfiguration(property(camelContext, org.apache.camel.vault.HashicorpVaultConfiguration.class, value)); return true;
+        case "kubernetesconfigmapvaultconfiguration":
+        case "kubernetesConfigMapVaultConfiguration": target.setKubernetesConfigMapVaultConfiguration(property(camelContext, org.apache.camel.vault.KubernetesConfigMapVaultConfiguration.class, value)); return true;
+        case "kubernetesvaultconfiguration":
+        case "kubernetesVaultConfiguration": target.setKubernetesVaultConfiguration(property(camelContext, org.apache.camel.vault.KubernetesVaultConfiguration.class, value)); return true;
         case "projectid":
         case "projectId": target.setProjectId(property(camelContext, java.lang.String.class, value)); return true;
         case "refreshenabled":
@@ -59,6 +63,10 @@ public class GcpVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "gcpVaultConfiguration": return org.apache.camel.vault.GcpVaultConfiguration.class;
         case "hashicorpvaultconfiguration":
         case "hashicorpVaultConfiguration": return org.apache.camel.vault.HashicorpVaultConfiguration.class;
+        case "kubernetesconfigmapvaultconfiguration":
+        case "kubernetesConfigMapVaultConfiguration": return org.apache.camel.vault.KubernetesConfigMapVaultConfiguration.class;
+        case "kubernetesvaultconfiguration":
+        case "kubernetesVaultConfiguration": return org.apache.camel.vault.KubernetesVaultConfiguration.class;
         case "projectid":
         case "projectId": return java.lang.String.class;
         case "refreshenabled":
@@ -88,6 +96,10 @@ public class GcpVaultConfigurationConfigurer extends org.apache.camel.support.co
         case "gcpVaultConfiguration": return target.getGcpVaultConfiguration();
         case "hashicorpvaultconfiguration":
         case "hashicorpVaultConfiguration": return target.getHashicorpVaultConfiguration();
+        case "kubernetesconfigmapvaultconfiguration":
+        case "kubernetesConfigMapVaultConfiguration": return target.getKubernetesConfigMapVaultConfiguration();
+        case "kubernetesvaultconfiguration":
+        case "kubernetesVaultConfiguration": return target.getKubernetesVaultConfiguration();
         case "projectid":
         case "projectId": return target.getProjectId();
         case "refreshenabled":

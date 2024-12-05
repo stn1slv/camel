@@ -507,6 +507,38 @@ public interface DebeziumPostgresEndpointBuilderFactory {
             return this;
         }
         /**
+         * Time to wait for a query to execute, given in milliseconds. Defaults
+         * to 600 seconds (600,000 ms); zero means there is no limit.
+         * 
+         * The option is a: <code>int</code> type.
+         * 
+         * Default: 10m
+         * Group: postgres
+         * 
+         * @param databaseQueryTimeoutMs the value to set
+         * @return the dsl builder
+         */
+        default DebeziumPostgresEndpointBuilder databaseQueryTimeoutMs(int databaseQueryTimeoutMs) {
+            doSetProperty("databaseQueryTimeoutMs", databaseQueryTimeoutMs);
+            return this;
+        }
+        /**
+         * Time to wait for a query to execute, given in milliseconds. Defaults
+         * to 600 seconds (600,000 ms); zero means there is no limit.
+         * 
+         * The option will be converted to a <code>int</code> type.
+         * 
+         * Default: 10m
+         * Group: postgres
+         * 
+         * @param databaseQueryTimeoutMs the value to set
+         * @return the dsl builder
+         */
+        default DebeziumPostgresEndpointBuilder databaseQueryTimeoutMs(String databaseQueryTimeoutMs) {
+            doSetProperty("databaseQueryTimeoutMs", databaseQueryTimeoutMs);
+            return this;
+        }
+        /**
          * File containing the SSL Certificate for the client. See the Postgres
          * SSL docs for further information.
          * 
@@ -1796,6 +1828,27 @@ public interface DebeziumPostgresEndpointBuilderFactory {
             return this;
         }
         /**
+         * Controls which transaction isolation level is used. The default is
+         * 'serializable', which means that serializable isolation level is
+         * used. When 'repeatable_read' is specified, connector runs the initial
+         * snapshot in REPEATABLE READ isolation level. When 'read_committed' is
+         * specified, connector runs the initial snapshot in READ COMMITTED
+         * isolation level. In 'read_uncommitted' is specified, connector runs
+         * the initial snapshot in READ UNCOMMITTED isolation level.
+         * 
+         * The option is a: <code>java.lang.String</code> type.
+         * 
+         * Default: serializable
+         * Group: postgres
+         * 
+         * @param snapshotIsolationMode the value to set
+         * @return the dsl builder
+         */
+        default DebeziumPostgresEndpointBuilder snapshotIsolationMode(String snapshotIsolationMode) {
+            doSetProperty("snapshotIsolationMode", snapshotIsolationMode);
+            return this;
+        }
+        /**
          * Controls how the connector holds locks on tables while performing the
          * schema snapshot. The 'shared' which means the connector will hold a
          * table lock that prevents exclusive table access for just the initial
@@ -2250,6 +2303,38 @@ public interface DebeziumPostgresEndpointBuilderFactory {
             return this;
         }
         /**
+         * A delay period after the snapshot is completed and the streaming
+         * begins, given in milliseconds. Defaults to 0 ms.
+         * 
+         * The option is a: <code>long</code> type.
+         * 
+         * Default: 0ms
+         * Group: postgres
+         * 
+         * @param streamingDelayMs the value to set
+         * @return the dsl builder
+         */
+        default DebeziumPostgresEndpointBuilder streamingDelayMs(long streamingDelayMs) {
+            doSetProperty("streamingDelayMs", streamingDelayMs);
+            return this;
+        }
+        /**
+         * A delay period after the snapshot is completed and the streaming
+         * begins, given in milliseconds. Defaults to 0 ms.
+         * 
+         * The option will be converted to a <code>long</code> type.
+         * 
+         * Default: 0ms
+         * Group: postgres
+         * 
+         * @param streamingDelayMs the value to set
+         * @return the dsl builder
+         */
+        default DebeziumPostgresEndpointBuilder streamingDelayMs(String streamingDelayMs) {
+            doSetProperty("streamingDelayMs", streamingDelayMs);
+            return this;
+        }
+        /**
          * A comma-separated list of regular expressions that match the
          * fully-qualified names of tables to be excluded from monitoring.
          * 
@@ -2403,6 +2488,22 @@ public interface DebeziumPostgresEndpointBuilderFactory {
          */
         default DebeziumPostgresEndpointBuilder topicPrefix(String topicPrefix) {
             doSetProperty("topicPrefix", topicPrefix);
+            return this;
+        }
+        /**
+         * Class to make transaction context &amp; transaction struct/schemas.
+         * 
+         * The option is a: <code>java.lang.String</code> type.
+         * 
+         * Default:
+         * io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory
+         * Group: postgres
+         * 
+         * @param transactionMetadataFactory the value to set
+         * @return the dsl builder
+         */
+        default DebeziumPostgresEndpointBuilder transactionMetadataFactory(String transactionMetadataFactory) {
+            doSetProperty("transactionMetadataFactory", transactionMetadataFactory);
             return this;
         }
         /**

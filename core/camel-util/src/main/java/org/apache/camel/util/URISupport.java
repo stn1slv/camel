@@ -37,6 +37,10 @@ import static org.apache.camel.util.CamelURIParser.URI_ALREADY_NORMALIZED;
 
 /**
  * URI utilities.
+ *
+ * IMPORTANT: This class is only intended for Camel internal, Camel components, and other Camel features. If you need a
+ * general purpose URI/URL utility class then do not use this class. This class is implemented in a certain way to work
+ * and support how Camel internally parses endpoint URIs.
  */
 public final class URISupport {
 
@@ -339,8 +343,7 @@ public final class URISupport {
             }
             // if the value is a list then we need to iterate
             Object value = entry.getValue();
-            if (value instanceof List) {
-                List list = (List) value;
+            if (value instanceof List list) {
                 for (int i = 0; i < list.size(); i++) {
                     Object obj = list.get(i);
                     if (obj == null) {
@@ -879,7 +882,7 @@ public final class URISupport {
             return "";
         }
 
-        final StringBuilder joined = new StringBuilder();
+        final StringBuilder joined = new StringBuilder(paths.length * 64);
 
         boolean addedLast = false;
         for (int i = paths.length - 1; i >= 0; i--) {
@@ -907,7 +910,7 @@ public final class URISupport {
     }
 
     public static String buildMultiValueQuery(String key, Iterable<Object> values) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(256);
         for (Object v : values) {
             if (!sb.isEmpty()) {
                 sb.append("&");

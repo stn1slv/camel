@@ -17,7 +17,136 @@ import org.apache.camel.main.MainConfigurationProperties;
  */
 @Generated("org.apache.camel.maven.packaging.GenerateConfigurerMojo")
 @SuppressWarnings("unchecked")
-public class MainConfigurationPropertiesConfigurer extends org.apache.camel.support.component.PropertyConfigurerSupport implements GeneratedPropertyConfigurer, PropertyConfigurerGetter {
+public class MainConfigurationPropertiesConfigurer extends org.apache.camel.support.component.PropertyConfigurerSupport implements GeneratedPropertyConfigurer, ExtendedPropertyConfigurerGetter {
+
+    private static final Map<String, Object> ALL_OPTIONS;
+    static {
+        Map<String, Object> map = new CaseInsensitiveMap();
+        map.put("AllowUseOriginalMessage", boolean.class);
+        map.put("AutoConfigurationEnabled", boolean.class);
+        map.put("AutoConfigurationEnvironmentVariablesEnabled", boolean.class);
+        map.put("AutoConfigurationFailFast", boolean.class);
+        map.put("AutoConfigurationLogSummary", boolean.class);
+        map.put("AutoConfigurationSystemPropertiesEnabled", boolean.class);
+        map.put("AutoStartup", boolean.class);
+        map.put("AutowiredEnabled", boolean.class);
+        map.put("BasePackageScan", java.lang.String.class);
+        map.put("BasePackageScanEnabled", boolean.class);
+        map.put("BeanIntrospectionExtendedStatistics", boolean.class);
+        map.put("BeanIntrospectionLoggingLevel", org.apache.camel.LoggingLevel.class);
+        map.put("BeanPostProcessorEnabled", boolean.class);
+        map.put("CamelEventsTimestampEnabled", boolean.class);
+        map.put("CaseInsensitiveHeaders", boolean.class);
+        map.put("CloudPropertiesLocation", java.lang.String.class);
+        map.put("CompileWorkDir", java.lang.String.class);
+        map.put("ConfigurationClasses", java.lang.String.class);
+        map.put("Configurations", java.util.List.class);
+        map.put("ConsumerTemplateCacheSize", int.class);
+        map.put("ContextReloadEnabled", boolean.class);
+        map.put("Description", java.lang.String.class);
+        map.put("DevConsoleEnabled", boolean.class);
+        map.put("DumpRoutes", java.lang.String.class);
+        map.put("DumpRoutesGeneratedIds", boolean.class);
+        map.put("DumpRoutesInclude", java.lang.String.class);
+        map.put("DumpRoutesLog", boolean.class);
+        map.put("DumpRoutesOutput", java.lang.String.class);
+        map.put("DumpRoutesResolvePlaceholders", boolean.class);
+        map.put("DumpRoutesUriAsParameters", boolean.class);
+        map.put("DurationHitExitCode", int.class);
+        map.put("DurationMaxAction", java.lang.String.class);
+        map.put("DurationMaxIdleSeconds", int.class);
+        map.put("DurationMaxMessages", int.class);
+        map.put("DurationMaxSeconds", int.class);
+        map.put("EndpointBridgeErrorHandler", boolean.class);
+        map.put("EndpointLazyStartProducer", boolean.class);
+        map.put("EndpointRuntimeStatisticsEnabled", boolean.class);
+        map.put("ExchangeFactory", java.lang.String.class);
+        map.put("ExchangeFactoryCapacity", int.class);
+        map.put("ExchangeFactoryStatisticsEnabled", boolean.class);
+        map.put("ExtraShutdownTimeout", int.class);
+        map.put("FileConfigurations", java.lang.String.class);
+        map.put("GlobalOptions", java.util.Map.class);
+        map.put("InflightRepositoryBrowseEnabled", boolean.class);
+        map.put("JavaRoutesExcludePattern", java.lang.String.class);
+        map.put("JavaRoutesIncludePattern", java.lang.String.class);
+        map.put("JmxEnabled", boolean.class);
+        map.put("JmxManagementMBeansLevel", org.apache.camel.ManagementMBeansLevel.class);
+        map.put("JmxManagementNamePattern", java.lang.String.class);
+        map.put("JmxManagementRegisterRoutesCreateByKamelet", boolean.class);
+        map.put("JmxManagementRegisterRoutesCreateByTemplate", boolean.class);
+        map.put("JmxManagementStatisticsLevel", org.apache.camel.ManagementStatisticsLevel.class);
+        map.put("JmxUpdateRouteEnabled", boolean.class);
+        map.put("Lightweight", boolean.class);
+        map.put("LoadHealthChecks", boolean.class);
+        map.put("LoadStatisticsEnabled", boolean.class);
+        map.put("LoadTypeConverters", boolean.class);
+        map.put("LogDebugMaxChars", int.class);
+        map.put("LogExhaustedMessageBody", boolean.class);
+        map.put("LogLanguage", java.lang.String.class);
+        map.put("LogMask", boolean.class);
+        map.put("LogName", java.lang.String.class);
+        map.put("MainListenerClasses", java.lang.String.class);
+        map.put("MainListeners", java.util.List.class);
+        map.put("MdcLoggingKeysPattern", java.lang.String.class);
+        map.put("MessageHistory", boolean.class);
+        map.put("Modeline", boolean.class);
+        map.put("Name", java.lang.String.class);
+        map.put("ProducerTemplateCacheSize", int.class);
+        map.put("Profile", java.lang.String.class);
+        map.put("RouteFilterExcludePattern", java.lang.String.class);
+        map.put("RouteFilterIncludePattern", java.lang.String.class);
+        map.put("RoutesBuilderClasses", java.lang.String.class);
+        map.put("RoutesBuilders", java.util.List.class);
+        map.put("RoutesCollectorEnabled", boolean.class);
+        map.put("RoutesCollectorIgnoreLoadingError", boolean.class);
+        map.put("RoutesExcludePattern", java.lang.String.class);
+        map.put("RoutesIncludePattern", java.lang.String.class);
+        map.put("RoutesReloadDirectory", java.lang.String.class);
+        map.put("RoutesReloadDirectoryRecursive", boolean.class);
+        map.put("RoutesReloadEnabled", boolean.class);
+        map.put("RoutesReloadPattern", java.lang.String.class);
+        map.put("RoutesReloadRemoveAllRoutes", boolean.class);
+        map.put("RoutesReloadRestartDuration", boolean.class);
+        map.put("ShutdownLogInflightExchangesOnTimeout", boolean.class);
+        map.put("ShutdownNowOnTimeout", boolean.class);
+        map.put("ShutdownRoutesInReverseOrder", boolean.class);
+        map.put("ShutdownSuppressLoggingOnTimeout", boolean.class);
+        map.put("ShutdownTimeout", int.class);
+        map.put("SourceLocationEnabled", boolean.class);
+        map.put("StartupRecorder", java.lang.String.class);
+        map.put("StartupRecorderDir", java.lang.String.class);
+        map.put("StartupRecorderDuration", long.class);
+        map.put("StartupRecorderMaxDepth", int.class);
+        map.put("StartupRecorderProfile", java.lang.String.class);
+        map.put("StartupRecorderRecording", boolean.class);
+        map.put("StartupSummaryLevel", org.apache.camel.StartupSummaryLevel.class);
+        map.put("StreamCachingAllowClasses", java.lang.String.class);
+        map.put("StreamCachingAnySpoolRules", boolean.class);
+        map.put("StreamCachingBufferSize", int.class);
+        map.put("StreamCachingDenyClasses", java.lang.String.class);
+        map.put("StreamCachingEnabled", boolean.class);
+        map.put("StreamCachingRemoveSpoolDirectoryWhenStopping", boolean.class);
+        map.put("StreamCachingSpoolCipher", java.lang.String.class);
+        map.put("StreamCachingSpoolDirectory", java.lang.String.class);
+        map.put("StreamCachingSpoolEnabled", boolean.class);
+        map.put("StreamCachingSpoolThreshold", long.class);
+        map.put("StreamCachingSpoolUsedHeapMemoryLimit", java.lang.String.class);
+        map.put("StreamCachingSpoolUsedHeapMemoryThreshold", int.class);
+        map.put("StreamCachingStatisticsEnabled", boolean.class);
+        map.put("ThreadNamePattern", java.lang.String.class);
+        map.put("Tracing", boolean.class);
+        map.put("TracingLoggingFormat", java.lang.String.class);
+        map.put("TracingPattern", java.lang.String.class);
+        map.put("TracingStandby", boolean.class);
+        map.put("TracingTemplates", boolean.class);
+        map.put("TypeConverterStatisticsEnabled", boolean.class);
+        map.put("UseBreadcrumb", boolean.class);
+        map.put("UseDataType", boolean.class);
+        map.put("UseMdcLogging", boolean.class);
+        map.put("UuidGenerator", java.lang.String.class);
+        ALL_OPTIONS = map;
+        ConfigurerStrategy.addBootstrapConfigurerClearer(MainConfigurationPropertiesConfigurer::clearBootstrapConfigurers);
+    }
 
     @Override
     public boolean configure(CamelContext camelContext, Object obj, String name, Object value, boolean ignoreCase) {
@@ -53,6 +182,8 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "camelEventsTimestampEnabled": target.setCamelEventsTimestampEnabled(property(camelContext, boolean.class, value)); return true;
         case "caseinsensitiveheaders":
         case "caseInsensitiveHeaders": target.setCaseInsensitiveHeaders(property(camelContext, boolean.class, value)); return true;
+        case "cloudpropertieslocation":
+        case "cloudPropertiesLocation": target.setCloudPropertiesLocation(property(camelContext, java.lang.String.class, value)); return true;
         case "compileworkdir":
         case "compileWorkDir": target.setCompileWorkDir(property(camelContext, java.lang.String.class, value)); return true;
         case "configurationclasses":
@@ -138,8 +269,16 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "logDebugMaxChars": target.setLogDebugMaxChars(property(camelContext, int.class, value)); return true;
         case "logexhaustedmessagebody":
         case "logExhaustedMessageBody": target.setLogExhaustedMessageBody(property(camelContext, boolean.class, value)); return true;
+        case "loglanguage":
+        case "logLanguage": target.setLogLanguage(property(camelContext, java.lang.String.class, value)); return true;
         case "logmask":
         case "logMask": target.setLogMask(property(camelContext, boolean.class, value)); return true;
+        case "logname":
+        case "logName": target.setLogName(property(camelContext, java.lang.String.class, value)); return true;
+        case "mainlistenerclasses":
+        case "mainListenerClasses": target.setMainListenerClasses(property(camelContext, java.lang.String.class, value)); return true;
+        case "mainlisteners":
+        case "mainListeners": target.setMainListeners(property(camelContext, java.util.List.class, value)); return true;
         case "mdcloggingkeyspattern":
         case "mdcLoggingKeysPattern": target.setMdcLoggingKeysPattern(property(camelContext, java.lang.String.class, value)); return true;
         case "messagehistory":
@@ -255,6 +394,15 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
     }
 
     @Override
+    public Map<String, Object> getAllOptions(Object target) {
+        return ALL_OPTIONS;
+    }
+
+    public static void clearBootstrapConfigurers() {
+        ALL_OPTIONS.clear();
+    }
+
+    @Override
     public Class<?> getOptionType(String name, boolean ignoreCase) {
         switch (ignoreCase ? name.toLowerCase() : name) {
         case "allowuseoriginalmessage":
@@ -287,6 +435,8 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "camelEventsTimestampEnabled": return boolean.class;
         case "caseinsensitiveheaders":
         case "caseInsensitiveHeaders": return boolean.class;
+        case "cloudpropertieslocation":
+        case "cloudPropertiesLocation": return java.lang.String.class;
         case "compileworkdir":
         case "compileWorkDir": return java.lang.String.class;
         case "configurationclasses":
@@ -372,8 +522,16 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "logDebugMaxChars": return int.class;
         case "logexhaustedmessagebody":
         case "logExhaustedMessageBody": return boolean.class;
+        case "loglanguage":
+        case "logLanguage": return java.lang.String.class;
         case "logmask":
         case "logMask": return boolean.class;
+        case "logname":
+        case "logName": return java.lang.String.class;
+        case "mainlistenerclasses":
+        case "mainListenerClasses": return java.lang.String.class;
+        case "mainlisteners":
+        case "mainListeners": return java.util.List.class;
         case "mdcloggingkeyspattern":
         case "mdcLoggingKeysPattern": return java.lang.String.class;
         case "messagehistory":
@@ -522,6 +680,8 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "camelEventsTimestampEnabled": return target.isCamelEventsTimestampEnabled();
         case "caseinsensitiveheaders":
         case "caseInsensitiveHeaders": return target.isCaseInsensitiveHeaders();
+        case "cloudpropertieslocation":
+        case "cloudPropertiesLocation": return target.getCloudPropertiesLocation();
         case "compileworkdir":
         case "compileWorkDir": return target.getCompileWorkDir();
         case "configurationclasses":
@@ -607,8 +767,16 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "logDebugMaxChars": return target.getLogDebugMaxChars();
         case "logexhaustedmessagebody":
         case "logExhaustedMessageBody": return target.isLogExhaustedMessageBody();
+        case "loglanguage":
+        case "logLanguage": return target.getLogLanguage();
         case "logmask":
         case "logMask": return target.isLogMask();
+        case "logname":
+        case "logName": return target.getLogName();
+        case "mainlistenerclasses":
+        case "mainListenerClasses": return target.getMainListenerClasses();
+        case "mainlisteners":
+        case "mainListeners": return target.getMainListeners();
         case "mdcloggingkeyspattern":
         case "mdcLoggingKeysPattern": return target.getMdcLoggingKeysPattern();
         case "messagehistory":
@@ -729,6 +897,8 @@ public class MainConfigurationPropertiesConfigurer extends org.apache.camel.supp
         case "configurations": return org.apache.camel.CamelConfiguration.class;
         case "globaloptions":
         case "globalOptions": return java.lang.String.class;
+        case "mainlisteners":
+        case "mainListeners": return org.apache.camel.main.MainListener.class;
         case "routesbuilders":
         case "routesBuilders": return org.apache.camel.RoutesBuilder.class;
         default: return null;

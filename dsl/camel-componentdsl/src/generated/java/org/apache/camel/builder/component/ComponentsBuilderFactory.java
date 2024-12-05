@@ -806,6 +806,19 @@ public interface ComponentsBuilderFactory {
         return ClasComponentBuilderFactory.clas();
     }
     /**
+     * ClickUp (camel-clickup)
+     * Receives events from ClickUp
+     * 
+     * Category: cloud
+     * Since: 4.9
+     * Maven coordinates: org.apache.camel:camel-clickup
+     * 
+     * @return the dsl builder
+     */
+    static ClickupComponentBuilderFactory.ClickupComponentBuilder clickup() {
+        return ClickupComponentBuilderFactory.clickup();
+    }
+    /**
      * CM SMS Gateway (camel-cm-sms)
      * Send SMS messages via CM SMS Gateway.
      * 
@@ -1108,7 +1121,7 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * Debezium Oracle Connector (camel-debezium-oracle)
-     * Capture changes from a Oracle database.
+     * Capture changes from an Oracle database.
      * 
      * Category: database
      * Since: 3.17
@@ -1439,6 +1452,19 @@ public interface ComponentsBuilderFactory {
      */
     static FlinkComponentBuilderFactory.FlinkComponentBuilder flink() {
         return FlinkComponentBuilderFactory.flink();
+    }
+    /**
+     * Flowable (camel-flowable)
+     * Send and receive messages from the Flowable BPMN and CMMN engines.
+     * 
+     * Category: workflow
+     * Since: 4.9
+     * Maven coordinates: org.apache.camel:camel-flowable
+     * 
+     * @return the dsl builder
+     */
+    static FlowableComponentBuilderFactory.FlowableComponentBuilder flowable() {
+        return FlowableComponentBuilderFactory.flowable();
     }
     /**
      * FOP (camel-fop)
@@ -2371,7 +2397,7 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * JMS (camel-jms)
-     * Sent and receive messages to/from a JMS Queue or Topic.
+     * Send and receive messages to/from JMS message brokers.
      * 
      * Category: messaging
      * Since: 1.0
@@ -2800,7 +2826,7 @@ public interface ComponentsBuilderFactory {
         return KuduComponentBuilderFactory.kudu();
     }
     /**
-     * langChain4j Chat (camel-langchain4j-chat)
+     * LangChain4j Chat (camel-langchain4j-chat)
      * LangChain4j Chat component
      * 
      * Category: ai
@@ -2824,6 +2850,32 @@ public interface ComponentsBuilderFactory {
      */
     static Langchain4jEmbeddingsComponentBuilderFactory.Langchain4jEmbeddingsComponentBuilder langchain4jEmbeddings() {
         return Langchain4jEmbeddingsComponentBuilderFactory.langchain4jEmbeddings();
+    }
+    /**
+     * LangChain4j Tools (camel-langchain4j-tools)
+     * LangChain4j Tools and Function Calling Features
+     * 
+     * Category: ai
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-langchain4j-tools
+     * 
+     * @return the dsl builder
+     */
+    static Langchain4jToolsComponentBuilderFactory.Langchain4jToolsComponentBuilder langchain4jTools() {
+        return Langchain4jToolsComponentBuilderFactory.langchain4jTools();
+    }
+    /**
+     * LangChain4j Web Search (camel-langchain4j-web-search)
+     * LangChain4j Web Search Engine
+     * 
+     * Category: ai
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-langchain4j-web-search
+     * 
+     * @return the dsl builder
+     */
+    static Langchain4jWebSearchComponentBuilderFactory.Langchain4jWebSearchComponentBuilder langchain4jWebSearch() {
+        return Langchain4jWebSearchComponentBuilderFactory.langchain4jWebSearch();
     }
     /**
      * Language (camel-language)
@@ -3222,7 +3274,7 @@ public interface ComponentsBuilderFactory {
         return OpensearchComponentBuilderFactory.opensearch();
     }
     /**
-     * Openshift Build Config (camel-kubernetes)
+     * OpenShift Build Config (camel-kubernetes)
      * Perform operations on OpenShift Build Configs.
      * 
      * Category: container,cloud
@@ -3235,7 +3287,7 @@ public interface ComponentsBuilderFactory {
         return OpenshiftBuildConfigsComponentBuilderFactory.openshiftBuildConfigs();
     }
     /**
-     * Openshift Builds (camel-kubernetes)
+     * OpenShift Builds (camel-kubernetes)
      * Perform operations on OpenShift Builds.
      * 
      * Category: container,cloud
@@ -3248,8 +3300,8 @@ public interface ComponentsBuilderFactory {
         return OpenshiftBuildsComponentBuilderFactory.openshiftBuilds();
     }
     /**
-     * Openshift Deployment Configs (camel-kubernetes)
-     * Perform operations on Openshift Deployment Configs and get notified on
+     * OpenShift Deployment Configs (camel-kubernetes)
+     * Perform operations on OpenShift Deployment Configs and get notified on
      * Deployment Config changes.
      * 
      * Category: container,cloud
@@ -3861,7 +3913,8 @@ public interface ComponentsBuilderFactory {
     }
     /**
      * Smooks (camel-smooks)
-     * EDI, XML, CSV, etc. based data transformation using Smooks.
+     * Use Smooks to transform, route, and bind both XML and non-XML data,
+     * including EDI, CSV, JSON, and YAML.
      * 
      * Category: transformation
      * Since: 4.7
@@ -3939,6 +3992,45 @@ public interface ComponentsBuilderFactory {
      */
     static SnmpComponentBuilderFactory.SnmpComponentBuilder snmp() {
         return SnmpComponentBuilderFactory.snmp();
+    }
+    /**
+     * Solr (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * @return the dsl builder
+     */
+    static SolrComponentBuilderFactory.SolrComponentBuilder solr() {
+        return SolrComponentBuilderFactory.solr();
+    }
+    /**
+     * Solr (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * @return the dsl builder
+     */
+    static SolrcloudComponentBuilderFactory.SolrcloudComponentBuilder solrcloud() {
+        return SolrcloudComponentBuilderFactory.solrcloud();
+    }
+    /**
+     * Solr (Secure) (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * @return the dsl builder
+     */
+    static SolrsComponentBuilderFactory.SolrsComponentBuilder solrs() {
+        return SolrsComponentBuilderFactory.solrs();
     }
     /**
      * Splunk (camel-splunk)
@@ -4176,6 +4268,32 @@ public interface ComponentsBuilderFactory {
      */
     static StubComponentBuilderFactory.StubComponentBuilder stub() {
         return StubComponentBuilderFactory.stub();
+    }
+    /**
+     * Tahu Edge Node / Device (camel-tahu)
+     * Sparkplug B Edge Node and Device support over MQTT using Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * @return the dsl builder
+     */
+    static TahuEdgeComponentBuilderFactory.TahuEdgeComponentBuilder tahuEdge() {
+        return TahuEdgeComponentBuilderFactory.tahuEdge();
+    }
+    /**
+     * Tahu Host Application (camel-tahu)
+     * Sparkplug B Host Application support over MQTT using Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * @return the dsl builder
+     */
+    static TahuHostComponentBuilderFactory.TahuHostComponentBuilder tahuHost() {
+        return TahuHostComponentBuilderFactory.tahuHost();
     }
     /**
      * Telegram (camel-telegram)

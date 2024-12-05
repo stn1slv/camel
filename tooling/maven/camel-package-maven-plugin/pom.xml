@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>maven-plugins</artifactId>
-        <version>4.7.0-SNAPSHOT</version>
+        <version>4.10.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-package-maven-plugin</artifactId>
@@ -35,18 +35,6 @@
     <properties>
         <skip.camel.maven.plugin.tests>false</skip.camel.maven.plugin.tests>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.apache.camel</groupId>
-                <artifactId>tooling-parent</artifactId>
-                <version>${project.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -66,11 +54,6 @@
             <groupId>org.mvel</groupId>
             <artifactId>mvel2</artifactId>
             <version>${mvel-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup</groupId>
-            <artifactId>kotlinpoet-jvm</artifactId>
-            <version>${kotlinpoet-version}</version>
         </dependency>
 
         <dependency>
@@ -119,7 +102,7 @@
             <version>${commons-text-version}</version>
         </dependency>
 
-        <!-- roaster to create java source for Spring Boot auto configuration support -->
+        <!-- roaster to create java sources for Spring Boot autoconfiguration support -->
         <dependency>
             <groupId>org.jboss.forge.roaster</groupId>
             <artifactId>roaster-api</artifactId>
@@ -192,7 +175,6 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj-version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -214,6 +196,18 @@
                         <dep>org.apache.maven:maven-plugin-api</dep>
                     </mojoDependencies>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>sisu-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-index</id>
+                        <goals>
+                            <goal>main-index</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -248,7 +242,6 @@
                             <execution>
                                 <goals>
                                     <goal>install</goal>
-				    <!--<goal>integration-test</goal>-->
                                     <goal>verify</goal>
                                 </goals>
                             </execution>

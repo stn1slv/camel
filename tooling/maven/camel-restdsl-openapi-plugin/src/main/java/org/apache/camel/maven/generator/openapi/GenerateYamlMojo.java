@@ -19,20 +19,24 @@ package org.apache.camel.maven.generator.openapi;
 import java.io.File;
 import java.io.FileOutputStream;
 
-import io.apicurio.datamodels.models.openapi.OpenApiDocument;
+import javax.inject.Inject;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.parser.OpenAPIV3Parser;
 import org.apache.camel.CamelContext;
 import org.apache.camel.generator.openapi.DestinationGenerator;
 import org.apache.camel.generator.openapi.RestDslGenerator;
 import org.apache.camel.generator.openapi.RestDslYamlGenerator;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.util.ObjectHelper;
+import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-@Mojo(name = "generate-yaml", inheritByDefault = false, defaultPhase = LifecyclePhase.GENERATE_SOURCES,
+@Mojo(name = "generate-yaml", defaultPhase = LifecyclePhase.GENERATE_SOURCES,
       requiresDependencyResolution = ResolutionScope.COMPILE, threadSafe = true)
 public class GenerateYamlMojo extends AbstractGenerateMojo {
 
@@ -41,6 +45,11 @@ public class GenerateYamlMojo extends AbstractGenerateMojo {
 
     @Parameter(defaultValue = "${project.build.directory}/generated-sources/restdsl-openapi", required = true)
     private String outputDirectory;
+
+    @Inject
+    public GenerateYamlMojo(BuildPluginManager pluginManager) {
+        super(pluginManager);
+    }
 
     @Override
     public void execute() throws MojoExecutionException {
@@ -52,12 +61,7 @@ public class GenerateYamlMojo extends AbstractGenerateMojo {
             return;
         }
 
-        OpenApiDocument openapi;
-        try {
-            openapi = readOpenApiDoc(specificationUri);
-        } catch (Exception e1) {
-            throw new MojoExecutionException("can't load open api doc from " + specificationUri, e1);
-        }
+        OpenAPI openapi = new OpenAPIV3Parser().read(specificationUri);
 
         if (openapi == null) {
             throw new MojoExecutionException(

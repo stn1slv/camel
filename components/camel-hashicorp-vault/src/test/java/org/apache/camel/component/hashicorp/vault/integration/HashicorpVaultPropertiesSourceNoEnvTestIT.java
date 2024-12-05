@@ -16,28 +16,73 @@
  */
 package org.apache.camel.component.hashicorp.vault.integration;
 
+import java.util.Map;
+
 import org.apache.camel.FailedToCreateRouteException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
+import org.apache.camel.test.infra.hashicorp.vault.services.HashicorpServiceFactory;
+import org.apache.camel.test.infra.hashicorp.vault.services.HashicorpVaultService;
 import org.apache.camel.test.junit5.CamelTestSupport;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperties;
-import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.springframework.vault.authentication.TokenAuthentication;
+import org.springframework.vault.client.VaultEndpoint;
+import org.springframework.vault.core.VaultKeyValueOperations;
+import org.springframework.vault.core.VaultKeyValueOperationsSupport;
+import org.springframework.vault.core.VaultTemplate;
+import org.springframework.vault.support.VaultMount;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-// Must be manually tested. Provide your own accessKey and secretKey using -Dcamel.vault.hashicorp.token, -Dcamel.vault.hashicorp.host, -Dcamel.vault.hashicorp.port and -Dcamel.vault.hashicorp.scheme
-@EnabledIfSystemProperties({
-        @EnabledIfSystemProperty(named = "camel.vault.hashicorp.token", matches = ".*",
-                                 disabledReason = "Token not provided"),
-        @EnabledIfSystemProperty(named = "camel.vault.hashicorp.host", matches = ".*", disabledReason = "Host not provided"),
-        @EnabledIfSystemProperty(named = "camel.vault.hashicorp.port", matches = ".*", disabledReason = "Port not provided"),
-        @EnabledIfSystemProperty(named = "camel.vault.hashicorp.scheme", matches = ".*", disabledReason = "Scheme not provided")
-})
 public class HashicorpVaultPropertiesSourceNoEnvTestIT extends CamelTestSupport {
 
+    @RegisterExtension
+    public static HashicorpVaultService service = HashicorpServiceFactory.createService();
+
+    @BeforeAll
+    public static void init() {
+        System.setProperty("camel.vault.hashicorp.token", service.token());
+        System.setProperty("camel.vault.hashicorp.host", service.host());
+        System.setProperty("camel.vault.hashicorp.port", String.valueOf(service.port()));
+        System.setProperty("camel.vault.hashicorp.scheme", "http");
+
+        VaultEndpoint vaultEndpoint = new VaultEndpoint();
+        vaultEndpoint.setHost(service.host());
+        vaultEndpoint.setPort(service.port());
+        vaultEndpoint.setScheme("http");
+
+        VaultTemplate client = new VaultTemplate(
+                vaultEndpoint,
+                new TokenAuthentication(service.token()));
+
+        VaultKeyValueOperations vaultKeyValueOperations
+                = client.opsForKeyValue("secret", VaultKeyValueOperationsSupport.KeyValueBackend.versioned());
+
+        vaultKeyValueOperations.put("hello", Map.of(
+                "id", "21",
+                "password", "password",
+                "username", "admin"));
+        vaultKeyValueOperations.put("production/secrets/hello", Map.of(
+                "id", "21"));
+
+        client.opsForSys().mount("secretengine1", VaultMount.create("kv"));
+        client.opsForSys().mount("secretengine2", VaultMount.create("kv"));
+
+        vaultKeyValueOperations
+                = client.opsForKeyValue("secretengine1", VaultKeyValueOperationsSupport.KeyValueBackend.versioned());
+        vaultKeyValueOperations.put("hello", Map.of(
+                "id", "21"));
+
+        vaultKeyValueOperations
+                = client.opsForKeyValue("secretengine2", VaultKeyValueOperationsSupport.KeyValueBackend.versioned());
+        vaultKeyValueOperations.put("hello", Map.of(
+                "id", "21"));
+    }
+
     @Test
-    public void testFunctio() throws Exception {
+    public void testFunction() throws Exception {
         context.getVaultConfiguration().hashicorp().setToken(System.getProperty("camel.vault.hashicorp.token"));
         context.getVaultConfiguration().hashicorp().setHost(System.getProperty("camel.vault.hashicorp.host"));
         context.getVaultConfiguration().hashicorp().setPort(System.getProperty("camel.vault.hashicorp.port"));
@@ -66,7 +111,7 @@ public class HashicorpVaultPropertiesSourceNoEnvTestIT extends CamelTestSupport 
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:start").setBody(simple("{{hashicorp:secret:hello/id}}")).to("mock:bar");
+                from("direct:start").setBody(simple("{{hashicorp:secret:hello#id}}")).to("mock:bar");
             }
         });
         context.start();
@@ -87,8 +132,8 @@ public class HashicorpVaultPropertiesSourceNoEnvTestIT extends CamelTestSupport 
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:username").setBody(simple("{{hashicorp:secret:hello/username}}")).to("mock:bar");
-                from("direct:password").setBody(simple("{{hashicorp:secret:hello/password}}")).to("mock:bar");
+                from("direct:username").setBody(simple("{{hashicorp:secret:hello#username}}")).to("mock:bar");
+                from("direct:password").setBody(simple("{{hashicorp:secret:hello#password}}")).to("mock:bar");
             }
         });
         context.start();
@@ -374,7 +419,7 @@ public class HashicorpVaultPropertiesSourceNoEnvTestIT extends CamelTestSupport 
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:version").setBody(simple("{{hashicorp:secret:hello/id@1}}")).to("mock:bar");
+                from("direct:version").setBody(simple("{{hashicorp:secret:hello#id@1}}")).to("mock:bar");
             }
         });
         context.start();
@@ -477,7 +522,49 @@ public class HashicorpVaultPropertiesSourceNoEnvTestIT extends CamelTestSupport 
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() {
-                from("direct:version").setBody(simple("{{hashicorp:secret:hello/id:pippo@1}}"))
+                from("direct:version").setBody(simple("{{hashicorp:secret:hello#id:pippo@1}}"))
+                        .to("mock:bar");
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:bar").expectedBodiesReceived("21");
+
+        template.sendBody("direct:version", "Hello World");
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testPropertiesWithVersionFieldAndDefaultValueFunctionWithNotExistentVersion() throws Exception {
+        context.getVaultConfiguration().hashicorp().setToken(System.getProperty("camel.vault.hashicorp.token"));
+        context.getVaultConfiguration().hashicorp().setHost(System.getProperty("camel.vault.hashicorp.host"));
+        context.getVaultConfiguration().hashicorp().setPort(System.getProperty("camel.vault.hashicorp.port"));
+        context.getVaultConfiguration().hashicorp().setScheme(System.getProperty("camel.vault.hashicorp.scheme"));
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:version").setBody(simple("{{hashicorp:secret:hello#id:pippo@2}}"))
+                        .to("mock:bar");
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:bar").expectedBodiesReceived("pippo");
+
+        template.sendBody("direct:version", "Hello World");
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testPropertiesWithVersionFieldAndDefaultValueWithSlashInName() throws Exception {
+        context.getVaultConfiguration().hashicorp().setToken(System.getProperty("camel.vault.hashicorp.token"));
+        context.getVaultConfiguration().hashicorp().setHost(System.getProperty("camel.vault.hashicorp.host"));
+        context.getVaultConfiguration().hashicorp().setPort(System.getProperty("camel.vault.hashicorp.port"));
+        context.getVaultConfiguration().hashicorp().setScheme(System.getProperty("camel.vault.hashicorp.scheme"));
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:version").setBody(simple("{{hashicorp:secret:production/secrets/hello#id:pippo@1}}"))
                         .to("mock:bar");
             }
         });
@@ -507,10 +594,31 @@ public class HashicorpVaultPropertiesSourceNoEnvTestIT extends CamelTestSupport 
         });
         context.start();
 
-        getMockEndpoint("mock:bar").expectedBodiesReceived("{id=21}", "{id=22}");
+        getMockEndpoint("mock:bar").expectedBodiesReceived("{id=21}", "{id=21}");
 
         template.sendBody("direct:engine1", "Hello World");
         template.sendBody("direct:engine2", "Hello World");
+        MockEndpoint.assertIsSatisfied(context);
+    }
+
+    @Test
+    public void testPropertiesWithVersionFieldAndDefaultValueWithVersion() throws Exception {
+        context.getVaultConfiguration().hashicorp().setToken(System.getProperty("camel.vault.hashicorp.token"));
+        context.getVaultConfiguration().hashicorp().setHost(System.getProperty("camel.vault.hashicorp.host"));
+        context.getVaultConfiguration().hashicorp().setPort(System.getProperty("camel.vault.hashicorp.port"));
+        context.getVaultConfiguration().hashicorp().setScheme(System.getProperty("camel.vault.hashicorp.scheme"));
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:version").setBody(simple("{{hashicorp:secret:production/secrets/hello@1}}"))
+                        .to("mock:bar");
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:bar").expectedBodiesReceived("{id=21}");
+
+        template.sendBody("direct:version", "Hello World");
         MockEndpoint.assertIsSatisfied(context);
     }
 }

@@ -60,6 +60,7 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
     private final Pattern excludePattern;
     private final String[] includeExt;
     private final String[] excludeExt;
+    private boolean retrieveFile = true;
 
     protected GenericFileConsumer(GenericFileEndpoint<T> endpoint, Processor processor, GenericFileOperations<T> operations,
                                   GenericFileProcessStrategy<T> processStrategy) {
@@ -267,7 +268,7 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
         while (exchanges.size() > limit) {
             // must remove last
             Exchange exchange = exchanges.removeLast();
-            GenericFile<?> file = exchange.getProperty(FileComponent.FILE_EXCHANGE_FILE, GenericFile.class);
+            GenericFile<?> file = exchange.getProperty(ExchangePropertyKey.FILE_EXCHANGE_FILE, GenericFile.class);
             String key = file.getAbsoluteFilePath();
             endpoint.getInProgressRepository().remove(key);
             releaseExchange(exchange, true);
@@ -429,7 +430,7 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
         try {
 
             if (isRetrieveFile()) {
-                if (tryRetrievingFile(exchange, name, target, absoluteFileName, file)) {
+                if (!tryRetrievingFile(exchange, name, target, absoluteFileName, file)) {
                     return false;
                 }
             } else {
@@ -474,7 +475,7 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
         return true;
     }
 
-    private boolean tryRetrievingFile(
+    boolean tryRetrievingFile(
             Exchange exchange, String name, GenericFile<T> target, String absoluteFileName, GenericFile<T> file)
             throws Exception {
         // retrieve the file using the stream
@@ -496,7 +497,7 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
                 // remove file from the in progress list as we could not
                 // retrieve it, but should ignore
                 endpoint.getInProgressRepository().remove(absoluteFileName);
-                return true;
+                return false;
             } else {
                 // throw exception to handle the problem with retrieving
                 // the file
@@ -513,7 +514,7 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
         }
 
         LOG.trace("Retrieved file: {} from: {}", name, endpoint);
-        return false;
+        return true;
     }
 
     /**
@@ -525,12 +526,19 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
     protected abstract void updateFileHeaders(GenericFile<T> file, Message message);
 
     /**
-     * Override if required. Files are retrieved / returns true by default
-     *
-     * @return <tt>true</tt> to retrieve files, <tt>false</tt> to skip retrieval of files.
+     * Whether the consumer should retrieve/download files. If false then the message body is null as no file is
+     * retrieved.
      */
-    protected boolean isRetrieveFile() {
-        return true;
+    public boolean isRetrieveFile() {
+        return retrieveFile;
+    }
+
+    /**
+     * Whether the consumer should retrieve/download files. If false then the message body is null as no file is
+     * retrieved.
+     */
+    public void setRetrieveFile(boolean retrieveFile) {
+        this.retrieveFile = retrieveFile;
     }
 
     /**
@@ -821,15 +829,15 @@ public abstract class GenericFileConsumer<T> extends ScheduledBatchPollingConsum
 
     @SuppressWarnings("unchecked")
     private GenericFile<T> getExchangeFileProperty(Exchange exchange) {
-        return (GenericFile<T>) exchange.getProperty(FileComponent.FILE_EXCHANGE_FILE);
+        return (GenericFile<T>) exchange.getProperty(ExchangePropertyKey.FILE_EXCHANGE_FILE);
     }
 
     @Override
     protected void doInit() throws Exception {
         super.doInit();
         // inject CamelContext before starting as it may be needed
-        if (processStrategy instanceof CamelContextAware) {
-            ((CamelContextAware) processStrategy).setCamelContext(getEndpoint().getCamelContext());
+        if (processStrategy instanceof CamelContextAware camelContextAware) {
+            camelContextAware.setCamelContext(getEndpoint().getCamelContext());
         }
     }
 

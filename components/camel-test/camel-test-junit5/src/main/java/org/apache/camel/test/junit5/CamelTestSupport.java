@@ -24,26 +24,21 @@ import org.apache.camel.Exchange;
 import org.apache.camel.NoSuchEndpointException;
 import org.apache.camel.Processor;
 import org.apache.camel.RoutesBuilder;
+import org.apache.camel.builder.LanguageBuilderFactory;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
-import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.spi.CamelBeanPostProcessor;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.Registry;
 import org.apache.camel.test.junit5.util.CamelContextTestHelper;
 import org.apache.camel.test.junit5.util.ExtensionHelper;
-import org.apache.camel.test.junit5.util.RouteCoverageDumperExtension;
 import org.apache.camel.util.StopWatch;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -58,8 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * testing.
  */
 public abstract class CamelTestSupport extends AbstractTestSupport
-        implements BeforeEachCallback, AfterEachCallback, AfterAllCallback, BeforeAllCallback, BeforeTestExecutionCallback,
-        AfterTestExecutionCallback {
+        implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
     private static final Logger LOG = LoggerFactory.getLogger(CamelTestSupport.class);
 
     @RegisterExtension
@@ -69,20 +63,22 @@ public abstract class CamelTestSupport extends AbstractTestSupport
     @RegisterExtension
     protected CamelTestSupport camelTestSupportExtension = this;
     private final StopWatch watch = new StopWatch();
-    private String currentTestName;
 
+    @RegisterExtension
+    @Order(1)
+    public final ContextManagerExtension contextManagerExtension;
     private CamelContextManager contextManager;
-    private final ContextManagerFactory contextManagerFactory;
 
-    protected CamelTestSupport(ContextManagerFactory contextManagerFactory) {
-        super();
-        this.contextManagerFactory = contextManagerFactory;
+    protected CamelTestSupport() {
+        super(new TestExecutionConfiguration(), new CamelContextConfiguration());
 
-        testConfigurationBuilder.withJMX(useJmx())
-                .withUseRouteBuilder(isUseRouteBuilder())
-                .withUseAdviceWith(isUseAdviceWith())
-                .withDumpRouteCoverage(isDumpRouteCoverage());
+        configureTest(testConfigurationBuilder);
+        configureContext(camelContextConfiguration);
+        contextManagerExtension = new ContextManagerExtension(testConfigurationBuilder, camelContextConfiguration);
+    }
 
+    @Override
+    public void configureContext(CamelContextConfiguration camelContextConfiguration) {
         camelContextConfiguration
                 .withCamelContextSupplier(this::createCamelContext)
                 .withRegistryBinder(this::bindToRegistry)
@@ -95,8 +91,12 @@ public abstract class CamelTestSupport extends AbstractTestSupport
                 .withMockEndpointsAndSkip(isMockEndpointsAndSkip());
     }
 
-    protected CamelTestSupport() {
-        this(new ContextManagerFactory());
+    @Override
+    public void configureTest(TestExecutionConfiguration testExecutionConfiguration) {
+        testExecutionConfiguration.withJMX(useJmx())
+                .withUseRouteBuilder(isUseRouteBuilder())
+                .withUseAdviceWith(isUseAdviceWith())
+                .withDumpRouteCoverage(isDumpRouteCoverage());
     }
 
     @Override
@@ -115,49 +115,14 @@ public abstract class CamelTestSupport extends AbstractTestSupport
         return watch.taken();
     }
 
-    @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
-        if (contextManager == null) {
-            LOG.trace("Creating a transient context manager for {}", context.getDisplayName());
-            contextManager = contextManagerFactory.createContextManager(ContextManagerFactory.Type.BEFORE_EACH,
-                    testConfigurationBuilder, camelContextConfiguration);
-        }
-
-        currentTestName = context.getDisplayName();
-        ExtensionContext.Store globalStore = context.getStore(ExtensionContext.Namespace.GLOBAL);
-        contextManager.setGlobalStore(globalStore);
-    }
-
-    @Override
-    public void afterEach(ExtensionContext context) throws Exception {
-        DefaultCamelContext.clearOptions();
-    }
-
-    @Override
-    public void beforeAll(ExtensionContext context) {
-        final boolean perClassPresent
-                = context.getTestInstanceLifecycle().filter(lc -> lc.equals(Lifecycle.PER_CLASS)).isPresent();
-        if (perClassPresent) {
-            LOG.trace("Creating a legacy context manager for {}", context.getDisplayName());
-            testConfigurationBuilder.withCreateCamelContextPerClass(perClassPresent);
-            contextManager = contextManagerFactory.createContextManager(ContextManagerFactory.Type.BEFORE_ALL,
-                    testConfigurationBuilder, camelContextConfiguration);
-        }
-
-        ExtensionContext.Store globalStore = context.getStore(ExtensionContext.Namespace.GLOBAL);
-        contextManager.setGlobalStore(globalStore);
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) {
-        contextManager.stop();
-    }
-
     /**
      * Gets the name of the current test being executed.
+     *
+     * @deprecated Use JUnit's TestInfo class or the {@link TestNameExtension}
      */
+    @Deprecated(since = "4.7.0")
     public final String getCurrentTestName() {
-        return currentTestName;
+        return contextManagerExtension.getCurrentTestName();
     }
 
     /**
@@ -168,12 +133,13 @@ public abstract class CamelTestSupport extends AbstractTestSupport
      */
     @Deprecated(since = "4.7.0")
     @BeforeEach
-    public void setUp() throws Exception {
+    public final void setUp() throws Exception {
         unsupportedCheck();
 
         setupResources();
         doPreSetup();
 
+        contextManager = contextManagerExtension.getContextManager();
         contextManager.createCamelContext(this);
         context = contextManager.context();
 
@@ -252,22 +218,18 @@ public abstract class CamelTestSupport extends AbstractTestSupport
      */
     @Deprecated(since = "4.7.0")
     @AfterEach
-    public void tearDown() throws Exception {
+    public final void tearDown(TestInfo testInfo) throws Exception {
         long time = watch.taken();
-
-        if (isRouteCoverageEnabled()) {
-            final RouteCoverageDumperExtension routeCoverageWrapper = new RouteCoverageDumperExtension(context);
-            routeCoverageWrapper.dumpRouteCoverage(getClass(), currentTestName, time);
-        }
-
-        if (testConfigurationBuilder.isCreateCamelContextPerClass()) {
-            // will tear down test specially in afterAll callback
-            return;
-        }
-
         LOG.debug("tearDown()");
 
-        contextManager.stop();
+        if (contextManager != null) {
+            contextManager.dumpRouteCoverage(getClass(), testInfo.getDisplayName(), time);
+        } else {
+            LOG.warn(
+                    "A context manager is required to dump the route coverage for the Camel context but it's not available (it's null). "
+                     +
+                     "It's likely that the test is misconfigured!");
+        }
 
         doPostTearDown();
         cleanupResources();
@@ -334,7 +296,6 @@ public abstract class CamelTestSupport extends AbstractTestSupport
     @Deprecated(since = "4.7.0")
     protected void stopCamelContext() throws Exception {
         contextManager.stopCamelContext();
-
     }
 
     @Deprecated(since = "4.7.0")
@@ -351,6 +312,19 @@ public abstract class CamelTestSupport extends AbstractTestSupport
      */
     protected void bindToRegistry(Registry registry) throws Exception {
         // noop
+    }
+
+    /**
+     * A utility method allowing to build any language using a fluent syntax as shown in the next example:
+     *
+     * <pre>
+     *  var exp = expression().tokenize().token("\n").end()
+     * </pre>
+     *
+     * @return an entry point to the builder of all supported languages.
+     */
+    protected LanguageBuilderFactory expression() {
+        return new LanguageBuilderFactory();
     }
 
     /**

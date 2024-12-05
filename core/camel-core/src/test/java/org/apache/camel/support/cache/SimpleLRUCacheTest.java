@@ -20,9 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.parallel.Isolated;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -37,6 +40,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The test class for {@link SimpleLRUCache}.
  */
+@Isolated("Some of these tests creates a lot of threads")
+@DisabledIfSystemProperty(named = "ci.env.name", matches = "apache.org",
+                          disabledReason = "Apache CI nodes are too resource constrained for this test")
 class SimpleLRUCacheTest {
 
     private final List<String> consumed = new ArrayList<>();
@@ -324,12 +330,20 @@ class SimpleLRUCacheTest {
     }
 
     @ParameterizedTest
+    @ValueSource(ints = { 0, -1 })
+    void validateCacheSize(int maximumCacheSize) {
+        assertThrows(IllegalArgumentException.class, () -> new SimpleLRUCache<>(16, maximumCacheSize, x -> {
+        }));
+    }
+
+    @ParameterizedTest
     @ValueSource(ints = { 1, 2, 5, 10, 20, 50, 100, 1_000 })
     void concurrentPut(int maximumCacheSize) throws Exception {
         int threads = Runtime.getRuntime().availableProcessors();
         int totalKeysPerThread = 1_000;
         AtomicInteger counter = new AtomicInteger();
         SimpleLRUCache<String, String> cache = new SimpleLRUCache<>(16, maximumCacheSize, v -> counter.incrementAndGet());
+
         CountDownLatch latch = new CountDownLatch(threads);
         for (int i = 0; i < threads; i++) {
             int threadId = i;
@@ -343,7 +357,8 @@ class SimpleLRUCacheTest {
                 }
             }).start();
         }
-        latch.await();
+        assertTrue(latch.await(20, TimeUnit.SECONDS),
+                "Should have completed within a reasonable timeframe. Latch at: " + latch.getCount());
         assertEquals(maximumCacheSize, cache.size());
         assertEquals(totalKeysPerThread * threads - maximumCacheSize, counter.get());
     }
@@ -367,7 +382,8 @@ class SimpleLRUCacheTest {
                 }
             }).start();
         }
-        latch.await();
+        assertTrue(latch.await(20, TimeUnit.SECONDS),
+                "Should have completed within a reasonable timeframe. Latch at: " + latch.getCount());
         assertEquals(maximumCacheSize, cache.size());
         counter.set(0);
         for (int j = 0; j < maximumCacheSize; j++) {

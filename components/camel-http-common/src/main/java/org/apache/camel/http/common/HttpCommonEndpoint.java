@@ -67,17 +67,16 @@ public abstract class HttpCommonEndpoint extends DefaultEndpoint
               description = "If this option is false the Servlet will disable the HTTP streaming and set the content-length header on the response")
     boolean chunked = true;
     @UriParam(label = "common",
-              description = "Determines whether or not the raw input stream from Servlet is cached or not"
-                            + " (Camel will read the stream into a in memory/overflow to file, Stream caching) cache."
-                            + " By default Camel will cache the Servlet input stream to support reading it multiple times to ensure it Camel"
+              description = "Determines whether or not the raw input stream is cached or not."
+                            + " The Camel consumer (camel-servlet, camel-jetty etc.) will by default cache the input stream to support reading it multiple times to ensure it Camel"
                             + " can retrieve all data from the stream. However you can set this option to true when you for example need"
                             + " to access the raw stream, such as streaming it directly to a file or other persistent store."
                             + " DefaultHttpBinding will copy the request input stream into a stream cache and put it into message body"
                             + " if this option is false to support reading the stream multiple times."
                             + " If you use Servlet to bridge/proxy an endpoint then consider enabling this option to improve performance,"
                             + " in case you do not need to read the message payload multiple times."
-                            + " The http producer will by default cache the response body stream. If setting this option to true,"
-                            + " then the producers will not cache the response body stream but use the response stream as-is as the message body.")
+                            + " The producer (camel-http) will by default cache the response body stream. If setting this option to true,"
+                            + " then the producers will not cache the response body stream but use the response stream as-is (the stream can only be read once) as the message body.")
     boolean disableStreamCache;
     @UriParam(label = "common",
               description = "If enabled and an Exchange failed processing on the consumer side, and if the caused Exception was send back serialized"
@@ -161,6 +160,21 @@ public abstract class HttpCommonEndpoint extends DefaultEndpoint
     private String oauth2ClientSecret;
     @UriParam(label = "producer,security", description = "OAuth2 Token endpoint")
     private String oauth2TokenEndpoint;
+    @UriParam(label = "producer,security", description = "OAuth2 scope")
+    private String oauth2Scope;
+    @UriParam(label = "producer,security", defaultValue = "false",
+              description = "Whether to cache OAuth2 client tokens.")
+    private boolean oauth2CacheTokens = false;
+    @UriParam(label = "producer,security", defaultValue = "3600",
+              description = "Default expiration time for cached OAuth2 tokens, in seconds. Used if token response does not contain 'expires_in' field.")
+    private long oauth2CachedTokensDefaultExpirySeconds = 3600L;
+    @UriParam(label = "producer,security", defaultValue = "5",
+              description = "Amount of time which is deducted from OAuth2 tokens expiry time to compensate for the time it takes OAuth2 Token Endpoint to send the token over http, in seconds. "
+                            +
+                            "Set this parameter to high value if you OAuth2 Token Endpoint answers slowly or you tokens expire quickly. "
+                            +
+                            "If you set this parameter to too small value, you can get 4xx http errors because camel will think that the received token is still valid, while in reality the token is expired for the Authentication server.")
+    private long oauth2CachedTokensExpirationMarginSeconds = 5L;
     @UriParam(label = "producer,security", description = "Authentication domain to use with NTML")
     private String authDomain;
     @UriParam(label = "producer,security", description = "Authentication host to use with NTML")
@@ -832,4 +846,52 @@ public abstract class HttpCommonEndpoint extends DefaultEndpoint
         this.oauth2TokenEndpoint = oauth2TokenEndpoint;
     }
 
+    public String getOauth2Scope() {
+        return oauth2Scope;
+    }
+
+    /**
+     * OAuth2 scope
+     */
+    public void setOauth2Scope(String oauth2Scope) {
+        this.oauth2Scope = oauth2Scope;
+    }
+
+    public boolean isOauth2CacheTokens() {
+        return oauth2CacheTokens;
+    }
+
+    /**
+     * Whether to cache OAuth2 client tokens.
+     */
+    public void setOauth2CacheTokens(boolean oauth2CacheTokens) {
+        this.oauth2CacheTokens = oauth2CacheTokens;
+    }
+
+    public long getOauth2CachedTokensDefaultExpirySeconds() {
+        return oauth2CachedTokensDefaultExpirySeconds;
+    }
+
+    /**
+     * Default expiration time for cached OAuth2 tokens, in seconds. Used if token response does not contain
+     * 'expires_in' field.
+     */
+    public void setOauth2CachedTokensDefaultExpirySeconds(long oauth2CachedTokensDefaultExpirySeconds) {
+        this.oauth2CachedTokensDefaultExpirySeconds = oauth2CachedTokensDefaultExpirySeconds;
+    }
+
+    public long getOauth2CachedTokensExpirationMarginSeconds() {
+        return oauth2CachedTokensExpirationMarginSeconds;
+    }
+
+    /**
+     * Amount of time which is deducted from OAuth2 tokens expiry time to compensate for the time it takes OAuth2 Token
+     * Endpoint to send the token over http, in seconds. Set this parameter to high value if you OAuth2 Token Endpoint
+     * answers slowly or you tokens expire quickly. If you set this parameter to too small value, you can get 4xx http
+     * errors because camel will think that the received token is still valid, while in reality the token is expired for
+     * the Authentication server.
+     */
+    public void setOauth2CachedTokensExpirationMarginSeconds(long cachedTokensExpirationMarginSeconds) {
+        this.oauth2CachedTokensExpirationMarginSeconds = cachedTokensExpirationMarginSeconds;
+    }
 }

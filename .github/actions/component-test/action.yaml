@@ -48,7 +48,7 @@ runs:
         FAST_BUILD: "true"
         LOG_FILE: build.log
     - name: archive logs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
       if: always()
       with:
         name: build-${{ inputs.artifact-upload-suffix }}.log
@@ -62,14 +62,14 @@ runs:
         FAST_BUILD: "false"
         LOG_FILE: tests.log
     - name: archive logs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
       if: always()
       with:
         name: tests-${{ inputs.artifact-upload-suffix }}.log
         path: tests.log
     - name: Success comment
       if: success() 
-      uses: ./.github/actions/create-or-update-comment
+      uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
       with:
         comment-id: ${{ inputs.comment-id }}
         edit-mode: replace
@@ -79,7 +79,7 @@ runs:
           **Result** :white_check_mark: The tests passed successfully
     - name: Failure comment
       if: failure() 
-      uses: ./.github/actions/create-or-update-comment
+      uses: peter-evans/create-or-update-comment@c9fcb64660bc90ec1cc535646af190c992007c32
       with:
         comment-id: ${{ inputs.comment-id }}
         edit-mode: replace

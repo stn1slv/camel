@@ -28,7 +28,7 @@ class KameletBindingLoaderIntegrationSpecTest extends YamlTestSupport {
         context.registry.bind("myDep", new DependencyStrategy() {
             @Override
             void onDependency(String dependency) {
-                deps.add(dependency);
+                deps.add(dependency)
             }
         })
 
@@ -48,13 +48,11 @@ class KameletBindingLoaderIntegrationSpecTest extends YamlTestSupport {
                     - "camel:cloudevents"
                     traits:
                       camel:
-                        configuration:
-                          properties:
+                        properties:
                           - "foo=howdy"
                           - "bar=123"
                       environment:
-                        configuration:
-                          vars:
+                        vars:
                           - "MY_ENV=cheese"   
                   source:
                     ref:

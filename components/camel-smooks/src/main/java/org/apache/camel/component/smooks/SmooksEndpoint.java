@@ -18,36 +18,50 @@ package org.apache.camel.component.smooks;
 
 import org.apache.camel.Category;
 import org.apache.camel.Component;
+import org.apache.camel.Consumer;
+import org.apache.camel.Processor;
+import org.apache.camel.Producer;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriEndpoint;
+import org.apache.camel.spi.UriParam;
 import org.apache.camel.spi.UriPath;
-import org.apache.camel.support.ProcessorEndpoint;
+import org.apache.camel.support.DefaultEndpoint;
 import org.apache.camel.support.service.ServiceHelper;
 
 /**
- * EDI, XML, CSV, etc. based data transformation using Smooks.
+ * Use Smooks to transform, route, and bind both XML and non-XML data, including EDI, CSV, JSON, and YAML.
  */
 @UriEndpoint(firstVersion = "4.7.0", scheme = "smooks", title = "Smooks", syntax = "smooks:smooksConfig",
-             category = { Category.TRANSFORMATION })
-public class SmooksEndpoint extends ProcessorEndpoint {
+             producerOnly = true,
+             category = { Category.TRANSFORMATION }, headersClass = SmooksConstants.class)
+public class SmooksEndpoint extends DefaultEndpoint {
 
-    @UriPath(description = "Smooks XML configuration file")
+    @UriPath(description = "Path to the Smooks configuration file")
     @Metadata(required = true, supportFileReference = true)
     private String smooksConfig;
+    @UriParam(description = "File path to place the generated HTML execution report. The report is a useful tool in the developer’s arsenal for diagnosing issues or comprehending a transformation. Do not set in production since this is a major performance drain")
+    private String reportPath;
+    @UriParam(description = "Allow execution context to be set from the " + SmooksConstants.SMOOKS_EXECUTION_CONTEXT
+                            + " header",
+              label = "advanced",
+              defaultValue = "false")
+    private Boolean allowExecutionContextFromHeader = false;
 
     private final SmooksProcessor smooksProcessor;
 
     public SmooksEndpoint(String endpointUri, Component component, SmooksProcessor processor) {
-        super(endpointUri, component, processor);
+        super(endpointUri, component);
         this.smooksProcessor = processor;
     }
 
-    public String getSmooksConfig() {
-        return smooksConfig;
+    @Override
+    public Producer createProducer() {
+        return new SmooksProducer(this, smooksProcessor);
     }
 
-    public void setSmooksConfig(String smooksConfig) {
-        this.smooksConfig = smooksConfig;
+    @Override
+    public Consumer createConsumer(Processor processor) {
+        throw new IllegalArgumentException("Consumer is not supported");
     }
 
     @Override
@@ -62,4 +76,27 @@ public class SmooksEndpoint extends ProcessorEndpoint {
         ServiceHelper.stopService(smooksProcessor);
     }
 
+    public String getSmooksConfig() {
+        return smooksConfig;
+    }
+
+    public void setSmooksConfig(String smooksConfig) {
+        this.smooksConfig = smooksConfig;
+    }
+
+    public String getReportPath() {
+        return reportPath;
+    }
+
+    public void setReportPath(String reportPath) {
+        this.reportPath = reportPath;
+    }
+
+    public Boolean getAllowExecutionContextFromHeader() {
+        return allowExecutionContextFromHeader;
+    }
+
+    public void setAllowExecutionContextFromHeader(Boolean allowExecutionContextFromHeader) {
+        this.allowExecutionContextFromHeader = allowExecutionContextFromHeader;
+    }
 }

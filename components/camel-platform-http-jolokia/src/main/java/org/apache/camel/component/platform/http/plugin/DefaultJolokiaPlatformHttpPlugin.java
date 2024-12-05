@@ -108,15 +108,19 @@ public class DefaultJolokiaPlatformHttpPlugin extends ServiceSupport implements 
         try {
             var restrictor = RestrictorFactory.lookupPolicyRestrictor(pLocation);
             if (restrictor != null) {
-                jolokiaLogHandler.info("Using access restrictor: " + pLocation);
+                LOG.info("Using access restrictor: " + pLocation);
                 return restrictor;
             } else {
-                jolokiaLogHandler.info("No access restrictor found at: " + pLocation + ", access to all MBeans is allowed");
+                LOG.warn("No access restrictor found at: " + pLocation + ", access to all MBeans is allowed." +
+                         " Mind that this is an unsecure and dangerous configuration that you may only want to use for development environments."
+                         +
+                         " NEVER use this in a production environment as it would expose sensitive information with no authentication"
+                         + " and is a potential vector of remote attacks.");
                 return new AllowAllRestrictor();
             }
         } catch (IOException e) {
-            jolokiaLogHandler.error("Error while accessing access restrictor: at " + pLocation +
-                                    ". Denying all access to MBeans for security reasons. Exception: " + e,
+            LOG.error("Error while accessing access restrictor: at " + pLocation +
+                      ". Denying all access to MBeans for security reasons. Exception: " + e,
                     e);
             return new DenyAllRestrictor();
         }
@@ -215,6 +219,17 @@ public class DefaultJolokiaPlatformHttpPlugin extends ServiceSupport implements 
                     }
                 }
 
+                // convert data to string
+                if (json != null) {
+                    try {
+                        Method m = ReflectionHelper.findMethod(json.getClass(), "toJSONString");
+                        if (m != null) {
+                            json = ObjectHelper.invokeMethodSafe(m, json);
+                        }
+                    } catch (Exception e) {
+                        // ignore
+                    }
+                }
                 String data = json != null ? json.toString() : "";
 
                 routingContext.response()

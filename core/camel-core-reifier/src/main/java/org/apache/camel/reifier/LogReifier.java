@@ -48,10 +48,15 @@ public class LogReifier extends ProcessorReifier<LogDefinition> {
         StringHelper.notEmpty(definition.getMessage(), "message", this);
         String msg = parseString(definition.getMessage());
 
+        // use a custom language
+        String lan = camelContext.getGlobalOption(Exchange.LOG_EIP_LANGUAGE);
+
         // use simple language for the message string to give it more power
         Expression exp = null;
-        if (LanguageSupport.hasSimpleFunction(msg)) {
+        if (lan == null && LanguageSupport.hasSimpleFunction(msg)) {
             exp = camelContext.resolveLanguage("simple").createExpression(msg);
+        } else if (lan != null) {
+            exp = camelContext.resolveLanguage(lan).createExpression(msg);
         }
 
         // get logger explicitly set in the definition
@@ -72,9 +77,25 @@ public class LogReifier extends ProcessorReifier<LogDefinition> {
             if (name == null) {
                 name = camelContext.getGlobalOption(Exchange.LOG_EIP_NAME);
                 if (name != null) {
-                    LOG.debug("Using logName from CamelContext properties: {}", name);
+                    LOG.debug("Using logName from CamelContext global option: {}", name);
                 }
             }
+            // token based names (dynamic)
+            if (name != null) {
+                name = StringHelper.replaceFirst(name, "${class}", LogProcessor.class.getName());
+                name = StringHelper.replaceFirst(name, "${contextId}", camelContext.getName());
+                name = StringHelper.replaceFirst(name, "${routeId}", route.getRouteId());
+                name = StringHelper.replaceFirst(name, "${groupId}", route.getGroup());
+                name = StringHelper.replaceFirst(name, "${nodeId}", definition.getId());
+                name = StringHelper.replaceFirst(name, "${nodePrefixId}", definition.getNodePrefixId());
+                if (camelContext.isSourceLocationEnabled()) {
+                    String source = getLineNumberLoggerName(definition);
+                    name = StringHelper.replaceFirst(name, "${source}", source);
+                    name = StringHelper.replaceFirst(name, "${source.name}", StringHelper.before(source, ":", source));
+                    name = StringHelper.replaceFirst(name, "${source.line}", StringHelper.after(source, ":", ""));
+                }
+            }
+            // fallback to defaults
             if (name == null) {
                 if (camelContext.isSourceLocationEnabled()) {
                     name = getLineNumberLoggerName(definition);

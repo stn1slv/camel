@@ -85,6 +85,7 @@ import org.apache.camel.spi.RouteController;
 import org.apache.camel.spi.RouteFactory;
 import org.apache.camel.spi.RoutesLoader;
 import org.apache.camel.spi.ShutdownStrategy;
+import org.apache.camel.spi.StartupConditionStrategy;
 import org.apache.camel.spi.StreamCachingStrategy;
 import org.apache.camel.spi.Tracer;
 import org.apache.camel.spi.TransformerRegistry;
@@ -98,6 +99,7 @@ import org.apache.camel.support.DefaultRegistry;
 import org.apache.camel.support.DefaultUuidGenerator;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.support.ResolverHelper;
+import org.apache.camel.support.startup.DefaultStartupConditionStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -167,7 +169,7 @@ public class SimpleCamelContext extends AbstractCamelContext {
     protected TypeConverter createTypeConverter() {
         return new DefaultTypeConverter(
                 getCamelContextReference(), PluginHelper.getPackageScanClassResolver(this), getInjector(),
-                isLoadTypeConverters());
+                isLoadTypeConverters(), isTypeConverterStatisticsEnabled());
     }
 
     @Override
@@ -177,8 +179,8 @@ public class SimpleCamelContext extends AbstractCamelContext {
         if (typeConverter == null) {
             typeConverter = createTypeConverter();
         }
-        if (typeConverter instanceof TypeConverterRegistry) {
-            return (TypeConverterRegistry) typeConverter;
+        if (typeConverter instanceof TypeConverterRegistry typeConverterRegistry) {
+            return typeConverterRegistry;
         }
         return null;
     }
@@ -730,6 +732,11 @@ public class SimpleCamelContext extends AbstractCamelContext {
     @Override
     protected EndpointServiceRegistry createEndpointServiceRegistry() {
         return new DefaultEndpointServiceRegistry(getCamelContextReference());
+    }
+
+    @Override
+    protected StartupConditionStrategy createStartupConditionStrategy() {
+        return new DefaultStartupConditionStrategy();
     }
 
     @Override

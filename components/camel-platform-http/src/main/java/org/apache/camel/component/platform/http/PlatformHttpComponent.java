@@ -56,14 +56,15 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
 
     @Metadata(label = "advanced", description = "An HTTP Server engine implementation to serve the requests")
     private volatile PlatformHttpEngine engine;
+    @Metadata(label = "advanced,consumer", defaultValue = "false",
+              description = "When Camel is complete processing the message, and the HTTP server is writing response. This option controls whether Camel"
+                            + " should catch any failure during writing response and store this on the Exchange, which allows onCompletion/UnitOfWork to"
+                            + " regard the Exchange as failed and have access to the caused exception from the HTTP server.")
+    private boolean handleWriteResponseError;
 
     private final Set<HttpEndpointModel> httpEndpoints = new TreeSet<>();
-
     private final List<PlatformHttpListener> listeners = new ArrayList<>();
-
     private volatile boolean localEngine;
-
-    private final Object lock = new Object();
 
     public PlatformHttpComponent() {
         this(null);
@@ -77,6 +78,7 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         PlatformHttpEndpoint endpoint = new PlatformHttpEndpoint(uri, remaining, this);
         endpoint.setPlatformHttpEngine(engine);
+        endpoint.setHandleWriteResponseError(handleWriteResponseError);
         setEndpointHeaderFilterStrategy(endpoint);
         setProperties(endpoint, parameters);
         return endpoint;
@@ -194,6 +196,14 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
         this.engine = engine;
     }
 
+    public boolean isHandleWriteResponseError() {
+        return handleWriteResponseError;
+    }
+
+    public void setHandleWriteResponseError(boolean handleWriteResponseError) {
+        this.handleWriteResponseError = handleWriteResponseError;
+    }
+
     private Consumer doCreateConsumer(
             CamelContext camelContext, Processor processor, String verb, String basePath,
             String uriTemplate,
@@ -259,7 +269,8 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
 
     PlatformHttpEngine getOrCreateEngine() {
         if (engine == null) {
-            synchronized (lock) {
+            lock.lock();
+            try {
                 if (engine == null) {
                     LOG.debug("Lookup platform http engine from registry");
 
@@ -279,6 +290,8 @@ public class PlatformHttpComponent extends HeaderFilterStrategyComponent
                         localEngine = true;
                     }
                 }
+            } finally {
+                lock.unlock();
             }
         }
 

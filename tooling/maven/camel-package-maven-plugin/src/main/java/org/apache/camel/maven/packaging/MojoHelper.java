@@ -39,7 +39,9 @@ public final class MojoHelper {
             case "camel-ai":
                 return Arrays.asList(dir.resolve("camel-chatscript"), dir.resolve("camel-djl"),
                         dir.resolve("camel-langchain4j-core"), dir.resolve("camel-langchain4j-chat"),
-                        dir.resolve("camel-langchain4j-embeddings"), dir.resolve("camel-qdrant"), dir.resolve("camel-milvus"),
+                        dir.resolve("camel-langchain4j-embeddings"), dir.resolve("camel-langchain4j-tokenizer"),
+                        dir.resolve("camel-langchain4j-tools"), dir.resolve("camel-langchain4j-web-search"),
+                        dir.resolve("camel-qdrant"), dir.resolve("camel-milvus"),
                         dir.resolve("camel-pinecone"));
             case "camel-as2":
                 return Collections.singletonList(dir.resolve("camel-as2-component"));
@@ -116,8 +118,6 @@ public final class MojoHelper {
                         dir.resolve("camel-huaweicloud-smn"));
             case "camel-knative":
                 return Collections.singletonList(dir.resolve("camel-knative-component"));
-            case "camel-groovy-dsl":
-                return Collections.singletonList(dir.resolve("camel-groovy-dsl"));
             case "camel-yaml-dsl":
                 return Collections.singletonList(dir.resolve("camel-yaml-dsl"));
             default:

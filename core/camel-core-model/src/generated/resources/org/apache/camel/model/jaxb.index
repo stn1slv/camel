@@ -48,6 +48,7 @@ PackageScanDefinition
 PausableDefinition
 PipelineDefinition
 PolicyDefinition
+PollDefinition
 PollEnrichDefinition
 ProcessDefinition
 PropertyDefinition
@@ -103,6 +104,8 @@ ThrottlingMode
 ThrowExceptionDefinition
 ToDefinition
 ToDynamicDefinition
+TokenizerDefinition
+TokenizerImplementationDefinition
 TransactedDefinition
 TransformDefinition
 TryDefinition

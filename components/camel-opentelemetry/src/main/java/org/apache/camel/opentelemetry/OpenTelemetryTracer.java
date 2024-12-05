@@ -164,7 +164,7 @@ public class OpenTelemetryTracer extends org.apache.camel.tracing.Tracer {
             baggage = spanFromExchange.getBaggage();
         } else {
             ExtractAdapter adapter = sd.getExtractAdapter(exchange.getIn().getHeaders(), encoding);
-            Context ctx = GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator().extract(Context.current(), adapter,
+            Context ctx = getContextPropagators().getTextMapPropagator().extract(Context.current(), adapter,
                     new OpenTelemetryGetter(adapter));
             Span span = Span.fromContext(ctx);
             baggage = Baggage.fromContext(ctx);
@@ -188,13 +188,11 @@ public class OpenTelemetryTracer extends org.apache.camel.tracing.Tracer {
     protected void inject(SpanAdapter span, InjectAdapter adapter) {
         OpenTelemetrySpanAdapter spanFromExchange = (OpenTelemetrySpanAdapter) span;
         Span otelSpan = spanFromExchange.getOpenTelemetrySpan();
-        Context ctx;
+        Context ctx = Context.current().with(otelSpan);
         if (spanFromExchange.getBaggage() != null) {
-            ctx = Context.current().with(otelSpan).with(spanFromExchange.getBaggage());
-        } else {
-            ctx = Context.current().with(otelSpan);
+            ctx = ctx.with(spanFromExchange.getBaggage());
         }
-        GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator().inject(ctx, adapter, new OpenTelemetrySetter());
+        getContextPropagators().getTextMapPropagator().inject(ctx, adapter, new OpenTelemetrySetter());
     }
 
     @Override

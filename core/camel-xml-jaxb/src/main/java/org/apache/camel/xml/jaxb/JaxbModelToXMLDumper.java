@@ -46,16 +46,19 @@ import org.apache.camel.NamedNode;
 import org.apache.camel.TypeConversionException;
 import org.apache.camel.converter.jaxp.XmlConverter;
 import org.apache.camel.model.BeanFactoryDefinition;
+import org.apache.camel.model.DataFormatDefinition;
 import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.model.RouteTemplateDefinition;
 import org.apache.camel.model.RouteTemplatesDefinition;
 import org.apache.camel.model.RoutesDefinition;
+import org.apache.camel.model.dataformat.DataFormatsDefinition;
 import org.apache.camel.spi.ModelToXMLDumper;
 import org.apache.camel.spi.PropertiesComponent;
 import org.apache.camel.spi.annotations.JdkService;
 import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.util.KeyValueHolder;
+import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.xml.XmlLineNumberParser;
 
 import static org.apache.camel.xml.jaxb.JaxbHelper.enrichLocations;
@@ -84,8 +87,8 @@ public class JaxbModelToXMLDumper implements ModelToXMLDumper {
 
         // gather all namespaces from the routes or route which is stored on the
         // expression nodes
-        if (definition instanceof RouteTemplatesDefinition) {
-            List<RouteTemplateDefinition> templates = ((RouteTemplatesDefinition) definition).getRouteTemplates();
+        if (definition instanceof RouteTemplatesDefinition routeTemplatesDefinition) {
+            List<RouteTemplateDefinition> templates = routeTemplatesDefinition.getRouteTemplates();
             for (RouteTemplateDefinition route : templates) {
                 extractNamespaces(route.getRoute(), namespaces);
                 if (context.isDebugging()) {
@@ -93,15 +96,14 @@ public class JaxbModelToXMLDumper implements ModelToXMLDumper {
                 }
                 resolveEndpointDslUris(route.getRoute());
             }
-        } else if (definition instanceof RouteTemplateDefinition) {
-            RouteTemplateDefinition template = (RouteTemplateDefinition) definition;
+        } else if (definition instanceof RouteTemplateDefinition template) {
             extractNamespaces(template.getRoute(), namespaces);
             if (context.isDebugging()) {
                 extractSourceLocations(template.getRoute(), locations);
             }
             resolveEndpointDslUris(template.getRoute());
-        } else if (definition instanceof RoutesDefinition) {
-            List<RouteDefinition> routes = ((RoutesDefinition) definition).getRoutes();
+        } else if (definition instanceof RoutesDefinition routesDefinition) {
+            List<RouteDefinition> routes = routesDefinition.getRoutes();
             for (RouteDefinition route : routes) {
                 extractNamespaces(route, namespaces);
                 if (context.isDebugging()) {
@@ -109,8 +111,7 @@ public class JaxbModelToXMLDumper implements ModelToXMLDumper {
                 }
                 resolveEndpointDslUris(route);
             }
-        } else if (definition instanceof RouteDefinition) {
-            RouteDefinition route = (RouteDefinition) definition;
+        } else if (definition instanceof RouteDefinition route) {
             extractNamespaces(route, namespaces);
             if (context.isDebugging()) {
                 extractSourceLocations(route, locations);
@@ -180,8 +181,8 @@ public class JaxbModelToXMLDumper implements ModelToXMLDumper {
                     Iterator<?> it = null;
                     if (definition instanceof RouteDefinition) {
                         it = ObjectHelper.createIterator(definition);
-                    } else if (definition instanceof RoutesDefinition) {
-                        it = ObjectHelper.createIterator(((RoutesDefinition) definition).getRoutes());
+                    } else if (definition instanceof RoutesDefinition routesDefinition) {
+                        it = ObjectHelper.createIterator(routesDefinition.getRoutes());
                     }
                     while (it != null && it.hasNext()) {
                         RouteDefinition routeDefinition = (RouteDefinition) it.next();
@@ -237,6 +238,29 @@ public class JaxbModelToXMLDumper implements ModelToXMLDumper {
         writer.start();
         try {
             writer.writeBeans(list);
+        } finally {
+            writer.stop();
+        }
+
+        return buffer.toString();
+    }
+
+    @Override
+    public String dumpDataFormatsAsXml(CamelContext context, Map<String, Object> dataFormats) throws Exception {
+        StringWriter buffer = new StringWriter();
+        buffer.write("\n");
+
+        DataFormatModelWriter writer = new DataFormatModelWriter(buffer);
+        Map<String, DataFormatDefinition> map = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : dataFormats.entrySet()) {
+            if (entry.getValue() instanceof DataFormatDefinition def) {
+                map.put(entry.getKey(), def);
+            }
+        }
+        writer.setCamelContext(context);
+        writer.start();
+        try {
+            writer.writeDataFormats(map);
         } finally {
             writer.stop();
         }
@@ -357,6 +381,64 @@ public class JaxbModelToXMLDumper implements ModelToXMLDumper {
                 buffer.write(String.format("        </properties>%n"));
             }
             buffer.write(String.format("    </bean>%n"));
+        }
+    }
+
+    private static class DataFormatModelWriter implements CamelContextAware {
+
+        private final StringWriter buffer;
+        private CamelContext camelContext;
+
+        public DataFormatModelWriter(StringWriter buffer) {
+            this.buffer = buffer;
+        }
+
+        @Override
+        public CamelContext getCamelContext() {
+            return camelContext;
+        }
+
+        @Override
+        public void setCamelContext(CamelContext camelContext) {
+            this.camelContext = camelContext;
+        }
+
+        public void start() {
+            // noop
+        }
+
+        public void stop() {
+            // noop
+        }
+
+        public void writeDataFormats(Map<String, DataFormatDefinition> dataFormats) throws Exception {
+            if (dataFormats.isEmpty()) {
+                return;
+            }
+
+            DataFormatsDefinition def = new DataFormatsDefinition();
+            def.setDataFormats(new ArrayList<>(dataFormats.values()));
+
+            final JAXBContext jaxbContext = getJAXBContext(camelContext);
+
+            StringWriter tmp = new StringWriter();
+            Marshaller marshaller = jaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+            marshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
+            marshaller.marshal(def, tmp);
+
+            // remove unwanted namespace
+            String xml = tmp.toString();
+            xml = xml.replace("<dataFormats xmlns=\"http://camel.apache.org/schema/spring\">", "<dataFormats>");
+            xml = StringHelper.after(xml, "<dataFormats>");
+
+            // output with 4 space indent
+            buffer.write("    <dataFormats>");
+            for (String line : xml.split("\n")) {
+                buffer.write("    ");
+                buffer.write(line);
+                buffer.write("\n");
+            }
         }
     }
 

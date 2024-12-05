@@ -62,15 +62,17 @@ import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 import jakarta.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.camel.maven.packaging.generics.JandexStore;
+import org.apache.camel.spi.Metadata;
 import org.apache.camel.tooling.util.srcgen.GenericType;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProjectHelper;
+import org.codehaus.plexus.build.BuildContext;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 import org.jboss.jandex.IndexReader;
 
-@SuppressWarnings("unused")
 public abstract class ModelWriterGeneratorMojo extends AbstractGeneratorMojo {
 
     public static final String MODEL_PACKAGE = "org.apache.camel.model";
@@ -80,6 +82,10 @@ public abstract class ModelWriterGeneratorMojo extends AbstractGeneratorMojo {
 
     @Parameter(defaultValue = "${project.basedir}/src/generated/java")
     protected File sourcesOutputDir;
+
+    protected ModelWriterGeneratorMojo(MavenProjectHelper projectHelper, BuildContext buildContext) {
+        super(projectHelper, buildContext);
+    }
 
     private static Type type(Member member) {
         return member instanceof Method
@@ -508,6 +514,26 @@ public abstract class ModelWriterGeneratorMojo extends AbstractGeneratorMojo {
                 an = getName();
             }
             return an;
+        }
+
+        public String getDefaultValue() {
+            String answer = null;
+            Metadata m = getAnnotation(Metadata.class);
+            if (m != null) {
+                answer = m.defaultValue();
+            }
+            if (answer == null || answer.isBlank()) {
+                answer = "null";
+            } else {
+                if (answer.equals("\"")) {
+                    answer = "\\\"";
+                }
+                if (answer.equals("\\")) {
+                    answer = "\\\\";
+                }
+                answer = "\"" + answer + "\"";
+            }
+            return answer;
         }
 
     }

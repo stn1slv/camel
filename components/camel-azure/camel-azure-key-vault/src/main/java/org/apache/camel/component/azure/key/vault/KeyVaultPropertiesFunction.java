@@ -88,6 +88,15 @@ public class KeyVaultPropertiesFunction extends ServiceSupport implements Proper
     private SecretClient client;
     private final Set<String> secrets = new HashSet<>();
 
+    public KeyVaultPropertiesFunction() {
+        super();
+    }
+
+    public KeyVaultPropertiesFunction(SecretClient client) {
+        super();
+        this.client = client;
+    }
+
     @Override
     protected void doStart() throws Exception {
         super.doStart();
@@ -158,9 +167,9 @@ public class KeyVaultPropertiesFunction extends ServiceSupport implements Proper
         String returnValue = null;
         String defaultValue = null;
         String version = null;
-        if (remainder.contains("/")) {
-            key = StringHelper.before(remainder, "/");
-            subkey = StringHelper.after(remainder, "/");
+        if (remainder.contains("#")) {
+            key = StringHelper.before(remainder, "#");
+            subkey = StringHelper.after(remainder, "#");
             defaultValue = StringHelper.after(subkey, ":");
             if (ObjectHelper.isNotEmpty(defaultValue)) {
                 if (defaultValue.contains("@")) {

@@ -18,6 +18,8 @@ package org.apache.camel.component.opensearch;
 
 import java.util.List;
 
+import javax.net.ssl.HostnameVerifier;
+
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.camel.spi.Metadata;
 import org.apache.camel.spi.UriParam;
@@ -72,6 +74,8 @@ public class OpensearchConfiguration {
     private int sniffAfterFailureDelay = OpensearchConstants.DEFAULT_AFTER_FAILURE_DELAY;
     @UriParam(label = "advanced", defaultValue = "ObjectNode")
     private Class<?> documentClass = ObjectNode.class;
+    @UriParam(label = "advanced")
+    private HostnameVerifier hostnameVerifier;
 
     /**
      * Starting index of the response.
@@ -159,7 +163,7 @@ public class OpensearchConfiguration {
     }
 
     /**
-     * The timeout in ms to wait before the socket will timeout.
+     * The timeout in ms to wait before the socket will time out.
      */
     public int getSocketTimeout() {
         return socketTimeout;
@@ -170,7 +174,7 @@ public class OpensearchConfiguration {
     }
 
     /**
-     * The time in ms to wait before connection will timeout.
+     * The time in ms to wait before connection will time out.
      */
     public int getConnectionTimeout() {
         return connectionTimeout;
@@ -192,7 +196,7 @@ public class OpensearchConfiguration {
     }
 
     /**
-     * Password for authenticate
+     * Password for authenticating
      */
     public String getPassword() {
         return password;
@@ -249,7 +253,7 @@ public class OpensearchConfiguration {
 
     /**
      * Enable automatically discover nodes from a running OpenSearch cluster. If this option is used in conjunction with
-     * Spring Boot then it's managed by the Spring Boot configuration (see: Disable Sniffer in Spring Boot).
+     * Spring Boot, then it's managed by the Spring Boot configuration (see: Disable Sniffer in Spring Boot).
      */
     public boolean isEnableSniffer() {
         return enableSniffer;
@@ -313,5 +317,16 @@ public class OpensearchConfiguration {
 
     public void setDocumentClass(Class<?> documentClass) {
         this.documentClass = documentClass;
+    }
+
+    public HostnameVerifier getHostnameVerifier() {
+        return hostnameVerifier;
+    }
+
+    /**
+     * The class to use as HostnameVerifier. By default there is no HostnameVerifier.
+     */
+    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+        this.hostnameVerifier = hostnameVerifier;
     }
 }

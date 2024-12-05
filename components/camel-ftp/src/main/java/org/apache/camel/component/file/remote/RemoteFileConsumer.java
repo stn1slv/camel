@@ -45,6 +45,7 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
                                  GenericFileProcessStrategy processStrategy) {
         super(endpoint, processor, operations, processStrategy);
         this.setPollStrategy(new RemoteFilePollingConsumerPollStrategy());
+        this.setRetrieveFile(endpoint.isDownload());
     }
 
     @Override
@@ -151,11 +152,6 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
         }
 
         return super.processExchange(exchange);
-    }
-
-    @Override
-    protected boolean isRetrieveFile() {
-        return getEndpoint().isDownload();
     }
 
     /**
@@ -269,8 +265,8 @@ public abstract class RemoteFileConsumer<T> extends GenericFileConsumer<T> {
                 return true;
             } else {
                 LOG.trace("Not ignoring file error {} for {}", e.getMessage(), absolutePath);
-                if (e instanceof GenericFileOperationFailedException) {
-                    throw (GenericFileOperationFailedException) e;
+                if (e instanceof GenericFileOperationFailedException genericFileOperationFailedException) {
+                    throw genericFileOperationFailedException;
                 } else {
                     throw new GenericFileOperationFailedException(
                             "Cannot poll sub-directory: " + absolutePath + " from: " + endpoint, e);

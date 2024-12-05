@@ -34,7 +34,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "vault",
-         description = "List secrets from security vaults used by running Camel integrations", sortOptions = false)
+         description = "List secrets from security vaults", sortOptions = false, showDefaultValues = true)
 public class ListVault extends ProcessWatchCommand {
 
     public static class PidNameCompletionCandidates implements Iterable<String> {
@@ -127,6 +127,50 @@ public class ListVault extends ProcessWatchCommand {
                                 for (int i = 0; i < arr.size(); i++) {
                                     if (i > 0) {
                                         // create a copy for 2+ secrets
+                                        row = row.copy();
+                                    }
+                                    JsonObject jo = (JsonObject) arr.get(i);
+                                    row.secret = jo.getString("name");
+                                    row.timestamp = jo.getLongOrDefault("timestamp", 0);
+                                    rows.add(row);
+                                }
+                            }
+
+                            JsonObject kubernetes = (JsonObject) vaults.get("kubernetes-secrets");
+                            if (kubernetes != null) {
+                                row.vault = "Kubernetes";
+                                row.lastCheck = kubernetes.getLongOrDefault("startCheckTimestamp", 0);
+                                row.lastReload = kubernetes.getLongOrDefault("lastReloadTimestamp", 0);
+                                JsonArray arr = (JsonArray) kubernetes.get("secrets");
+                                for (int i = 0; i < arr.size(); i++) {
+                                    if (i > 0) {
+                                        // create a copy for 2+ secrets
+                                        row = row.copy();
+                                    }
+                                    JsonObject jo = (JsonObject) arr.get(i);
+                                    row.secret = jo.getString("name");
+                                    row.timestamp = jo.getLongOrDefault("timestamp", 0);
+                                    rows.add(row);
+                                }
+                            }
+
+                            JsonObject hashicorp = (JsonObject) vaults.get("hashicorp-secrets");
+                            if (hashicorp != null) {
+                                row.vault = "Hashicorp";
+                                row.lastCheck = hashicorp.getLongOrDefault("startCheckTimestamp", 0);
+                                row.lastReload = hashicorp.getLongOrDefault("lastReloadTimestamp", 0);
+                                rows.add(row);
+                            }
+
+                            JsonObject cmKubernetes = (JsonObject) vaults.get("kubernetes-configmaps");
+                            if (cmKubernetes != null) {
+                                row.vault = "Kubernetes-cm";
+                                row.lastCheck = cmKubernetes.getLongOrDefault("startCheckTimestamp", 0);
+                                row.lastReload = cmKubernetes.getLongOrDefault("lastReloadTimestamp", 0);
+                                JsonArray arr = (JsonArray) cmKubernetes.get("configmap");
+                                for (int i = 0; i < arr.size(); i++) {
+                                    if (i > 0) {
+                                        // create a copy for 2+ configmap
                                         row = row.copy();
                                     }
                                     JsonObject jo = (JsonObject) arr.get(i);

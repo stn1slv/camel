@@ -36,6 +36,7 @@ import org.apache.camel.spi.Configurer;
 import org.apache.camel.spi.FactoryFinder;
 import org.apache.camel.spi.LoadablePropertiesSource;
 import org.apache.camel.spi.PropertiesFunction;
+import org.apache.camel.spi.PropertiesResolvedValue;
 import org.apache.camel.spi.PropertiesSource;
 import org.apache.camel.spi.PropertiesSourceFactory;
 import org.apache.camel.spi.annotations.JdkService;
@@ -56,7 +57,7 @@ import org.slf4j.LoggerFactory;
  */
 @ManagedResource(description = "Managed PropertiesComponent")
 @JdkService(org.apache.camel.spi.PropertiesComponent.FACTORY)
-@Configurer(bootstrap = true)
+@Configurer(bootstrap = true, extended = true)
 public class PropertiesComponent extends ServiceSupport
         implements org.apache.camel.spi.PropertiesComponent, StaticService, CamelContextAware {
 
@@ -111,6 +112,7 @@ public class PropertiesComponent extends ServiceSupport
     private final PropertiesLookup propertiesLookup = new DefaultPropertiesLookup(this);
     private final List<PropertiesLookupListener> propertiesLookupListeners = new ArrayList<>();
     private final PropertiesSourceFactory propertiesSourceFactory = new DefaultPropertiesSourceFactory(this);
+    private final DefaultPropertiesLookupListener defaultPropertiesLookupListener = new DefaultPropertiesLookupListener();
     private final List<PropertiesSource> sources = new ArrayList<>();
     private List<PropertiesLocation> locations = new ArrayList<>();
     private String location;
@@ -128,6 +130,7 @@ public class PropertiesComponent extends ServiceSupport
     private boolean autoDiscoverPropertiesSources = true;
 
     public PropertiesComponent() {
+        addPropertiesLookupListener(defaultPropertiesLookupListener);
         // include out of the box functions
         addPropertiesFunction(new EnvPropertiesFunction());
         addPropertiesFunction(new SysPropertiesFunction());
@@ -188,6 +191,15 @@ public class PropertiesComponent extends ServiceSupport
     }
 
     @Override
+    public Optional<PropertiesResolvedValue> getResolvedValue(String key) {
+        return Optional.ofNullable(defaultPropertiesLookupListener.getProperty(key));
+    }
+
+    public void updateResolvedValue(String key, String newValue, String newSource) {
+        defaultPropertiesLookupListener.updateValue(key, newValue, newSource);
+    }
+
+    @Override
     public Properties loadProperties() {
         // this method may be replaced by loadProperties(k -> true) but the underlying sources
         // may have some optimization for bulk load so let's keep it
@@ -205,13 +217,12 @@ public class PropertiesComponent extends ServiceSupport
             // override properties from higher priority ones
             for (int i = sources.size(); i-- > 0;) {
                 PropertiesSource ps = sources.get(i);
-                if (ps instanceof LoadablePropertiesSource) {
-                    LoadablePropertiesSource lps = (LoadablePropertiesSource) ps;
+                if (ps instanceof LoadablePropertiesSource lps) {
                     Properties p = lps.loadProperties();
-                    if (p instanceof OrderedLocationProperties) {
-                        prop.putAll((OrderedLocationProperties) p);
-                    } else if (ps instanceof LocationPropertiesSource) {
-                        String loc = ((LocationPropertiesSource) ps).getLocation().getPath();
+                    if (p instanceof OrderedLocationProperties propSource) {
+                        prop.putAll(propSource);
+                    } else if (ps instanceof LocationPropertiesSource propSource) {
+                        String loc = propSource.getLocation().getPath();
                         prop.putAll(loc, p);
                     } else {
                         prop.putAll(lps.getName(), p);
@@ -273,11 +284,9 @@ public class PropertiesComponent extends ServiceSupport
             // override properties from higher priority ones
             for (int i = sources.size(); i-- > 0;) {
                 PropertiesSource ps = sources.get(i);
-                if (ps instanceof LoadablePropertiesSource) {
-                    LoadablePropertiesSource lps = (LoadablePropertiesSource) ps;
+                if (ps instanceof LoadablePropertiesSource lps) {
                     Properties p = lps.loadProperties(filter);
-                    if (p instanceof OrderedLocationProperties) {
-                        OrderedLocationProperties olp = (OrderedLocationProperties) p;
+                    if (p instanceof OrderedLocationProperties olp) {
                         for (String name : olp.stringPropertyNames()) {
                             String loc = olp.getLocation(name);
                             Object value = olp.getProperty(name);
@@ -286,8 +295,7 @@ public class PropertiesComponent extends ServiceSupport
                         }
                     } else {
                         String loc = lps.getName();
-                        if (ps instanceof LocationPropertiesSource) {
-                            LocationPropertiesSource olp = (LocationPropertiesSource) ps;
+                        if (ps instanceof LocationPropertiesSource olp) {
                             loc = olp.getLocation().getPath();
                         }
                         for (String name : p.stringPropertyNames()) {
@@ -491,7 +499,7 @@ public class PropertiesComponent extends ServiceSupport
         this.ignoreMissingLocation = ignoreMissingLocation;
     }
 
-    @ManagedAttribute(description = "Ignore missing location")
+    @ManagedAttribute(description = "Ignore missing property")
     public boolean isIgnoreMissingProperty() {
         return ignoreMissingProperty;
     }
@@ -650,7 +658,8 @@ public class PropertiesComponent extends ServiceSupport
     @Override
     public void addPropertiesSource(PropertiesSource propertiesSource) {
         CamelContextAware.trySetCamelContext(propertiesSource, getCamelContext());
-        synchronized (lock) {
+        lock.lock();
+        try {
             sources.add(propertiesSource);
             // resort after we add a new source
             sources.sort(OrderedComparator.get());
@@ -661,6 +670,8 @@ public class PropertiesComponent extends ServiceSupport
             if (isStarted()) {
                 ServiceHelper.startService(propertiesSource);
             }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -708,9 +719,7 @@ public class PropertiesComponent extends ServiceSupport
 
         // find sources with this location to reload
         for (PropertiesSource source : sources) {
-            if (source instanceof LocationPropertiesSource && source instanceof LoadablePropertiesSource) {
-                LocationPropertiesSource loc = (LocationPropertiesSource) source;
-                LoadablePropertiesSource loadable = (LoadablePropertiesSource) source;
+            if (source instanceof LocationPropertiesSource loc && source instanceof LoadablePropertiesSource loadable) {
                 String schemeAndPath = loc.getLocation().getResolver() + ":" + loc.getLocation().getPath();
                 String path = loc.getLocation().getPath();
                 if (PatternHelper.matchPattern(schemeAndPath, pattern) || PatternHelper.matchPattern(path, pattern)) {
@@ -754,8 +763,8 @@ public class PropertiesComponent extends ServiceSupport
         }
 
         // inject the component to the parser
-        if (propertiesParser instanceof DefaultPropertiesParser) {
-            ((DefaultPropertiesParser) propertiesParser).setPropertiesComponent(this);
+        if (propertiesParser instanceof DefaultPropertiesParser defaultPropertiesParser) {
+            defaultPropertiesParser.setPropertiesComponent(this);
         }
 
         if (isAutoDiscoverPropertiesSources()) {
@@ -771,8 +780,7 @@ public class PropertiesComponent extends ServiceSupport
                 Class<?> type = factoryFinder.findClass("properties-source-factory").orElse(null);
                 if (type != null) {
                     Object obj = getCamelContext().getInjector().newInstance(type, false);
-                    if (obj instanceof PropertiesSource) {
-                        PropertiesSource ps = (PropertiesSource) obj;
+                    if (obj instanceof PropertiesSource ps) {
                         addPropertiesSource(ps);
                         LOG.debug("PropertiesComponent added custom PropertiesSource (factory): {}", ps);
                     } else if (obj != null) {
@@ -788,27 +796,27 @@ public class PropertiesComponent extends ServiceSupport
         }
 
         sources.sort(OrderedComparator.get());
-        ServiceHelper.initService(sources, propertiesFunctionResolver);
+        ServiceHelper.initService(sources, propertiesFunctionResolver, defaultPropertiesLookupListener);
     }
 
     @Override
     protected void doBuild() throws Exception {
-        ServiceHelper.buildService(sources, propertiesFunctionResolver);
+        ServiceHelper.buildService(sources, propertiesFunctionResolver, defaultPropertiesLookupListener);
     }
 
     @Override
     protected void doStart() throws Exception {
-        ServiceHelper.startService(sources, propertiesFunctionResolver);
+        ServiceHelper.startService(sources, propertiesFunctionResolver, defaultPropertiesLookupListener);
     }
 
     @Override
     protected void doStop() throws Exception {
-        ServiceHelper.stopService(sources, propertiesFunctionResolver);
+        ServiceHelper.stopService(sources, propertiesFunctionResolver, defaultPropertiesLookupListener);
     }
 
     @Override
     protected void doShutdown() throws Exception {
-        ServiceHelper.stopAndShutdownServices(sources, propertiesFunctionResolver);
+        ServiceHelper.stopAndShutdownServices(sources, propertiesFunctionResolver, defaultPropertiesLookupListener);
     }
 
     private void addPropertiesLocationsAsPropertiesSource(PropertiesLocation location, int order) {

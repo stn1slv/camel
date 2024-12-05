@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.CamelExecutionException;
@@ -63,7 +62,7 @@ public abstract class CoreTypeConverterRegistry extends ServiceSupport implement
     // special enum converter for optional performance
     protected final TypeConverter enumTypeConverter = new EnumTypeConverter();
 
-    private final ConverterStatistics statistics = new TypeConverterStatistics();
+    private final ConverterStatistics statistics;
 
     protected TypeConverterExists typeConverterExists = TypeConverterExists.Ignore;
     protected LoggingLevel typeConverterExistsLoggingLevel = LoggingLevel.DEBUG;
@@ -71,6 +70,14 @@ public abstract class CoreTypeConverterRegistry extends ServiceSupport implement
     // Why 256: as of Camel 4, we have about 230 type converters. Therefore, set the capacity to a few more to provide
     // space for others added during runtime
     private final Map<TypeConvertible<?, ?>, TypeConverter> converters = new ConcurrentHashMap<>(256);
+
+    protected CoreTypeConverterRegistry(boolean statisticsEnabled) {
+        if (statisticsEnabled) {
+            statistics = new TypeConverterStatistics();
+        } else {
+            statistics = new NoopTypeConverterStatistics();
+        }
+    }
 
     @Override
     public boolean allowNull() {
@@ -107,9 +114,9 @@ public abstract class CoreTypeConverterRegistry extends ServiceSupport implement
             Object answer = ObjectConverter.toBoolean(value);
             requireNonNullBoolean(type, value, answer);
             return (T) answer;
-        } else if (type == Boolean.class && value instanceof String) {
+        } else if (type == Boolean.class && value instanceof String str) {
             // String -> Boolean
-            Boolean parsedBoolean = customParseBoolean((String) value);
+            Boolean parsedBoolean = customParseBoolean(str);
             if (parsedBoolean != null) {
                 return (T) parsedBoolean;
             }
@@ -208,9 +215,9 @@ public abstract class CoreTypeConverterRegistry extends ServiceSupport implement
                 Object answer = ObjectConverter.toBoolean(value);
                 requireNonNullBoolean(type, value, answer);
                 return (T) answer;
-            } else if (type == Boolean.class && value instanceof String) {
+            } else if (type == Boolean.class && value instanceof String str) {
                 // String -> Boolean
-                Boolean parsedBoolean = customParseBoolean((String) value);
+                Boolean parsedBoolean = customParseBoolean(str);
                 if (parsedBoolean != null) {
                     return (T) parsedBoolean;
                 }
@@ -566,8 +573,8 @@ public abstract class CoreTypeConverterRegistry extends ServiceSupport implement
 
     protected TypeConversionException createTypeConversionException(
             Exchange exchange, Class<?> type, Object value, Throwable cause) {
-        if (cause instanceof TypeConversionException) {
-            if (((TypeConversionException) cause).getToType() == type) {
+        if (cause instanceof TypeConversionException tce) {
+            if (tce.getToType() == type) {
                 return (TypeConversionException) cause;
             }
         }
@@ -615,19 +622,11 @@ public abstract class CoreTypeConverterRegistry extends ServiceSupport implement
     @Override
     protected void doStop() throws Exception {
         super.doStop();
+
         // log utilization statistics when stopping, including mappings
-        if (statistics.isStatisticsEnabled()) {
-            final String info = generateMappingStatisticsMessage();
-            LOG.info(info);
-        }
+        statistics.logMappingStatisticsMessage(converters, MISS_CONVERTER);
 
         statistics.reset();
-    }
-
-    private String generateMappingStatisticsMessage() {
-        final AtomicInteger misses = ConverterStatistics.computeCachedMisses(converters, MISS_CONVERTER);
-
-        return String.format("%s mappings[total=%s, misses=%s]", statistics, size(), misses);
     }
 
     /**

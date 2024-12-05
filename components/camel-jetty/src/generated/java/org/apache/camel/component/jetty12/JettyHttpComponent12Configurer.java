@@ -66,10 +66,14 @@ public class JettyHttpComponent12Configurer extends PropertyConfigurerSupport im
         case "requestBufferSize": target.setRequestBufferSize(property(camelContext, java.lang.Integer.class, value)); return true;
         case "requestheadersize":
         case "requestHeaderSize": target.setRequestHeaderSize(property(camelContext, java.lang.Integer.class, value)); return true;
+        case "requestlog":
+        case "requestLog": target.setRequestLog(property(camelContext, org.eclipse.jetty.server.RequestLog.class, value)); return true;
         case "responsebuffersize":
         case "responseBufferSize": target.setResponseBufferSize(property(camelContext, java.lang.Integer.class, value)); return true;
         case "responseheadersize":
         case "responseHeaderSize": target.setResponseHeaderSize(property(camelContext, java.lang.Integer.class, value)); return true;
+        case "securerequestcustomizer":
+        case "secureRequestCustomizer": target.setSecureRequestCustomizer(property(camelContext, org.eclipse.jetty.server.SecureRequestCustomizer.class, value)); return true;
         case "sendserverversion":
         case "sendServerVersion": target.setSendServerVersion(property(camelContext, boolean.class, value)); return true;
         case "socketconnectorproperties":
@@ -144,10 +148,14 @@ public class JettyHttpComponent12Configurer extends PropertyConfigurerSupport im
         case "requestBufferSize": return java.lang.Integer.class;
         case "requestheadersize":
         case "requestHeaderSize": return java.lang.Integer.class;
+        case "requestlog":
+        case "requestLog": return org.eclipse.jetty.server.RequestLog.class;
         case "responsebuffersize":
         case "responseBufferSize": return java.lang.Integer.class;
         case "responseheadersize":
         case "responseHeaderSize": return java.lang.Integer.class;
+        case "securerequestcustomizer":
+        case "secureRequestCustomizer": return org.eclipse.jetty.server.SecureRequestCustomizer.class;
         case "sendserverversion":
         case "sendServerVersion": return boolean.class;
         case "socketconnectorproperties":
@@ -223,10 +231,14 @@ public class JettyHttpComponent12Configurer extends PropertyConfigurerSupport im
         case "requestBufferSize": return target.getRequestBufferSize();
         case "requestheadersize":
         case "requestHeaderSize": return target.getRequestHeaderSize();
+        case "requestlog":
+        case "requestLog": return target.getRequestLog();
         case "responsebuffersize":
         case "responseBufferSize": return target.getResponseBufferSize();
         case "responseheadersize":
         case "responseHeaderSize": return target.getResponseHeaderSize();
+        case "securerequestcustomizer":
+        case "secureRequestCustomizer": return target.getSecureRequestCustomizer();
         case "sendserverversion":
         case "sendServerVersion": return target.isSendServerVersion();
         case "socketconnectorproperties":

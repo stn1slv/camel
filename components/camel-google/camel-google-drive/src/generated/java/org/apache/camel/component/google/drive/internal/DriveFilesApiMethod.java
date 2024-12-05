@@ -19,6 +19,10 @@ import static org.apache.camel.support.component.ApiMethodArg.arg;
  */
 public enum DriveFilesApiMethod implements ApiMethod {
 
+    ACCESSPROPOSALS(
+        com.google.api.services.drive.Drive.Files.Accessproposals.class,
+        "accessproposals"),
+
     COPY(
         com.google.api.services.drive.Drive.Files.Copy.class,
         "copy",
@@ -39,6 +43,11 @@ public enum DriveFilesApiMethod implements ApiMethod {
     DELETE(
         com.google.api.services.drive.Drive.Files.Delete.class,
         "delete",
+        arg("fileId", String.class)),
+
+    DOWNLOAD(
+        com.google.api.services.drive.Drive.Files.Download.class,
+        "download",
         arg("fileId", String.class)),
 
     EMPTY_TRASH(

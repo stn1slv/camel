@@ -175,10 +175,10 @@ public final class PropertyBindingSupport {
         }
 
         PropertyConfigurer configurer = null;
-        if (target instanceof Component) {
+        if (target instanceof Component component) {
             // the component needs to be initialized to have the configurer ready
             ServiceHelper.initService(target);
-            configurer = ((Component) target).getComponentPropertyConfigurer();
+            configurer = component.getComponentPropertyConfigurer();
         }
 
         if (configurer == null) {
@@ -383,13 +383,13 @@ public final class PropertyBindingSupport {
             } else {
                 // okay ognl path is success (either get existing or created empty object)
                 // now lets update the target/name/class before next iterator (next part)
-                if (configurer instanceof PropertyConfigurerGetter) {
+                if (configurer instanceof PropertyConfigurerGetter propertyConfigurerGetter) {
                     // lets see if we have a specialized configurer
                     String key = StringHelper.before(part, "[", part);
 
                     // if its a map/list/array type then find out what type the collection uses
                     // so we can use that to lookup as configurer
-                    Class<?> collectionType = (Class<?>) ((PropertyConfigurerGetter) configurer)
+                    Class<?> collectionType = (Class<?>) propertyConfigurerGetter
                             .getCollectionValueType(newTarget, undashKey(key), ignoreCase);
 
                     if (collectionType == null) {
@@ -451,8 +451,8 @@ public final class PropertyBindingSupport {
 
         Object answer = null;
         Class<?> parameterType = null;
-        if (configurer instanceof PropertyConfigurerGetter) {
-            parameterType = ((PropertyConfigurerGetter) configurer).getOptionType(key, true);
+        if (configurer instanceof PropertyConfigurerGetter propertyConfigurerGetter) {
+            parameterType = propertyConfigurerGetter.getOptionType(key, true);
         }
         if (parameterType != null) {
             Object obj = getObjectForType(camelContext, parameterType);
@@ -514,9 +514,8 @@ public final class PropertyBindingSupport {
         if (placeholder) {
             // resolve property placeholders
             key = camelContext.resolvePropertyPlaceholders(key);
-            if (text instanceof String) {
+            if (text instanceof String s) {
                 // resolve property placeholders
-                String s = text.toString();
                 text = camelContext.resolvePropertyPlaceholders(s);
                 if (text == null && s.startsWith(PropertiesComponent.PREFIX_TOKEN + "?")) {
                     // it was an optional value, so we should not try to set the property but regard it as a "hit"
@@ -530,9 +529,9 @@ public final class PropertyBindingSupport {
             Object str = resolveValue(camelContext, target, key, text, ignoreCase, fluentBuilder,
                     allowPrivateSetter, reflection, configurer);
             // resolve property placeholders
-            if (str instanceof String) {
+            if (str instanceof String strValue) {
                 // resolve property placeholders
-                str = camelContext.resolvePropertyPlaceholders(str.toString());
+                str = camelContext.resolvePropertyPlaceholders(strValue);
             }
             if (str == null && reference && mandatory && !optional) {
                 // we could not resolve the reference and this is mandatory
@@ -649,8 +648,7 @@ public final class PropertyBindingSupport {
 
         // special for reference (we should not do this for options that are String type)
         // this is only required for reflection (as configurer does this automatic in a more safe way)
-        if (value instanceof String) {
-            String str = value.toString();
+        if (value instanceof String str) {
             if (reference && isReferenceParameter(str)) {
                 Object bean = CamelContextHelper.lookup(context, str.substring(1));
                 if (bean != null) {
@@ -710,14 +708,14 @@ public final class PropertyBindingSupport {
         String undashKey = undashKey(key);
 
         Object obj = null;
-        if (configurer instanceof PropertyConfigurerGetter) {
-            obj = ((PropertyConfigurerGetter) configurer).getOptionValue(target, undashKey, ignoreCase);
+        if (configurer instanceof PropertyConfigurerGetter propertyConfigurerGetter) {
+            obj = propertyConfigurerGetter.getOptionValue(target, undashKey, ignoreCase);
         }
         if (obj == null) {
-            // it was supposed to be a list or map, but its null, so lets create a new list or map and set it automatically
+            // it was supposed to be a list or map, but its null, so let's create a new list or map and set it automatically
             Class<?> returnType = null;
-            if (configurer instanceof PropertyConfigurerGetter) {
-                returnType = ((PropertyConfigurerGetter) configurer).getOptionType(undashKey, true);
+            if (configurer instanceof PropertyConfigurerGetter propertyConfigurerGetter) {
+                returnType = propertyConfigurerGetter.getOptionType(undashKey, true);
             }
             if (returnType == null) {
                 return false;
@@ -734,6 +732,9 @@ public final class PropertyBindingSupport {
                                                        + " as either a Map/List/array because target bean is not a Map, List or array type: "
                                                        + target);
                 }
+
+                // get the fresh created and configured option value, because the target instance may have created a new list or map as part of the setter
+                obj = ((PropertyConfigurerGetter) configurer).getOptionValue(target, undashKey, ignoreCase);
                 target = obj;
             }
         }
@@ -832,14 +833,13 @@ public final class PropertyBindingSupport {
 
         String undashKey = undashKey(name);
 
-        if (value instanceof String) {
-            String str = value.toString();
+        if (value instanceof String str) {
             if (str.equals("#autowired")) {
                 // we should get the type from the setter
                 Class<?> parameterType = null;
-                if (configurer instanceof PropertyConfigurerGetter) {
+                if (configurer instanceof PropertyConfigurerGetter propertyConfigurerGetter) {
                     // favour using configurer
-                    parameterType = ((PropertyConfigurerGetter) configurer).getOptionType(undashKey, true);
+                    parameterType = propertyConfigurerGetter.getOptionType(undashKey, true);
                 }
                 if (parameterType == null && reflection) {
                     // fallback to reflection
@@ -868,8 +868,7 @@ public final class PropertyBindingSupport {
             boolean ignoreCase, boolean fluentBuilder, boolean allowPrivateSetter,
             boolean reflection, PropertyConfigurer configurer)
             throws Exception {
-        if (value instanceof String) {
-            String str = value.toString();
+        if (value instanceof String str) {
             if (str.startsWith("#property:")) {
                 String key = str.substring(10);
                 // the key may have property placeholder so resolve those first
@@ -897,11 +896,10 @@ public final class PropertyBindingSupport {
             throws Exception {
 
         String refName = null;
-        if (reference && value instanceof String) {
-            String str = value.toString();
+        if (reference && value instanceof String str) {
             if (str.startsWith("#bean:")) {
                 // okay it's a reference so swap to look up this which is already supported in IntrospectionSupport
-                refName = "#" + ((String) value).substring(6);
+                refName = "#" + str.substring(6);
                 value = null;
             } else if (str.equals("#autowired")) {
                 value = resolveAutowired(context, target, name, value, ignoreCase, fluentBuilder, allowPrivateSetter, true,
@@ -943,13 +941,13 @@ public final class PropertyBindingSupport {
         Object answer = null;
         Class<?> type = null;
 
-        if (configurer instanceof PropertyConfigurerGetter) {
-            answer = ((PropertyConfigurerGetter) configurer).getOptionValue(target, undashKey, ignoreCase);
+        if (configurer instanceof PropertyConfigurerGetter propertyConfigurerGetter) {
+            answer = propertyConfigurerGetter.getOptionValue(target, undashKey, ignoreCase);
         }
         if (answer != null) {
             type = answer.getClass();
-        } else if (configurer instanceof PropertyConfigurerGetter) {
-            type = ((PropertyConfigurerGetter) configurer).getOptionType(undashKey, true);
+        } else if (configurer instanceof PropertyConfigurerGetter propertyConfigurerGetter) {
+            type = propertyConfigurerGetter.getOptionType(undashKey, true);
         }
 
         if (answer == null && type == null) {
@@ -1253,7 +1251,7 @@ public final class PropertyBindingSupport {
      */
     public static Object newInstanceConstructorParameters(CamelContext camelContext, Class<?> type, String parameters)
             throws Exception {
-        String[] params = StringQuoteHelper.splitSafeQuote(parameters, ',', false);
+        String[] params = StringQuoteHelper.splitSafeQuote(parameters, ',');
         Constructor<?> found = findMatchingConstructor(camelContext, type.getConstructors(), params);
         if (found != null) {
             Object[] arr = new Object[found.getParameterCount()];
@@ -1262,8 +1260,7 @@ public final class PropertyBindingSupport {
                 Object param = params[i];
                 Object val = null;
                 // special as we may refer to other #bean or #type in the parameter
-                if (param instanceof String) {
-                    String str = param.toString();
+                if (param instanceof String str) {
                     if (str.startsWith("#")) {
                         Object bean = resolveBean(camelContext, param);
                         if (bean != null) {
@@ -1272,8 +1269,8 @@ public final class PropertyBindingSupport {
                     }
                 }
                 // unquote text
-                if (val instanceof String) {
-                    val = StringHelper.removeLeadingAndEndingQuotes((String) val);
+                if (val instanceof String strVal) {
+                    val = StringHelper.removeLeadingAndEndingQuotes(strVal);
                 }
                 if (val != null) {
                     val = camelContext.getTypeConverter().tryConvertTo(paramType, val);
@@ -1354,7 +1351,7 @@ public final class PropertyBindingSupport {
     public static Object newInstanceFactoryParameters(
             CamelContext camelContext, Class<?> type, String factoryMethod, String parameters)
             throws Exception {
-        String[] params = StringQuoteHelper.splitSafeQuote(parameters, ',', false);
+        String[] params = StringQuoteHelper.splitSafeQuote(parameters, ',');
         Method found = findMatchingFactoryMethod(camelContext, type.getMethods(), factoryMethod, params);
         if (found != null) {
             Object[] arr = new Object[found.getParameterCount()];
@@ -1363,8 +1360,7 @@ public final class PropertyBindingSupport {
                 Object param = params[i];
                 Object val = null;
                 // special as we may refer to other #bean or #type in the parameter
-                if (param instanceof String) {
-                    String str = param.toString();
+                if (param instanceof String str) {
                     if (str.startsWith("#")) {
                         Object bean = resolveBean(camelContext, param);
                         if (bean != null) {
@@ -1373,8 +1369,8 @@ public final class PropertyBindingSupport {
                     }
                 }
                 // unquote text
-                if (val instanceof String) {
-                    val = StringHelper.removeLeadingAndEndingQuotes((String) val);
+                if (val instanceof String strVal) {
+                    val = StringHelper.removeLeadingAndEndingQuotes(strVal);
                 }
                 if (val != null) {
                     val = camelContext.getTypeConverter().tryConvertTo(paramType, val);
@@ -1582,7 +1578,7 @@ public final class PropertyBindingSupport {
             }
             Class<?> type = camelContext.getClassResolver().resolveMandatoryClass(className);
             if (factoryMethod != null) {
-                Class<?> factoryClass = null;
+                Class<?> factoryClass;
                 String typeOrRef = StringHelper.before(factoryMethod, ":");
                 if (typeOrRef != null) {
                     // use another class with factory method
@@ -1594,6 +1590,10 @@ public final class PropertyBindingSupport {
                     } else {
                         factoryClass = camelContext.getClassResolver().resolveMandatoryClass(typeOrRef);
                     }
+                } else {
+                    // no specific factory class given so we need to use the bean type for that
+                    factoryClass = type;
+                    type = Object.class;
                 }
                 if (parameters != null) {
                     Class<?> target = factoryClass != null ? factoryClass : type;
@@ -1668,7 +1668,7 @@ public final class PropertyBindingSupport {
         List<String> parts = new ArrayList<>();
 
         boolean mapKey = false;
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(key.length() + 16);
         for (char ch : key.toCharArray()) {
             if (ch == '[') {
                 mapKey = true;

@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.camel.dsl.jbang.core.common;
 
 import java.util.Arrays;
@@ -25,8 +24,8 @@ import java.util.Optional;
  */
 public enum PluginType {
 
-    CAMEL_K("camel-k", "k", "Manage Camel integrations on Kubernetes", "4.4.0"),
-    GENERATE("generate", "generate", "Generate code such as DTOs", "4.7.0");
+    KUBERNETES("kubernetes", "kubernetes", "Run Camel applications on Kubernetes", "4.8.0"),
+    GENERATE("generate", "generate", "Generate code such as DTOs", "4.8.0");
 
     private final String name;
     private final String command;

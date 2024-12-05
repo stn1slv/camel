@@ -35,6 +35,8 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Date;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.InvalidPayloadException;
@@ -53,6 +55,7 @@ import static org.apache.camel.component.file.GenericFileHelper.asExclusiveReadL
  */
 public class FileOperations implements GenericFileOperations<File> {
     private static final Logger LOG = LoggerFactory.getLogger(FileOperations.class);
+    private final Lock lock = new ReentrantLock();
     private FileEndpoint endpoint;
 
     public FileOperations() {
@@ -102,12 +105,14 @@ public class FileOperations implements GenericFileOperations<File> {
         return file.exists();
     }
 
-    protected boolean buildDirectory(File dir, Set<PosixFilePermission> permissions, boolean absolute) {
+    protected boolean buildDirectory(File dir, Set<PosixFilePermission> permissions, boolean absolute, boolean stepwise) {
         if (dir.exists()) {
             return true;
         }
 
-        if (permissions == null || permissions.isEmpty()) {
+        boolean hasPermissions = permissions != null && !permissions.isEmpty();
+
+        if (!stepwise && !hasPermissions) {
             return dir.mkdirs();
         }
 
@@ -127,10 +132,13 @@ public class FileOperations implements GenericFileOperations<File> {
                 File subDir = new File(base, part);
                 if (!subDir.exists()) {
                     if (subDir.mkdir()) {
-                        if (LOG.isTraceEnabled()) {
-                            LOG.trace("Setting chmod: {} on directory: {}", PosixFilePermissions.toString(permissions), subDir);
+                        if (hasPermissions) {
+                            if (LOG.isTraceEnabled()) {
+                                LOG.trace("Setting chmod: {} on directory: {}", PosixFilePermissions.toString(permissions),
+                                        subDir);
+                            }
+                            Files.setPosixFilePermissions(subDir.toPath(), permissions);
                         }
-                        Files.setPosixFilePermissions(subDir.toPath(), permissions);
                     } else {
                         return false;
                     }
@@ -151,7 +159,7 @@ public class FileOperations implements GenericFileOperations<File> {
         // always create endpoint defined directory
         if (endpoint.isAutoCreate() && !endpoint.getFile().exists()) {
             LOG.trace("Building starting directory: {}", endpoint.getFile());
-            buildDirectory(endpoint.getFile(), endpoint.getDirectoryPermissions(), absolute);
+            buildDirectory(endpoint.getFile(), endpoint.getDirectoryPermissions(), absolute, endpoint.isAutoCreateStepwise());
         }
 
         if (ObjectHelper.isEmpty(directory)) {
@@ -189,14 +197,17 @@ public class FileOperations implements GenericFileOperations<File> {
 
         // We need to make sure that this is thread-safe and only one thread
         // tries to create the path directory at the same time.
-        synchronized (this) {
+        lock.lock();
+        try {
             if (path.isDirectory() && path.exists()) {
                 // the directory already exists
                 return true;
             } else {
                 LOG.trace("Building directory: {}", path);
-                return buildDirectory(path, endpoint.getDirectoryPermissions(), absolute);
+                return buildDirectory(path, endpoint.getDirectoryPermissions(), absolute, endpoint.isAutoCreateStepwise());
             }
+        } finally {
+            lock.unlock();
         }
     }
 
@@ -278,8 +289,8 @@ public class FileOperations implements GenericFileOperations<File> {
                 // if no charset and not in appending mode, then we can try
                 // using file directly (optimized)
                 final Object body = extractBodyFromExchange(exchange);
-                if (body instanceof File) {
-                    source = (File) body;
+                if (body instanceof File fileBody) {
+                    source = fileBody;
                     fileBased = true;
                 }
             }

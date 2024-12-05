@@ -103,7 +103,7 @@ public class StaticEndpointBuilders {
      * @param path destinationType:destinationName
      * @return the dsl builder
      */
-    public static ActiveMQEndpointBuilderFactory.ActiveMQEndpointBuilder activemq6(String path) {
+    public static ActiveMQ6EndpointBuilderFactory.ActiveMQ6EndpointBuilder activemq6(String path) {
         return activemq6("activemq6", path);
     }
     /**
@@ -131,8 +131,8 @@ public class StaticEndpointBuilders {
      * @param path destinationType:destinationName
      * @return the dsl builder
      */
-    public static ActiveMQEndpointBuilderFactory.ActiveMQEndpointBuilder activemq6(String componentName, String path) {
-        return ActiveMQEndpointBuilderFactory.endpointBuilder(componentName, path);
+    public static ActiveMQ6EndpointBuilderFactory.ActiveMQ6EndpointBuilder activemq6(String componentName, String path) {
+        return ActiveMQ6EndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * AMQP (camel-amqp)
@@ -2563,6 +2563,46 @@ public class StaticEndpointBuilders {
         return ClassEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
+     * ClickUp (camel-clickup)
+     * Receives events from ClickUp
+     * 
+     * Category: cloud
+     * Since: 4.9
+     * Maven coordinates: org.apache.camel:camel-clickup
+     * 
+     * Syntax: <code>clickup:workspaceId</code>
+     * 
+     * Path parameter: workspaceId (required)
+     * The WorkspaceID.
+     * 
+     * @param path workspaceId
+     * @return the dsl builder
+     */
+    public static ClickUpEndpointBuilderFactory.ClickUpEndpointBuilder clickup(String path) {
+        return clickup("clickup", path);
+    }
+    /**
+     * ClickUp (camel-clickup)
+     * Receives events from ClickUp
+     * 
+     * Category: cloud
+     * Since: 4.9
+     * Maven coordinates: org.apache.camel:camel-clickup
+     * 
+     * Syntax: <code>clickup:workspaceId</code>
+     * 
+     * Path parameter: workspaceId (required)
+     * The WorkspaceID.
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path workspaceId
+     * @return the dsl builder
+     */
+    public static ClickUpEndpointBuilderFactory.ClickUpEndpointBuilder clickup(String componentName, String path) {
+        return ClickUpEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
      * CM SMS Gateway (camel-cm-sms)
      * Send SMS messages via CM SMS Gateway.
      * 
@@ -3523,7 +3563,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * Debezium Oracle Connector (camel-debezium-oracle)
-     * Capture changes from a Oracle database.
+     * Capture changes from an Oracle database.
      * 
      * Category: database
      * Since: 3.17
@@ -3543,7 +3583,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * Debezium Oracle Connector (camel-debezium-oracle)
-     * Capture changes from a Oracle database.
+     * Capture changes from an Oracle database.
      * 
      * Category: database
      * Since: 3.17
@@ -4339,6 +4379,7 @@ public class StaticEndpointBuilders {
      * @param path path
      * @return the dsl builder
      */
+    @Deprecated
     public static Etcd3EndpointBuilderFactory.Etcd3EndpointBuilder etcd3(String path) {
         return etcd3("etcd3", path);
     }
@@ -4360,6 +4401,7 @@ public class StaticEndpointBuilders {
      * @param path path
      * @return the dsl builder
      */
+    @Deprecated
     public static Etcd3EndpointBuilderFactory.Etcd3EndpointBuilder etcd3(String componentName, String path) {
         return Etcd3EndpointBuilderFactory.endpointBuilder(componentName, path);
     }
@@ -4636,6 +4678,46 @@ public class StaticEndpointBuilders {
      */
     public static FlinkEndpointBuilderFactory.FlinkEndpointBuilder flink(String componentName, String path) {
         return FlinkEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Flowable (camel-flowable)
+     * Send and receive messages from the Flowable BPMN and CMMN engines.
+     * 
+     * Category: workflow
+     * Since: 4.9
+     * Maven coordinates: org.apache.camel:camel-flowable
+     * 
+     * Syntax: <code>flowable:channelKey</code>
+     * 
+     * Path parameter: channelKey (required)
+     * The channel key
+     * 
+     * @param path channelKey
+     * @return the dsl builder
+     */
+    public static FlowableEndpointBuilderFactory.FlowableEndpointBuilder flowable(String path) {
+        return flowable("flowable", path);
+    }
+    /**
+     * Flowable (camel-flowable)
+     * Send and receive messages from the Flowable BPMN and CMMN engines.
+     * 
+     * Category: workflow
+     * Since: 4.9
+     * Maven coordinates: org.apache.camel:camel-flowable
+     * 
+     * Syntax: <code>flowable:channelKey</code>
+     * 
+     * Path parameter: channelKey (required)
+     * The channel key
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path channelKey
+     * @return the dsl builder
+     */
+    public static FlowableEndpointBuilderFactory.FlowableEndpointBuilder flowable(String componentName, String path) {
+        return FlowableEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * FOP (camel-fop)
@@ -5813,6 +5895,7 @@ public class StaticEndpointBuilders {
      * @param path eventBusRef
      * @return the dsl builder
      */
+    @Deprecated
     public static GuavaEventBusEndpointBuilderFactory.GuavaEventBusEndpointBuilder guavaEventbus(String path) {
         return guavaEventbus("guava-eventbus", path);
     }
@@ -5834,6 +5917,7 @@ public class StaticEndpointBuilders {
      * @param path eventBusRef
      * @return the dsl builder
      */
+    @Deprecated
     public static GuavaEventBusEndpointBuilderFactory.GuavaEventBusEndpointBuilder guavaEventbus(String componentName, String path) {
         return GuavaEventBusEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
@@ -7680,7 +7764,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * JMS (camel-jms)
-     * Sent and receive messages to/from a JMS Queue or Topic.
+     * Send and receive messages to/from JMS message brokers.
      * 
      * Category: messaging
      * Since: 1.0
@@ -7705,7 +7789,7 @@ public class StaticEndpointBuilders {
     }
     /**
      * JMS (camel-jms)
-     * Sent and receive messages to/from a JMS Queue or Topic.
+     * Send and receive messages to/from JMS message brokers.
      * 
      * Category: messaging
      * Since: 1.0
@@ -9303,7 +9387,7 @@ public class StaticEndpointBuilders {
         return KuduEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * langChain4j Chat (camel-langchain4j-chat)
+     * LangChain4j Chat (camel-langchain4j-chat)
      * LangChain4j Chat component
      * 
      * Category: ai
@@ -9322,7 +9406,7 @@ public class StaticEndpointBuilders {
         return langchain4jChat("langchain4j-chat", path);
     }
     /**
-     * langChain4j Chat (camel-langchain4j-chat)
+     * LangChain4j Chat (camel-langchain4j-chat)
      * LangChain4j Chat component
      * 
      * Category: ai
@@ -9381,6 +9465,86 @@ public class StaticEndpointBuilders {
      */
     public static LangChain4jEmbeddingsEndpointBuilderFactory.LangChain4jEmbeddingsEndpointBuilder langchain4jEmbeddings(String componentName, String path) {
         return LangChain4jEmbeddingsEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * LangChain4j Tools (camel-langchain4j-tools)
+     * LangChain4j Tools and Function Calling Features
+     * 
+     * Category: ai
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-langchain4j-tools
+     * 
+     * Syntax: <code>langchain4j-tools:toolId</code>
+     * 
+     * Path parameter: toolId (required)
+     * The tool name
+     * 
+     * @param path toolId
+     * @return the dsl builder
+     */
+    public static LangChain4jToolsEndpointBuilderFactory.LangChain4jToolsEndpointBuilder langchain4jTools(String path) {
+        return langchain4jTools("langchain4j-tools", path);
+    }
+    /**
+     * LangChain4j Tools (camel-langchain4j-tools)
+     * LangChain4j Tools and Function Calling Features
+     * 
+     * Category: ai
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-langchain4j-tools
+     * 
+     * Syntax: <code>langchain4j-tools:toolId</code>
+     * 
+     * Path parameter: toolId (required)
+     * The tool name
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path toolId
+     * @return the dsl builder
+     */
+    public static LangChain4jToolsEndpointBuilderFactory.LangChain4jToolsEndpointBuilder langchain4jTools(String componentName, String path) {
+        return LangChain4jToolsEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * LangChain4j Web Search (camel-langchain4j-web-search)
+     * LangChain4j Web Search Engine
+     * 
+     * Category: ai
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-langchain4j-web-search
+     * 
+     * Syntax: <code>langchain4j-web-search:searchId</code>
+     * 
+     * Path parameter: searchId (required)
+     * The id
+     * 
+     * @param path searchId
+     * @return the dsl builder
+     */
+    public static LangChain4jWebSearchEndpointBuilderFactory.LangChain4jWebSearchEndpointBuilder langchain4jWebSearch(String path) {
+        return langchain4jWebSearch("langchain4j-web-search", path);
+    }
+    /**
+     * LangChain4j Web Search (camel-langchain4j-web-search)
+     * LangChain4j Web Search Engine
+     * 
+     * Category: ai
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-langchain4j-web-search
+     * 
+     * Syntax: <code>langchain4j-web-search:searchId</code>
+     * 
+     * Path parameter: searchId (required)
+     * The id
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path searchId
+     * @return the dsl builder
+     */
+    public static LangChain4jWebSearchEndpointBuilderFactory.LangChain4jWebSearchEndpointBuilder langchain4jWebSearch(String componentName, String path) {
+        return LangChain4jWebSearchEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Language (camel-language)
@@ -10537,9 +10701,8 @@ public class StaticEndpointBuilders {
      * Syntax: <code>netty-http:protocol://host:port/path</code>
      * 
      * Path parameter: protocol (required)
-     * The protocol to use which is either http, https or proxy - a consumer
-     * only option.
-     * There are 2 enums and the value can be one of: http, https
+     * The protocol to use which is either http, https or proxy (consumer only).
+     * There are 3 enums and the value can be one of: http, https, proxy
      * 
      * Path parameter: host (required)
      * The local hostname such as localhost, or 0.0.0.0 when being a consumer.
@@ -10568,9 +10731,8 @@ public class StaticEndpointBuilders {
      * Syntax: <code>netty-http:protocol://host:port/path</code>
      * 
      * Path parameter: protocol (required)
-     * The protocol to use which is either http, https or proxy - a consumer
-     * only option.
-     * There are 2 enums and the value can be one of: http, https
+     * The protocol to use which is either http, https or proxy (consumer only).
+     * There are 3 enums and the value can be one of: http, https, proxy
      * 
      * Path parameter: host (required)
      * The local hostname such as localhost, or 0.0.0.0 when being a consumer.
@@ -10811,7 +10973,7 @@ public class StaticEndpointBuilders {
         return OpensearchEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * Openshift Build Config (camel-kubernetes)
+     * OpenShift Build Config (camel-kubernetes)
      * Perform operations on OpenShift Build Configs.
      * 
      * Category: container,cloud
@@ -10835,7 +10997,7 @@ public class StaticEndpointBuilders {
         return openshiftBuildConfigs("openshift-build-configs", path);
     }
     /**
-     * Openshift Build Config (camel-kubernetes)
+     * OpenShift Build Config (camel-kubernetes)
      * Perform operations on OpenShift Build Configs.
      * 
      * Category: container,cloud
@@ -10861,7 +11023,7 @@ public class StaticEndpointBuilders {
         return OpenshiftBuildConfigsEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * Openshift Builds (camel-kubernetes)
+     * OpenShift Builds (camel-kubernetes)
      * Perform operations on OpenShift Builds.
      * 
      * Category: container,cloud
@@ -10885,7 +11047,7 @@ public class StaticEndpointBuilders {
         return openshiftBuilds("openshift-builds", path);
     }
     /**
-     * Openshift Builds (camel-kubernetes)
+     * OpenShift Builds (camel-kubernetes)
      * Perform operations on OpenShift Builds.
      * 
      * Category: container,cloud
@@ -10911,8 +11073,8 @@ public class StaticEndpointBuilders {
         return OpenshiftBuildsEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
-     * Openshift Deployment Configs (camel-kubernetes)
-     * Perform operations on Openshift Deployment Configs and get notified on
+     * OpenShift Deployment Configs (camel-kubernetes)
+     * Perform operations on OpenShift Deployment Configs and get notified on
      * Deployment Config changes.
      * 
      * Category: container,cloud
@@ -10936,8 +11098,8 @@ public class StaticEndpointBuilders {
         return openshiftDeploymentconfigs("openshift-deploymentconfigs", path);
     }
     /**
-     * Openshift Deployment Configs (camel-kubernetes)
-     * Perform operations on Openshift Deployment Configs and get notified on
+     * OpenShift Deployment Configs (camel-kubernetes)
+     * Perform operations on OpenShift Deployment Configs and get notified on
      * Deployment Config changes.
      * 
      * Category: container,cloud
@@ -11336,8 +11498,8 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: operation (required)
      * Operation type
-     * There are 3 enums and the value can be one of: create, append,
-     * extractText
+     * There are 4 enums and the value can be one of: create, append,
+     * extractText, merge
      * 
      * @param path operation
      * @return the dsl builder
@@ -11357,8 +11519,8 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: operation (required)
      * Operation type
-     * There are 3 enums and the value can be one of: create, append,
-     * extractText
+     * There are 4 enums and the value can be one of: create, append,
+     * extractText, merge
      * 
      * @param componentName to use a custom component name for the endpoint
      * instead of the default name
@@ -13042,7 +13204,8 @@ public class StaticEndpointBuilders {
     }
     /**
      * Smooks (camel-smooks)
-     * EDI, XML, CSV, etc. based data transformation using Smooks.
+     * Use Smooks to transform, route, and bind both XML and non-XML data,
+     * including EDI, CSV, JSON, and YAML.
      * 
      * Category: transformation
      * Since: 4.7
@@ -13051,7 +13214,7 @@ public class StaticEndpointBuilders {
      * Syntax: <code>smooks:smooksConfig</code>
      * 
      * Path parameter: smooksConfig (required)
-     * Smooks XML configuration file
+     * Path to the Smooks configuration file
      * This option can also be loaded from an existing file, by prefixing with
      * file: or classpath: followed by the location of the file.
      * 
@@ -13063,7 +13226,8 @@ public class StaticEndpointBuilders {
     }
     /**
      * Smooks (camel-smooks)
-     * EDI, XML, CSV, etc. based data transformation using Smooks.
+     * Use Smooks to transform, route, and bind both XML and non-XML data,
+     * including EDI, CSV, JSON, and YAML.
      * 
      * Category: transformation
      * Since: 4.7
@@ -13072,7 +13236,7 @@ public class StaticEndpointBuilders {
      * Syntax: <code>smooks:smooksConfig</code>
      * 
      * Path parameter: smooksConfig (required)
-     * Smooks XML configuration file
+     * Path to the Smooks configuration file
      * This option can also be loaded from an existing file, by prefixing with
      * file: or classpath: followed by the location of the file.
      * 
@@ -13252,6 +13416,92 @@ public class StaticEndpointBuilders {
      */
     public static SnmpEndpointBuilderFactory.SnmpEndpointBuilder snmp(String componentName, String path) {
         return SnmpEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Solr (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * Syntax: <code>solr:url</code>
+     * 
+     * Path parameter: url (required)
+     * Hostname and port for the Solr server(s). Multiple hosts can be
+     * specified, separated with a comma. See the solrClient parameter for more
+     * information on the SolrClient used to connect to Solr.
+     * 
+     * @param path url
+     * @return the dsl builder
+     */
+    public static SolrEndpointBuilderFactory.SolrEndpointBuilder solr(String path) {
+        return solr("solr", path);
+    }
+    /**
+     * Solr (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * Syntax: <code>solr:url</code>
+     * 
+     * Path parameter: url (required)
+     * Hostname and port for the Solr server(s). Multiple hosts can be
+     * specified, separated with a comma. See the solrClient parameter for more
+     * information on the SolrClient used to connect to Solr.
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path url
+     * @return the dsl builder
+     */
+    public static SolrEndpointBuilderFactory.SolrEndpointBuilder solr(String componentName, String path) {
+        return SolrEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Solr (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * Syntax: <code>solrCloud:url</code>
+     * 
+     * Path parameter: url (required)
+     * Hostname and port for the Solr server(s). Multiple hosts can be
+     * specified, separated with a comma. See the solrClient parameter for more
+     * information on the SolrClient used to connect to Solr.
+     * 
+     * @param path url
+     * @return the dsl builder
+     */
+    public static SolrEndpointBuilderFactory.SolrEndpointBuilder solrCloud(String path) {
+        return solr("solrCloud", path);
+    }
+    /**
+     * Solr (Secure) (camel-solr)
+     * Perform operations against Apache Lucene Solr.
+     * 
+     * Category: monitoring,search
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-solr
+     * 
+     * Syntax: <code>solrs:url</code>
+     * 
+     * Path parameter: url (required)
+     * Hostname and port for the Solr server(s). Multiple hosts can be
+     * specified, separated with a comma. See the solrClient parameter for more
+     * information on the SolrClient used to connect to Solr.
+     * 
+     * @param path url
+     * @return the dsl builder
+     */
+    public static SolrEndpointBuilderFactory.SolrEndpointBuilder solrs(String path) {
+        return solr("solrs", path);
     }
     /**
      * Splunk (camel-splunk)
@@ -14080,6 +14330,98 @@ public class StaticEndpointBuilders {
      */
     public static StubEndpointBuilderFactory.StubEndpointBuilder stub(String componentName, String path) {
         return StubEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Tahu Edge Node / Device (camel-tahu)
+     * Sparkplug B Edge Node and Device support over MQTT using Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu-edge:groupId/edgeNode</code>
+     * 
+     * Path parameter: groupId (required)
+     * ID of the group
+     * 
+     * Path parameter: edgeNode (required)
+     * ID of the edge node
+     * 
+     * Path parameter: deviceId
+     * ID of this edge node device
+     * 
+     * @param path groupId/edgeNode
+     * @return the dsl builder
+     */
+    public static TahuEdgeEndpointBuilderFactory.TahuEdgeEndpointBuilder tahuEdge(String path) {
+        return tahuEdge("tahu-edge", path);
+    }
+    /**
+     * Tahu Edge Node / Device (camel-tahu)
+     * Sparkplug B Edge Node and Device support over MQTT using Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu-edge:groupId/edgeNode</code>
+     * 
+     * Path parameter: groupId (required)
+     * ID of the group
+     * 
+     * Path parameter: edgeNode (required)
+     * ID of the edge node
+     * 
+     * Path parameter: deviceId
+     * ID of this edge node device
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path groupId/edgeNode
+     * @return the dsl builder
+     */
+    public static TahuEdgeEndpointBuilderFactory.TahuEdgeEndpointBuilder tahuEdge(String componentName, String path) {
+        return TahuEdgeEndpointBuilderFactory.endpointBuilder(componentName, path);
+    }
+    /**
+     * Tahu Host Application (camel-tahu)
+     * Sparkplug B Host Application support over MQTT using Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu-host:hostId</code>
+     * 
+     * Path parameter: hostId (required)
+     * ID for the host application
+     * 
+     * @param path hostId
+     * @return the dsl builder
+     */
+    public static TahuHostEndpointBuilderFactory.TahuHostEndpointBuilder tahuHost(String path) {
+        return tahuHost("tahu-host", path);
+    }
+    /**
+     * Tahu Host Application (camel-tahu)
+     * Sparkplug B Host Application support over MQTT using Eclipse Tahu
+     * 
+     * Category: messaging,iot,monitoring
+     * Since: 4.8
+     * Maven coordinates: org.apache.camel:camel-tahu
+     * 
+     * Syntax: <code>tahu-host:hostId</code>
+     * 
+     * Path parameter: hostId (required)
+     * ID for the host application
+     * 
+     * @param componentName to use a custom component name for the endpoint
+     * instead of the default name
+     * @param path hostId
+     * @return the dsl builder
+     */
+    public static TahuHostEndpointBuilderFactory.TahuHostEndpointBuilder tahuHost(String componentName, String path) {
+        return TahuHostEndpointBuilderFactory.endpointBuilder(componentName, path);
     }
     /**
      * Telegram (camel-telegram)
@@ -15541,7 +15883,7 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: methodName (required)
      * What operation to use
-     * There are 374 enums and the value can be one of:
+     * There are 376 enums and the value can be one of:
      * ADD_TAG_TO_ORGANISATIONS, ADD_TAG_TO_TICKET, ADD_TAG_TO_TOPICS,
      * ASSOCIATE_ATTACHMENTS_TO_ARTICLE, CHANGE_USER_PASSWORD, CREATE_ARTICLE,
      * CREATE_ARTICLE_1, CREATE_ARTICLE_TRANSLATION, CREATE_AUTOMATION,
@@ -15585,15 +15927,16 @@ public class StaticEndpointBuilders {
      * DELETE_USERS, GET_ACTIVE_TRIGGERS, GET_ARTICLE, GET_ARTICLE_FROM_SEARCH,
      * GET_ARTICLE_FROM_SEARCH_1, GET_ARTICLE_SUBSCRIPTIONS,
      * GET_ARTICLE_SUBSCRIPTIONS_1, GET_ARTICLE_TRANSLATIONS, GET_ARTICLES,
-     * GET_ARTICLES_1, GET_ARTICLES_2, GET_ARTICLES_3,
-     * GET_ARTICLES_FROM_ALL_LABELS, GET_ARTICLES_FROM_ANY_LABELS,
-     * GET_ARTICLES_FROM_PAGE, GET_ARTICLES_INCREMENTALLY,
-     * GET_ASSIGNABLE_GROUP_MEMBERSHIPS, GET_ASSIGNABLE_GROUP_MEMBERSHIPS_1,
-     * GET_ASSIGNABLE_GROUPS, GET_ASSIGNED_TICKETS_COUNT_FOR_USER,
-     * GET_ATTACHMENT, GET_ATTACHMENT_1, GET_ATTACHMENTS_FROM_ARTICLE,
-     * GET_AUTHENTICATED_USER, GET_AUTO_COMPLETE_ORGANIZATIONS, GET_AUTOMATION,
-     * GET_AUTOMATIONS, GET_BRANDS, GET_CC_REQUESTS, GET_CATEGORIES,
-     * GET_CATEGORY, GET_CATEGORY_TRANSLATIONS, GET_CCD_TICKETS_COUNT_FOR_USER,
+     * GET_ARTICLES_1, GET_ARTICLES_2, GET_ARTICLES_3, GET_ARTICLES_4,
+     * GET_ARTICLES_5, GET_ARTICLES_FROM_ALL_LABELS,
+     * GET_ARTICLES_FROM_ANY_LABELS, GET_ARTICLES_FROM_PAGE,
+     * GET_ARTICLES_INCREMENTALLY, GET_ASSIGNABLE_GROUP_MEMBERSHIPS,
+     * GET_ASSIGNABLE_GROUP_MEMBERSHIPS_1, GET_ASSIGNABLE_GROUPS,
+     * GET_ASSIGNED_TICKETS_COUNT_FOR_USER, GET_ATTACHMENT, GET_ATTACHMENT_1,
+     * GET_ATTACHMENTS_FROM_ARTICLE, GET_AUTHENTICATED_USER,
+     * GET_AUTO_COMPLETE_ORGANIZATIONS, GET_AUTOMATION, GET_AUTOMATIONS,
+     * GET_BRANDS, GET_CC_REQUESTS, GET_CATEGORIES, GET_CATEGORY,
+     * GET_CATEGORY_TRANSLATIONS, GET_CCD_TICKETS_COUNT_FOR_USER,
      * GET_COMPLIANCE_DELETION_STATUSES, GET_CONTENT_TAG, GET_CONTENT_TAGS,
      * GET_CONTENT_TAGS_1, GET_CONTENT_TAGS_2, GET_CURRENT_USER,
      * GET_CUSTOM_AGENT_ROLES, GET_CUSTOM_TICKET_STATUSES, GET_DELETED_TICKETS,
@@ -15693,7 +16036,7 @@ public class StaticEndpointBuilders {
      * 
      * Path parameter: methodName (required)
      * What operation to use
-     * There are 374 enums and the value can be one of:
+     * There are 376 enums and the value can be one of:
      * ADD_TAG_TO_ORGANISATIONS, ADD_TAG_TO_TICKET, ADD_TAG_TO_TOPICS,
      * ASSOCIATE_ATTACHMENTS_TO_ARTICLE, CHANGE_USER_PASSWORD, CREATE_ARTICLE,
      * CREATE_ARTICLE_1, CREATE_ARTICLE_TRANSLATION, CREATE_AUTOMATION,
@@ -15737,15 +16080,16 @@ public class StaticEndpointBuilders {
      * DELETE_USERS, GET_ACTIVE_TRIGGERS, GET_ARTICLE, GET_ARTICLE_FROM_SEARCH,
      * GET_ARTICLE_FROM_SEARCH_1, GET_ARTICLE_SUBSCRIPTIONS,
      * GET_ARTICLE_SUBSCRIPTIONS_1, GET_ARTICLE_TRANSLATIONS, GET_ARTICLES,
-     * GET_ARTICLES_1, GET_ARTICLES_2, GET_ARTICLES_3,
-     * GET_ARTICLES_FROM_ALL_LABELS, GET_ARTICLES_FROM_ANY_LABELS,
-     * GET_ARTICLES_FROM_PAGE, GET_ARTICLES_INCREMENTALLY,
-     * GET_ASSIGNABLE_GROUP_MEMBERSHIPS, GET_ASSIGNABLE_GROUP_MEMBERSHIPS_1,
-     * GET_ASSIGNABLE_GROUPS, GET_ASSIGNED_TICKETS_COUNT_FOR_USER,
-     * GET_ATTACHMENT, GET_ATTACHMENT_1, GET_ATTACHMENTS_FROM_ARTICLE,
-     * GET_AUTHENTICATED_USER, GET_AUTO_COMPLETE_ORGANIZATIONS, GET_AUTOMATION,
-     * GET_AUTOMATIONS, GET_BRANDS, GET_CC_REQUESTS, GET_CATEGORIES,
-     * GET_CATEGORY, GET_CATEGORY_TRANSLATIONS, GET_CCD_TICKETS_COUNT_FOR_USER,
+     * GET_ARTICLES_1, GET_ARTICLES_2, GET_ARTICLES_3, GET_ARTICLES_4,
+     * GET_ARTICLES_5, GET_ARTICLES_FROM_ALL_LABELS,
+     * GET_ARTICLES_FROM_ANY_LABELS, GET_ARTICLES_FROM_PAGE,
+     * GET_ARTICLES_INCREMENTALLY, GET_ASSIGNABLE_GROUP_MEMBERSHIPS,
+     * GET_ASSIGNABLE_GROUP_MEMBERSHIPS_1, GET_ASSIGNABLE_GROUPS,
+     * GET_ASSIGNED_TICKETS_COUNT_FOR_USER, GET_ATTACHMENT, GET_ATTACHMENT_1,
+     * GET_ATTACHMENTS_FROM_ARTICLE, GET_AUTHENTICATED_USER,
+     * GET_AUTO_COMPLETE_ORGANIZATIONS, GET_AUTOMATION, GET_AUTOMATIONS,
+     * GET_BRANDS, GET_CC_REQUESTS, GET_CATEGORIES, GET_CATEGORY,
+     * GET_CATEGORY_TRANSLATIONS, GET_CCD_TICKETS_COUNT_FOR_USER,
      * GET_COMPLIANCE_DELETION_STATUSES, GET_CONTENT_TAG, GET_CONTENT_TAGS,
      * GET_CONTENT_TAGS_1, GET_CONTENT_TAGS_2, GET_CURRENT_USER,
      * GET_CUSTOM_AGENT_ROLES, GET_CUSTOM_TICKET_STATUSES, GET_DELETED_TICKETS,

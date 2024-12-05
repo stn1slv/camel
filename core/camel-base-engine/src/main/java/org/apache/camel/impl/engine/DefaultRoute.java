@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Channel;
 import org.apache.camel.Consumer;
 import org.apache.camel.Endpoint;
 import org.apache.camel.ErrorHandlerFactory;
@@ -670,34 +671,34 @@ public class DefaultRoute extends ServiceSupport implements Route {
         consumer = endpoint.createConsumer(processor);
         if (consumer != null) {
             services.add(consumer);
-            if (consumer instanceof RouteAware) {
-                ((RouteAware) consumer).setRoute(this);
+            if (consumer instanceof RouteAware routeAware) {
+                routeAware.setRoute(this);
             }
-            if (consumer instanceof RouteIdAware) {
-                ((RouteIdAware) consumer).setRouteId(this.getId());
+            if (consumer instanceof RouteIdAware routeIdAware) {
+                routeIdAware.setRouteId(this.getId());
             }
 
-            if (consumer instanceof ResumeAware<?> && resumeStrategy != null) {
-                ResumeAdapter resumeAdapter = AdapterHelper.eval(getCamelContext(), (ResumeAware<?>) consumer, resumeStrategy);
+            if (consumer instanceof ResumeAware resumeAware && resumeStrategy != null) {
+                ResumeAdapter resumeAdapter = AdapterHelper.eval(getCamelContext(), resumeAware, resumeStrategy);
                 resumeStrategy.setAdapter(resumeAdapter);
-                ((ResumeAware) consumer).setResumeStrategy(resumeStrategy);
+                resumeAware.setResumeStrategy(resumeStrategy);
             }
 
-            if (consumer instanceof ConsumerListenerAware<?>) {
-                ((ConsumerListenerAware) consumer).setConsumerListener(consumerListener);
+            if (consumer instanceof ConsumerListenerAware consumerListenerAware) {
+                consumerListenerAware.setConsumerListener(consumerListener);
             }
         }
-        if (processor instanceof Service) {
-            services.add((Service) processor);
+        if (processor instanceof Service service) {
+            services.add(service);
         }
         for (Processor p : onCompletions.values()) {
-            if (processor instanceof Service) {
-                services.add((Service) p);
+            if (processor instanceof Service service) {
+                services.add(service);
             }
         }
         for (Processor p : onExceptions.values()) {
-            if (processor instanceof Service) {
-                services.add((Service) p);
+            if (processor instanceof Service service) {
+                services.add(service);
             }
         }
     }
@@ -709,8 +710,7 @@ public class DefaultRoute extends ServiceSupport implements Route {
 
         // we want to navigate routes to be easy, so skip the initial channel
         // and navigate to its output where it all starts from end user point of view
-        if (answer instanceof Navigate) {
-            Navigate<Processor> nav = (Navigate<Processor>) answer;
+        if (answer instanceof Navigate nav) {
             if (nav.next().size() == 1) {
                 Object first = nav.next().get(0);
                 if (first instanceof Navigate) {
@@ -734,9 +734,12 @@ public class DefaultRoute extends ServiceSupport implements Route {
         List<Processor> list = nav.next();
         if (list != null) {
             for (Processor proc : list) {
+                if (proc instanceof Channel channel) {
+                    proc = channel.getNextProcessor();
+                }
                 String id = null;
-                if (proc instanceof IdAware) {
-                    id = ((IdAware) proc).getId();
+                if (proc instanceof IdAware idAware) {
+                    id = idAware.getId();
                 }
                 if (PatternHelper.matchPattern(id, pattern)) {
                     match.add(proc);

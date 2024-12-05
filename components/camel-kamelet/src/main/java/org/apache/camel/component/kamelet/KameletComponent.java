@@ -23,7 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Endpoint;
@@ -63,6 +67,8 @@ public class KameletComponent extends DefaultComponent {
 
     // active consumers
     private final Map<String, KameletConsumer> consumers = new HashMap<>();
+    private final Lock consumersLock = new ReentrantLock();
+    private final Condition consumersCondition = consumersLock.newCondition();
     // active kamelet EIPs
     private final Map<String, Processor> kameletEips = new ConcurrentHashMap<>();
 
@@ -219,6 +225,15 @@ public class KameletComponent extends DefaultComponent {
             }
 
             //
+            // Look for OS environment variables that match the Kamelet properties
+            // Environment variables are loaded in the following order:
+            //
+            //   CAMEL_KAMELET_" + templateId
+            //   CAMEL_KAMELET_" + templateId + "_" routeId
+            //
+            Kamelet.extractKameletEnvironmentVariables(kameletProperties, templateId, routeId);
+
+            //
             // Uri params have the highest precedence
             //
             kameletProperties.putAll(parameters);
@@ -335,7 +350,8 @@ public class KameletComponent extends DefaultComponent {
     }
 
     public void addConsumer(String key, KameletConsumer consumer) {
-        synchronized (consumers) {
+        consumersLock.lock();
+        try {
             if (consumers.putIfAbsent(key, consumer) != null) {
                 throw new IllegalArgumentException(
                         "Cannot add a 2nd consumer to the same endpoint: " + key
@@ -343,21 +359,27 @@ public class KameletComponent extends DefaultComponent {
             }
             // state changed so inc counter
             stateCounter++;
-            consumers.notifyAll();
+            consumersCondition.signalAll();
+        } finally {
+            consumersLock.unlock();
         }
     }
 
     public void removeConsumer(String key, KameletConsumer consumer) {
-        synchronized (consumers) {
+        consumersLock.lock();
+        try {
             consumers.remove(key, consumer);
             // state changed so inc counter
             stateCounter++;
-            consumers.notifyAll();
+            consumersCondition.signalAll();
+        } finally {
+            consumersLock.unlock();
         }
     }
 
     protected KameletConsumer getConsumer(String key, boolean block, long timeout) throws InterruptedException {
-        synchronized (consumers) {
+        consumersLock.lock();
+        try {
             KameletConsumer answer = consumers.get(key);
             if (answer == null && block) {
                 StopWatch watch = new StopWatch();
@@ -370,10 +392,12 @@ public class KameletComponent extends DefaultComponent {
                     if (rem <= 0) {
                         break;
                     }
-                    consumers.wait(rem);
+                    consumersCondition.await(rem, TimeUnit.MILLISECONDS);
                 }
             }
             return answer;
+        } finally {
+            consumersLock.unlock();
         }
     }
 

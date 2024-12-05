@@ -35,7 +35,7 @@ import picocli.CommandLine.Command;
 
 import static org.apache.camel.dsl.jbang.core.common.CamelCommandHelper.extractState;
 
-@Command(name = "ps", description = "List running Camel integrations", sortOptions = false)
+@Command(name = "ps", description = "List running Camel integrations", sortOptions = false, showDefaultValues = true)
 public class ListProcess extends ProcessWatchCommand {
 
     @CommandLine.Option(names = { "--sort" }, completionCandidates = PidNameAgeCompletionCandidates.class,
@@ -96,7 +96,15 @@ public class ListProcess extends ProcessWatchCommand {
                             if (num != null) {
                                 row.inflightRemote = num.toString();
                             }
+                            stats = (Map<String, ?>) stats.get("reload");
+                            if (stats != null) {
+                                stats = (Map<String, ?>) stats.get("lastError");
+                            }
+                            if (stats != null) {
+                                row.reloadError = (String) stats.get("message");
+                            }
                         }
+
                         rows.add(row);
                     }
                 });
@@ -115,22 +123,45 @@ public class ListProcess extends ProcessWatchCommand {
                                 .with(r -> r.name),
                         new Column().header("READY").dataAlign(HorizontalAlign.CENTER).with(r -> r.ready),
                         new Column().header("STATUS").headerAlign(HorizontalAlign.CENTER)
-                                .with(r -> extractState(r.state)),
+                                .with(this::getStatus),
                         new Column().header("AGE").headerAlign(HorizontalAlign.CENTER).with(r -> r.ago),
                         new Column().header("TOTAL").with(this::getTotal),
+                        new Column().header("REMOTE").with(this::getTotalRemote),
                         new Column().header("FAIL").with(this::getFailed),
-                        new Column().header("INFLIGHT").with(this::getInflight))));
+                        new Column().header("INFLIGHT").with(this::getInflight),
+                        new Column().header("") // empty header as we only show info when there is an error
+                                .headerAlign(HorizontalAlign.LEFT).dataAlign(HorizontalAlign.LEFT)
+                                .maxWidth(70, OverflowBehaviour.NEWLINE)
+                                .with(this::getDescription))));
             }
         }
 
         return 0;
     }
 
-    private String getTotal(Row r) {
-        if (r.totalRemote != null) {
-            return r.totalRemote + "/" + r.total;
+    private String getStatus(Row r) {
+        if (r.reloadError != null) {
+            return "Error";
         }
+        return extractState(r.state);
+    }
+
+    private String getDescription(Row r) {
+        if (r.reloadError != null) {
+            return "Reload failed due to: " + r.reloadError;
+        }
+        return null;
+    }
+
+    private String getTotal(Row r) {
         return r.total;
+    }
+
+    private String getTotalRemote(Row r) {
+        if (r.totalRemote != null) {
+            return r.totalRemote;
+        }
+        return "";
     }
 
     private String getFailed(Row r) {
@@ -179,6 +210,7 @@ public class ListProcess extends ProcessWatchCommand {
         String failedRemote;
         String inflight;
         String inflightRemote;
+        String reloadError;
     }
 
 }

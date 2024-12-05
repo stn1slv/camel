@@ -34,7 +34,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "circuit-breaker",
-         description = "Get status of Circuit Breaker EIPs", sortOptions = false)
+         description = "Get status of Circuit Breaker EIPs", sortOptions = false, showDefaultValues = true)
 public class ListCircuitBreaker extends ProcessWatchCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
@@ -176,7 +176,7 @@ public class ListCircuitBreaker extends ProcessWatchCommand {
         if (r.failedCalls <= 0) {
             return "";
         } else if (r.failureRate > 0) {
-            return +r.failedCalls + " (" + String.format("%.0f", r.failureRate) + "%)";
+            return r.failedCalls + " (" + String.format("%.0f", r.failureRate) + "%)";
         } else {
             return Integer.toString(r.failedCalls);
         }

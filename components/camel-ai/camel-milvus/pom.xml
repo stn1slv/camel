@@ -24,12 +24,12 @@
     <parent>
         <artifactId>camel-ai-parent</artifactId>
         <groupId>org.apache.camel</groupId>
-        <version>4.7.0-SNAPSHOT</version>
+        <version>4.10.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-milvus</artifactId>
     <packaging>jar</packaging>
-    <name>Camel :: Milvus</name>
+    <name>Camel :: AI :: Milvus</name>
     <description>Camel Milvus support</description>
 
     <properties>
@@ -120,7 +120,6 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj-version}</version>
             <scope>test</scope>
         </dependency>
 

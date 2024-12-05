@@ -18,15 +18,15 @@ package org.apache.camel.component.file;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Expression;
+import org.apache.camel.support.DefaultAsyncProducer;
 import org.apache.camel.support.DefaultExchange;
-import org.apache.camel.support.DefaultProducer;
 import org.apache.camel.support.LRUCacheFactory;
 import org.apache.camel.support.MessageHelper;
 import org.apache.camel.support.service.ServiceHelper;
@@ -40,14 +40,14 @@ import org.slf4j.LoggerFactory;
 /**
  * Generic file producer
  */
-public class GenericFileProducer<T> extends DefaultProducer {
+public class GenericFileProducer<T> extends DefaultAsyncProducer {
     private static final Logger LOG = LoggerFactory.getLogger(GenericFileProducer.class);
 
     protected final GenericFileEndpoint<T> endpoint;
     protected GenericFileOperations<T> operations;
     // assume writing to 100 different files concurrently at most for the same
     // file producer
-    private final Map<String, Lock> locks = Collections.synchronizedMap(LRUCacheFactory.newLRUCache(100));
+    private final Map<String, Lock> locks = LRUCacheFactory.newLRUCache(100);
 
     protected GenericFileProducer(GenericFileEndpoint<T> endpoint, GenericFileOperations<T> operations) {
         super(endpoint);
@@ -64,7 +64,18 @@ public class GenericFileProducer<T> extends DefaultProducer {
     }
 
     @Override
-    public void process(Exchange exchange) throws Exception {
+    public boolean process(Exchange exchange, AsyncCallback callback) {
+        try {
+            doProcess(exchange);
+        } catch (Exception e) {
+            exchange.setException(e);
+        } finally {
+            callback.done(true);
+        }
+        return true;
+    }
+
+    protected void doProcess(Exchange exchange) throws Exception {
         // store any existing file header which we want to keep and propagate
         final String existing = exchange.getIn().getHeader(FileConstants.FILE_NAME, String.class);
 
@@ -79,6 +90,8 @@ public class GenericFileProducer<T> extends DefaultProducer {
         lock.lock();
         try {
             processExchange(exchange, target);
+        } catch (Exception e) {
+            exchange.setException(e);
         } finally {
             // do not remove as the locks cache has an upper bound
             // this ensure the locks is appropriate reused
@@ -369,8 +382,8 @@ public class GenericFileProducer<T> extends DefaultProducer {
 
         // expression support
         Expression expression = endpoint.getFileName();
-        if (value instanceof Expression) {
-            expression = (Expression) value;
+        if (value instanceof Expression expression1) {
+            expression = expression1;
         }
 
         // evaluate the name as a String from the value
@@ -484,7 +497,9 @@ public class GenericFileProducer<T> extends DefaultProducer {
             answer = tempName;
         } else {
             // path should be prefixed before the temp name
-            StringBuilder sb = new StringBuilder(answer.substring(0, pos + 1));
+            final String prefix = answer.substring(0, pos + 1);
+            StringBuilder sb = new StringBuilder(tempName.length() + prefix.length() + 1);
+            sb.append(prefix);
             sb.append(tempName);
             answer = sb.toString();
         }
@@ -511,4 +526,5 @@ public class GenericFileProducer<T> extends DefaultProducer {
         super.doStop();
         ServiceHelper.stopService(locks);
     }
+
 }

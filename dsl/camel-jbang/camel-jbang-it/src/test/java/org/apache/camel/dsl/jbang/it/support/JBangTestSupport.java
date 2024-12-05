@@ -20,6 +20,13 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,7 +35,9 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Duration;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.camel.test.infra.cli.common.CliProperties;
@@ -84,10 +93,19 @@ public abstract class JBangTestSupport {
 
     protected enum TestResources {
         ROUTE2("route2.yaml", "/jbang/it/route2.yaml"),
-        LOCAL_PROP("local.properties", "/jbang/it/local.properties"),
+        TEST_PROFILE_PROP("application-test.properties", "/jbang/it/application-test.properties"),
         HELLO_NAME("helloName.xml", "/jbang/it/helloName.xml"),
         JOKE("joke.yaml", "/jbang/it/joke.yaml"),
-        MQQT_CONSUMER("mqttConsumer.yaml", "/jbang/it/mqttConsumer.yaml");
+        MQQT_CONSUMER("mqttConsumer.yaml", "/jbang/it/mqttConsumer.yaml"),
+        BUILD_GRADLE("build.gradle", "/jbang/it/maven-gradle/build.gradle"),
+        DIR_ROUTE("FromDirectoryRoute.java", "/jbang/it/from-source-dir/FromDirectoryRoute.java"),
+        SERVER_ROUTE("server.yaml", "/jbang/it/server.yaml"),
+        CIRCUIT_BREAKER("CircuitBreakerRoute.java", "/jbang/it/CircuitBreakerRoute.java"),
+        SRC_MAPPING_DATA("data.json", "/jbang/it/data-mapping/src/data.json"),
+        SRC_MAPPING_TEMPLATE("transform.yaml", "/jbang/it/data-mapping/src/transform.yaml"),
+        COMP_MAPPING_DATA("data.xml", "/jbang/it/data-mapping/components/data.xml"),
+        COMP_MAPPING_TEMPLATE("transform.xml", "/jbang/it/data-mapping/components/transform.xml"),
+        FORMATS_MAPPING_DATA("data.csv", "/jbang/it/data-mapping/data-formats/data.csv");
 
         private String name;
         private String resPath;
@@ -104,6 +122,10 @@ public abstract class JBangTestSupport {
         public String getName() {
             return name;
         }
+    }
+
+    protected String execInContainer(final String command) {
+        return containerService.executeGenericCommand(command);
     }
 
     protected String execute(final String command) {
@@ -134,6 +156,24 @@ public abstract class JBangTestSupport {
                 .as("file " + toVerify + " exists")
                 .exists()
                 .isReadable();
+    }
+
+    protected void checkCommandOutputs(String command, String contains) {
+        Assertions.assertThat(execute(command))
+                .as("command camel" + command + "should output" + contains)
+                .contains(contains);
+    }
+
+    protected void checkCommandOutputsPattern(String command, String contains) {
+        Assertions.assertThat(execute(command))
+                .as("command camel" + command + "should output pattern" + contains)
+                .containsPattern(contains);
+    }
+
+    protected void checkCommandDoesNotOutput(String command, String contains) {
+        Assertions.assertThat(execute(command))
+                .as("command camel" + command + "should not output" + contains)
+                .doesNotContain(contains);
     }
 
     protected void assertFileInDataFolderDoesNotExist(String file) {
@@ -172,6 +212,26 @@ public abstract class JBangTestSupport {
                 .untilAsserted(() -> Assertions.assertThat(getLogs(route))
                         .as("log contains " + contains)
                         .contains(contains)));
+    }
+
+    protected void checkLogDoesNotContain(String route, String contains, int waitForSeconds) {
+        Assertions.assertThatNoException().isThrownBy(() -> Awaitility.await()
+                .atMost(waitForSeconds, TimeUnit.SECONDS)
+                .untilAsserted(() -> Assertions.assertThat(getLogs(route))
+                        .as("log does not contain " + contains)
+                        .doesNotContain(contains)));
+    }
+
+    protected void checkLogDoesNotContain(String contains, int waitForSeconds) {
+        checkLogDoesNotContain(null, contains, waitForSeconds);
+    }
+
+    protected void checkLogDoesNotContain(String route, String contains) {
+        checkLogDoesNotContain(route, contains, ASSERTION_WAIT_SECONDS);
+    }
+
+    protected void checkLogDoesNotContain(String contains) {
+        checkLogDoesNotContain(contains, ASSERTION_WAIT_SECONDS);
     }
 
     protected void checkLogContainsPattern(String contains) {
@@ -245,6 +305,10 @@ public abstract class JBangTestSupport {
                     .atMost(Duration.ofMinutes(2))
                     .pollInterval(Duration.ofSeconds(1))
                     .until(() -> !process.isAlive());
+            if (process.exitValue() != 0) {
+                logger.error(String.valueOf(process.getErrorStream()));
+                logger.info(String.valueOf(process.getOutputStream()));
+            }
             return new String(process.getInputStream().readAllBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -254,4 +318,62 @@ public abstract class JBangTestSupport {
     protected String makeTheFileWriteable(String containerPath) {
         return containerService.executeGenericCommand("chmod 777 " + containerPath);
     }
+
+    protected String downloadNewFileInDataFolder(String downloadUrl) {
+        try {
+            return this.downloadNewFileInDataFolder(new URL(downloadUrl), null);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    protected String downloadNewFileInDataFolder(URL downloadUrl, String fileName) {
+        final String fName = fileName == null ? Paths.get(downloadUrl.getPath().toString()).getFileName().toString() : fileName;
+
+        final StringWriter sw = new StringWriter();
+        try (ReadableByteChannel channel = Channels.newChannel(downloadUrl.openStream());
+             Reader reader = Channels.newReader(channel, Charset.defaultCharset())) {
+            reader.transferTo(sw);
+            sw.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        this.newFileInDataFolder(fName, sw.toString());
+        return fName;
+    }
+
+    protected String downloadFile(String downloadUrl) {
+        String fileName = this.downloadNewFileInDataFolder(downloadUrl);
+        containerService.copyFileInternally(mountPoint() + "/" + fileName, DEFAULT_ROUTE_FOLDER);
+        return fileName;
+    }
+
+    protected void generateProperties(Map<String, String> properties) {
+        this.generateProperties("application.properties", properties, false);
+    }
+
+    protected void generateProperties(String fileName, Map<String, String> properties, boolean inDataFolder) {
+        final Properties prop = new Properties();
+        prop.putAll(properties);
+        final StringWriter contentWriter = new StringWriter();
+        try {
+            prop.store(contentWriter, "");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        this.newFileInDataFolder(fileName, contentWriter.toString());
+        if (!inDataFolder) {
+            containerService.executeGenericCommand(
+                    String.format("mv %s/%s %s/%s", mountPoint(), fileName, DEFAULT_ROUTE_FOLDER, fileName));
+        }
+    }
+
+    protected void assertFileInContainerExists(String fileAbsolutePath) {
+        String fileName = Path.of(fileAbsolutePath).getFileName().toFile().getName();
+        Assertions.assertThat(containerService.listDirectory(Path.of(fileAbsolutePath).getParent().toAbsolutePath().toString())
+                .anyMatch(child -> fileName.equals(child)))
+                .as("check if file " + fileAbsolutePath + " exists")
+                .isTrue();
+    }
+
 }

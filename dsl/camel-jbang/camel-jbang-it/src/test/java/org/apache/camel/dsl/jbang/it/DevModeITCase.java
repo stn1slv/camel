@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.stream.Collectors;
 
 import org.apache.camel.dsl.jbang.it.support.JBangTestSupport;
+import org.apache.camel.dsl.jbang.it.support.JiraIssue;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -74,15 +75,49 @@ public class DevModeITCase extends JBangTestSupport {
     }
 
     @Test
+    @JiraIssue("CAMEL-20939")
     public void runUsingProfileTest() throws IOException {
         copyResourceInDataFolder(TestResources.HELLO_NAME);
-        copyResourceInDataFolder(TestResources.LOCAL_PROP);
-        containerService.copyFileInternally(mountPoint() + "/" + TestResources.LOCAL_PROP.getName(), DEFAULT_ROUTE_FOLDER);
+        copyResourceInDataFolder(TestResources.TEST_PROFILE_PROP);
+        containerService.copyFileInternally(mountPoint() + "/" + TestResources.TEST_PROFILE_PROP.getName(),
+                DEFAULT_ROUTE_FOLDER);
         executeBackground(String.format("run %s/%s", mountPoint(), TestResources.HELLO_NAME.getName()));
         checkLogContains("Hello Camel from John");
         execute("stop helloName");
-        executeBackground(String.format("run %s/%s --profile=local", mountPoint(), TestResources.HELLO_NAME.getName()));
+        executeBackground(String.format("run %s/%s --profile=test", mountPoint(), TestResources.HELLO_NAME.getName()));
         checkLogContains("Hello Camel from Jenna");
+    }
+
+    @Test
+    public void testDeleteFileViaHttp() throws IOException {
+        copyResourceInDataFolder(TestResources.DIR_ROUTE);
+        executeBackground(String.format("run --dev --console --source-dir=%s", mountPoint()));
+        checkLogContains("Hello world!");
+        execInHost(String.format(
+                "curl -X DELETE http://localhost:%s/q/upload/FromDirectoryRoute.java",
+                containerService.getDevConsolePort()));
+        checkLogContains("FromDirectoryRoute.java does not exist");
+    }
+
+    @Test
+    public void testUploadFileViaHttp() throws IOException {
+        copyResourceInDataFolder(TestResources.DIR_ROUTE);
+        Files.createDirectory(Path.of(getDataFolder() + "/source-dir"));
+        Files.copy(Path.of(getDataFolder() + "/FromDirectoryRoute.java"),
+                Path.of(getDataFolder() + "/source-dir/FromDirectoryRoute.java"));
+        executeBackground(String.format("run --dev --console --source-dir=%s/source-dir", mountPoint()));
+        checkLogContains("Hello world!");
+        makeTheFileWriteable(String.format("%s/FromDirectoryRoute.java", mountPoint()));
+        Path routeFile = Path.of(getDataFolder(), "FromDirectoryRoute.java");
+        Files.write(routeFile,
+                Files.readAllLines(routeFile).stream()
+                        .map(line -> line.replace("Hello world!", "I have been modified!"))
+                        .collect(Collectors.toList()));
+        checkLogDoesNotContain("I have been modified!");
+        execInHost(String.format(
+                "curl -X PUT http://localhost:%s/q/upload/FromDirectoryRoute.java --data-binary \"@%s/FromDirectoryRoute.java\"",
+                containerService.getDevConsolePort(), getDataFolder()));
+        checkLogContains("I have been modified!");
     }
 
     private HttpResponse<String> getDevRequest(final String ctxUrl) {

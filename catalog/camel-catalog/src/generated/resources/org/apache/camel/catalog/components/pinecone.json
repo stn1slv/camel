@@ -8,10 +8,10 @@
     "firstVersion": "4.6.0",
     "label": "database,ai",
     "javaType": "org.apache.camel.component.pinecone.PineconeVectorDbComponent",
-    "supportLevel": "Preview",
+    "supportLevel": "Stable",
     "groupId": "org.apache.camel",
     "artifactId": "camel-pinecone",
-    "version": "4.7.0-SNAPSHOT",
+    "version": "4.10.0-SNAPSHOT",
     "scheme": "pinecone",
     "extendsScheme": "",
     "syntax": "pinecone:collection",
@@ -20,6 +20,7 @@
     "consumerOnly": false,
     "producerOnly": true,
     "lenientProperties": false,
+    "browsable": false,
     "remote": true
   },
   "componentProperties": {

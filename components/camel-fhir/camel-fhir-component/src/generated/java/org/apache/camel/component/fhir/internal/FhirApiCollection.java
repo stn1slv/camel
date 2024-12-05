@@ -33,8 +33,6 @@ import org.apache.camel.support.component.ApiMethodHelper;
  */
 public final class FhirApiCollection extends ApiCollection<FhirApiName, FhirConfiguration> {
 
-    private static FhirApiCollection collection;
-
     private FhirApiCollection() {
         final Map<String, String> aliases = new HashMap<>();
         final Map<FhirApiName, ApiMethodHelper<? extends ApiMethod>> apiHelpers = new EnumMap<>(FhirApiName.class);
@@ -88,7 +86,7 @@ public final class FhirApiCollection extends ApiCollection<FhirApiName, FhirConf
         apiMethods.put(FhirReadApiMethod.class, FhirApiName.READ);
 
         aliases.clear();
-        nullableArgs = Arrays.asList("extraParameters");
+        nullableArgs = Arrays.asList("searchParameters", "searchStyle", "extraParameters");
         apiHelpers.put(FhirApiName.SEARCH, new ApiMethodHelper<>(FhirSearchApiMethod.class, aliases, nullableArgs));
         apiMethods.put(FhirSearchApiMethod.class, FhirApiName.SEARCH);
 
@@ -157,10 +155,11 @@ public final class FhirApiCollection extends ApiCollection<FhirApiName, FhirConf
         return result;
     }
 
-    public static synchronized FhirApiCollection getCollection() {
-        if (collection == null) {
-            collection = new FhirApiCollection();
-        }
-        return collection;
+    public static FhirApiCollection getCollection() {
+        return FhirApiCollectionHolder.INSTANCE;
+    }
+
+    private static final class FhirApiCollectionHolder {
+        private static final FhirApiCollection INSTANCE = new FhirApiCollection();
     }
 }

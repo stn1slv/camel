@@ -214,8 +214,8 @@ public class DefaultModel implements Model {
                             if (def.isAbstract()) {
                                 continue;
                             }
-                            if (def instanceof ToDefinition) {
-                                to = (ToDefinition) def;
+                            if (def instanceof ToDefinition toDefinition) {
+                                to = toDefinition;
                             }
                             break;
                         }
@@ -228,8 +228,19 @@ public class DefaultModel implements Model {
                                 FromDefinition inlinedFrom = toBeInlined.getInput();
                                 from.setLocation(inlinedFrom.getLocation());
                                 from.setLineNumber(inlinedFrom.getLineNumber());
-                                // inline by replacing the outputs
-                                r.getOutputs().clear();
+                                // inline by replacing the outputs (preserve all abstracts such as interceptors)
+                                List<ProcessorDefinition<?>> toBeRemovedOut = new ArrayList<>();
+                                for (ProcessorDefinition<?> out : r.getOutputs()) {
+                                    // should be removed if to be added via inlined
+                                    boolean remove = toBeInlined.getOutputs().stream().anyMatch(o -> o == out);
+                                    if (!remove) {
+                                        remove = !out.isAbstract(); // remove all non abstract
+                                    }
+                                    if (remove) {
+                                        toBeRemovedOut.add(out);
+                                    }
+                                }
+                                r.getOutputs().removeAll(toBeRemovedOut);
                                 r.getOutputs().addAll(toBeInlined.getOutputs());
                                 // and copy over various configurations
                                 if (toBeInlined.getRouteId() != null) {
@@ -449,23 +460,24 @@ public class DefaultModel implements Model {
         final Map<String, Object> propDefaultValues = new HashMap<>();
         // include default values first from the template (and validate that we have inputs for all required parameters)
         if (target.getTemplateParameters() != null) {
-            StringJoiner templatesBuilder = new StringJoiner(", ");
+            StringJoiner missingParameters = new StringJoiner(", ");
 
             for (RouteTemplateParameterDefinition temp : target.getTemplateParameters()) {
                 if (temp.getDefaultValue() != null) {
                     addProperty(prop, temp.getName(), temp.getDefaultValue());
                     addProperty(propDefaultValues, temp.getName(), temp.getDefaultValue());
-                } else {
-                    if (temp.isRequired() && !routeTemplateContext.hasParameter(temp.getName())) {
-                        // this is a required parameter which is missing
-                        templatesBuilder.add(temp.getName());
-                    }
+                } else if (routeTemplateContext.hasEnvironmentVariable(temp.getName())) {
+                    // property is configured via environment variables
+                    addProperty(prop, temp.getName(), routeTemplateContext.getEnvironmentVariable(temp.getName()));
+                } else if (temp.isRequired() && !routeTemplateContext.hasParameter(temp.getName())) {
+                    // this is a required parameter which is missing
+                    missingParameters.add(temp.getName());
                 }
             }
-            if (templatesBuilder.length() > 0) {
+            if (missingParameters.length() > 0) {
                 throw new IllegalArgumentException(
                         "Route template " + routeTemplateId + " the following mandatory parameters must be provided: "
-                                                   + templatesBuilder);
+                                                   + missingParameters);
             }
         }
 
@@ -522,6 +534,9 @@ public class DefaultModel implements Model {
         }
 
         // assign ids to the routes and validate that the id's are all unique
+        if (prefixId == null) {
+            prefixId = def.getNodePrefixId();
+        }
         String duplicate = RouteDefinitionHelper.validateUniqueIds(def, routeDefinitions, prefixId);
         if (duplicate != null) {
             throw new FailedToCreateRouteFromTemplateException(

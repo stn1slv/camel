@@ -18,6 +18,7 @@ package org.apache.camel.dsl.jbang.core.commands;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Stack;
@@ -44,7 +45,7 @@ import static org.apache.camel.dsl.jbang.core.common.GitHubHelper.asGithubSingle
 import static org.apache.camel.dsl.jbang.core.common.GitHubHelper.fetchGithubUrls;
 
 @Command(name = "init", description = "Creates a new Camel integration",
-         sortOptions = false)
+         sortOptions = false, showDefaultValues = true)
 public class Init extends CamelCommand {
 
     @Parameters(description = "Name of integration file (or a github link)", arity = "1",
@@ -54,8 +55,13 @@ public class Init extends CamelCommand {
 
     @Option(names = {
             "--dir",
-            "--directory" }, description = "Directory where the project will be saved", defaultValue = ".")
+            "--directory" }, description = "Directory relative path where the new Camel integration will be saved",
+            defaultValue = ".")
     private String directory;
+
+    @Option(names = { "--clean-dir", "--clean-directory" },
+            description = "Whether to clean directory first (deletes all files in directory)")
+    private boolean cleanDirectory;
 
     @Option(names = { "--from-kamelet" },
             description = "To be used when extending an existing Kamelet")
@@ -145,12 +151,17 @@ public class Init extends CamelCommand {
         IOHelper.close(is);
 
         if (!directory.equals(".")) {
+            if (cleanDirectory) {
+                // ensure target dir is created after clean
+                CommandHelper.cleanExportDir(directory);
+            }
             File dir = new File(directory);
-            CommandHelper.cleanExportDir(directory);
-            // ensure target dir is created after clean
             dir.mkdirs();
         }
-        File target = new File(directory, file);
+        File target = new File(file);
+        if (!target.isAbsolute()) {
+            target = new File(directory, file);
+        }
         content = content.replaceFirst("\\{\\{ \\.Name }}", name);
         if (fromKamelet != null) {
             content = content.replaceFirst("\\s\\sname:\\s" + fromKamelet, "  name: " + name);
@@ -171,8 +182,39 @@ public class Init extends CamelCommand {
             }
             content = sb.toString();
         }
+        if ("java".equals(ext)) {
+            String packageDeclaration = computeJavaPackageDeclaration(target);
+            content = content.replaceFirst("\\{\\{ \\.PackageDeclaration }}", packageDeclaration);
+        }
+        // in case of using relative paths in the file name
+        File p = target.getParentFile();
+        if (p != null) {
+            if (".".equals(p.getName())) {
+                target = new File(file);
+            } else {
+                p.mkdirs();
+            }
+        }
         IOHelper.writeText(content, new FileOutputStream(target, false));
         return 0;
+    }
+
+    /**
+     * @return The package declaration lines to insert at the beginning of the file or empty string if no package found
+     */
+    private String computeJavaPackageDeclaration(File target) throws IOException {
+        String packageDeclaration = "";
+        String canonicalPath = target.getParentFile().getCanonicalPath();
+        String srcMainJavaPath = "src" + File.separatorChar + "main" + File.separatorChar + "java";
+        int index = canonicalPath.indexOf(srcMainJavaPath);
+        if (index != -1) {
+            String packagePath = canonicalPath.substring(index + srcMainJavaPath.length() + 1);
+            String packageName = packagePath.replace(File.separatorChar, '.');
+            if (!packageName.isEmpty()) {
+                packageDeclaration = "package " + packageName + ";\n\n";
+            }
+        }
+        return packageDeclaration;
     }
 
     private void createWorkingDirectoryIfAbsent() {
@@ -199,8 +241,10 @@ public class Init extends CamelCommand {
             // okay we downloaded something so prepare export dir
             if (!directory.equals(".")) {
                 File dir = new File(directory);
-                CommandHelper.cleanExportDir(directory);
-                // ensure target dir is created after clean
+                if (cleanDirectory) {
+                    // ensure target dir is created after clean
+                    CommandHelper.cleanExportDir(directory);
+                }
                 dir.mkdirs();
             }
 
@@ -233,8 +277,10 @@ public class Init extends CamelCommand {
             // okay we downloaded something so prepare export dir
             if (!directory.equals(".")) {
                 File dir = new File(directory);
-                CommandHelper.cleanExportDir(directory);
-                // ensure target dir is created after clean
+                if (cleanDirectory) {
+                    // ensure target dir is created after clean
+                    CommandHelper.cleanExportDir(directory);
+                }
                 dir.mkdirs();
             }
 

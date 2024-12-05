@@ -49,6 +49,8 @@ public class AWS2S3EndpointConfigurer extends PropertyConfigurerSupport implemen
         case "bridgeErrorHandler": target.setBridgeErrorHandler(property(camelContext, boolean.class, value)); return true;
         case "buffersize":
         case "bufferSize": target.getConfiguration().setBufferSize(property(camelContext, int.class, value)); return true;
+        case "conditionalwritesenabled":
+        case "conditionalWritesEnabled": target.getConfiguration().setConditionalWritesEnabled(property(camelContext, boolean.class, value)); return true;
         case "customeralgorithm":
         case "customerAlgorithm": target.getConfiguration().setCustomerAlgorithm(property(camelContext, java.lang.String.class, value)); return true;
         case "customerkeyid":
@@ -80,6 +82,8 @@ public class AWS2S3EndpointConfigurer extends PropertyConfigurerSupport implemen
         case "greedy": target.setGreedy(property(camelContext, boolean.class, value)); return true;
         case "ignorebody":
         case "ignoreBody": target.getConfiguration().setIgnoreBody(property(camelContext, boolean.class, value)); return true;
+        case "inprogressrepository":
+        case "inProgressRepository": target.setInProgressRepository(property(camelContext, org.apache.camel.spi.IdempotentRepository.class, value)); return true;
         case "includebody":
         case "includeBody": target.getConfiguration().setIncludeBody(property(camelContext, boolean.class, value)); return true;
         case "includefolders":
@@ -203,6 +207,8 @@ public class AWS2S3EndpointConfigurer extends PropertyConfigurerSupport implemen
         case "bridgeErrorHandler": return boolean.class;
         case "buffersize":
         case "bufferSize": return int.class;
+        case "conditionalwritesenabled":
+        case "conditionalWritesEnabled": return boolean.class;
         case "customeralgorithm":
         case "customerAlgorithm": return java.lang.String.class;
         case "customerkeyid":
@@ -234,6 +240,8 @@ public class AWS2S3EndpointConfigurer extends PropertyConfigurerSupport implemen
         case "greedy": return boolean.class;
         case "ignorebody":
         case "ignoreBody": return boolean.class;
+        case "inprogressrepository":
+        case "inProgressRepository": return org.apache.camel.spi.IdempotentRepository.class;
         case "includebody":
         case "includeBody": return boolean.class;
         case "includefolders":
@@ -353,6 +361,8 @@ public class AWS2S3EndpointConfigurer extends PropertyConfigurerSupport implemen
         case "bridgeErrorHandler": return target.isBridgeErrorHandler();
         case "buffersize":
         case "bufferSize": return target.getConfiguration().getBufferSize();
+        case "conditionalwritesenabled":
+        case "conditionalWritesEnabled": return target.getConfiguration().isConditionalWritesEnabled();
         case "customeralgorithm":
         case "customerAlgorithm": return target.getConfiguration().getCustomerAlgorithm();
         case "customerkeyid":
@@ -384,6 +394,8 @@ public class AWS2S3EndpointConfigurer extends PropertyConfigurerSupport implemen
         case "greedy": return target.isGreedy();
         case "ignorebody":
         case "ignoreBody": return target.getConfiguration().isIgnoreBody();
+        case "inprogressrepository":
+        case "inProgressRepository": return target.getInProgressRepository();
         case "includebody":
         case "includeBody": return target.getConfiguration().isIncludeBody();
         case "includefolders":

@@ -79,7 +79,7 @@ public class Dhis2GetIT extends AbstractDhis2TestSupport {
             public void configure() {
                 // test route for collection
                 from("direct://COLLECTION")
-                        .to("dhis2://" + PATH_PREFIX + "/collection")
+                        .to("dhis2://" + PATH_PREFIX + "/collection?paging=false")
                         .split().body().aggregationStrategy(new GroupedBodyAggregationStrategy())
                         .convertBodyTo(OrganisationUnit.class);
 

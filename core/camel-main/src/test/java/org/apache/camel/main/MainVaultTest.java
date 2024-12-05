@@ -17,10 +17,7 @@
 package org.apache.camel.main;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.vault.AwsVaultConfiguration;
-import org.apache.camel.vault.AzureVaultConfiguration;
-import org.apache.camel.vault.GcpVaultConfiguration;
-import org.apache.camel.vault.HashicorpVaultConfiguration;
+import org.apache.camel.vault.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +51,34 @@ public class MainVaultTest {
     }
 
     @Test
+    public void testMainOverrideEndpointAws() {
+        Main main = new Main();
+
+        main.addInitialProperty("camel.vault.aws.accessKey", "myKey");
+        main.addInitialProperty("camel.vault.aws.secretKey", "mySecret");
+        main.addInitialProperty("camel.vault.aws.region", "myRegion");
+        main.addInitialProperty("camel.vault.aws.defaultCredentialsProvider", "false");
+        main.addInitialProperty("camel.vault.aws.overrideEndpoint", "true");
+        main.addInitialProperty("camel.vault.aws.uriEndpointOverride", "http://localhost:8080");
+
+        main.start();
+
+        CamelContext context = main.getCamelContext();
+        assertNotNull(context);
+
+        AwsVaultConfiguration cfg = context.getVaultConfiguration().aws();
+        assertNotNull(cfg);
+
+        Assertions.assertEquals("myKey", cfg.getAccessKey());
+        Assertions.assertEquals("mySecret", cfg.getSecretKey());
+        Assertions.assertEquals("myRegion", cfg.getRegion());
+        Assertions.assertFalse(cfg.isDefaultCredentialsProvider());
+        Assertions.assertTrue(cfg.isOverrideEndpoint());
+        Assertions.assertEquals("http://localhost:8080", cfg.getUriEndpointOverride());
+        main.stop();
+    }
+
+    @Test
     public void testMainProfileAws() {
         final Main main = getMain();
 
@@ -82,9 +107,63 @@ public class MainVaultTest {
         main.addInitialProperty("camel.vault.aws.defaultCredentialsProvider", "false");
         main.addInitialProperty("camel.vault.aws.profileCredentialsProvider", "true");
         main.addInitialProperty("camel.vault.aws.profileName", "jack");
+        main.addInitialProperty("camel.vault.aws.sqsQueueUrl", "http://sqs-2");
+        main.addInitialProperty("camel.vault.aws.useSqsNotification", "true");
 
         main.start();
         return main;
+    }
+
+    @Test
+    public void testUseSqsNotification() {
+        final Main main = getMain();
+
+        CamelContext context = main.getCamelContext();
+        assertNotNull(context);
+
+        AwsVaultConfiguration cfg = context.getVaultConfiguration().aws();
+        assertNotNull(cfg);
+
+        Assertions.assertEquals("myKey", cfg.getAccessKey());
+        Assertions.assertEquals("mySecret", cfg.getSecretKey());
+        Assertions.assertEquals("myRegion", cfg.getRegion());
+        Assertions.assertFalse(cfg.isDefaultCredentialsProvider());
+        Assertions.assertTrue(cfg.isProfileCredentialsProvider());
+        Assertions.assertEquals("jack", cfg.getProfileName());
+        Assertions.assertEquals("http://sqs-2", cfg.getSqsQueueUrl());
+        Assertions.assertTrue(cfg.isUseSqsNotification());
+
+        main.stop();
+    }
+
+    @Test
+    public void testMainOverrideEndpointAwsFluent() {
+        Main main = new Main();
+        main.configure().vault().aws()
+                .withAccessKey("myKey")
+                .withSecretKey("mySecret")
+                .withRegion("myRegion")
+                .isOverrideEndpoint(true)
+                .withUriEndpointOverride("http://localhost:8080")
+                .withDefaultCredentialsProvider(false)
+                .end();
+
+        main.start();
+
+        CamelContext context = main.getCamelContext();
+        assertNotNull(context);
+
+        AwsVaultConfiguration cfg = context.getVaultConfiguration().aws();
+        assertNotNull(cfg);
+
+        Assertions.assertEquals("myKey", cfg.getAccessKey());
+        Assertions.assertEquals("mySecret", cfg.getSecretKey());
+        Assertions.assertEquals("myRegion", cfg.getRegion());
+        Assertions.assertFalse(cfg.isDefaultCredentialsProvider());
+        Assertions.assertTrue(cfg.isOverrideEndpoint());
+        Assertions.assertEquals("http://localhost:8080", cfg.getUriEndpointOverride());
+
+        main.stop();
     }
 
     @Test
@@ -256,6 +335,88 @@ public class MainVaultTest {
         Assertions.assertEquals("localhost", cfg.getHost());
         Assertions.assertEquals("8200", cfg.getPort());
         Assertions.assertEquals("https", cfg.getScheme());
+        main.stop();
+    }
+
+    @Test
+    public void testMainKubernetes() {
+        Main main = new Main();
+
+        main.addInitialProperty("camel.vault.kubernetes.refreshEnabled", "true");
+        main.addInitialProperty("camel.vault.kubernetes.secrets", "xxxx");
+
+        main.start();
+
+        CamelContext context = main.getCamelContext();
+        assertNotNull(context);
+
+        KubernetesVaultConfiguration cfg = context.getVaultConfiguration().kubernetes();
+        assertNotNull(cfg);
+
+        Assertions.assertTrue(cfg.isRefreshEnabled());
+        Assertions.assertEquals("xxxx", cfg.getSecrets());
+        main.stop();
+    }
+
+    @Test
+    public void testMainKubernetesFluent() {
+        Main main = new Main();
+        main.configure().vault().kubernetes()
+                .withRefreshEnabled(true)
+                .withSecrets("xxxx")
+                .end();
+
+        main.start();
+
+        CamelContext context = main.getCamelContext();
+        assertNotNull(context);
+
+        KubernetesVaultConfiguration cfg = context.getVaultConfiguration().kubernetes();
+        assertNotNull(cfg);
+
+        Assertions.assertTrue(cfg.isRefreshEnabled());
+        Assertions.assertEquals("xxxx", cfg.getSecrets());
+        main.stop();
+    }
+
+    @Test
+    public void testMainKubernetesConfigmaps() {
+        Main main = new Main();
+
+        main.addInitialProperty("camel.vault.kubernetescm.refreshEnabled", "true");
+        main.addInitialProperty("camel.vault.kubernetescm.configmaps", "xxxx");
+
+        main.start();
+
+        CamelContext context = main.getCamelContext();
+        assertNotNull(context);
+
+        KubernetesConfigMapVaultConfiguration cfg = context.getVaultConfiguration().kubernetesConfigmaps();
+        assertNotNull(cfg);
+
+        Assertions.assertTrue(cfg.isRefreshEnabled());
+        Assertions.assertEquals("xxxx", cfg.getConfigmaps());
+        main.stop();
+    }
+
+    @Test
+    public void testMainKubernetesConfigmapsFluent() {
+        Main main = new Main();
+        main.configure().vault().kubernetesConfigmaps()
+                .withRefreshEnabled(true)
+                .withConfigmaps("xxxx")
+                .end();
+
+        main.start();
+
+        CamelContext context = main.getCamelContext();
+        assertNotNull(context);
+
+        KubernetesConfigMapVaultConfiguration cfg = context.getVaultConfiguration().kubernetesConfigmaps();
+        assertNotNull(cfg);
+
+        Assertions.assertTrue(cfg.isRefreshEnabled());
+        Assertions.assertEquals("xxxx", cfg.getConfigmaps());
         main.stop();
     }
 }

@@ -17,9 +17,11 @@
 package org.apache.camel.language.csimple;
 
 import java.lang.reflect.Array;
+import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -28,6 +30,7 @@ import java.util.regex.Pattern;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelExchangeException;
+import org.apache.camel.CamelExecutionException;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePropertyKey;
 import org.apache.camel.Expression;
@@ -38,6 +41,8 @@ import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.spi.ExchangeFormatter;
 import org.apache.camel.spi.Language;
 import org.apache.camel.spi.PropertiesComponent;
+import org.apache.camel.spi.UuidGenerator;
+import org.apache.camel.support.CamelContextHelper;
 import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.GroupIterator;
 import org.apache.camel.support.LanguageHelper;
@@ -50,6 +55,8 @@ import org.apache.camel.util.SkipIterator;
 import org.apache.camel.util.StringHelper;
 import org.apache.camel.util.json.Jsoner;
 import org.apache.camel.util.xml.pretty.XmlPrettyPrinter;
+
+import static org.apache.camel.util.StringHelper.between;
 
 /**
  * A set of helper as static imports for the Camel compiled simple language.
@@ -64,6 +71,14 @@ public final class CSimpleHelper {
     private static ExchangeFormatter exchangeFormatter;
 
     private CSimpleHelper() {
+    }
+
+    public static <T> T convertTo(Exchange exchange, Class<T> type, Object value) {
+        return exchange.getContext().getTypeConverter().convertTo(type, exchange, value);
+    }
+
+    public static <T> T tryConvertTo(Exchange exchange, Class<T> type, Object value) {
+        return exchange.getContext().getTypeConverter().tryConvertTo(type, exchange, value);
     }
 
     public static <T> T messageAs(Exchange exchange, Class<T> type) {
@@ -127,7 +142,7 @@ public final class CSimpleHelper {
         List<String> keys = OgnlHelper.splitOgnl(key);
         for (String k : keys) {
             if (k.startsWith("[") && k.endsWith("]")) {
-                k = StringHelper.between(k, "[", "]");
+                k = between(k, "[", "]");
             }
             obj = doObjectAsIndex(context, obj, k);
         }
@@ -153,11 +168,41 @@ public final class CSimpleHelper {
         List<String> keys = OgnlHelper.splitOgnl(key);
         for (String k : keys) {
             if (k.startsWith("[") && k.endsWith("]")) {
-                k = StringHelper.between(k, "[", "]");
+                k = between(k, "[", "]");
             }
             obj = doObjectAsIndex(exchange.getContext(), obj, k);
         }
         return type.cast(obj);
+    }
+
+    public static Object variable(Exchange exchange, String name) {
+        return exchange.getVariable(name);
+    }
+
+    public static <T> T variableAs(Exchange exchange, String name, Class<T> type) {
+        return exchange.getVariable(name, type);
+    }
+
+    public static <T> T variableAsIndex(Exchange exchange, Class<T> type, String name, String key) {
+        Object obj = exchange.getVariable(name);
+        // try key as-is as it may be using dots or something that valid
+        Object objKey = doObjectAsIndex(exchange.getContext(), obj, key);
+        if (objKey != null && objKey != obj) {
+            return type.cast(objKey);
+        }
+        // the key may contain multiple keys ([0][foo]) so we need to walk these keys
+        List<String> keys = OgnlHelper.splitOgnl(key);
+        for (String k : keys) {
+            if (k.startsWith("[") && k.endsWith("]")) {
+                k = between(k, "[", "]");
+            }
+            obj = doObjectAsIndex(exchange.getContext(), obj, k);
+        }
+        return type.cast(obj);
+    }
+
+    public static Map<String, Object> variables(Exchange exchange) {
+        return exchange.getVariables();
     }
 
     public static String bodyOneLine(Exchange exchange) {
@@ -228,12 +273,25 @@ public final class CSimpleHelper {
         return InetAddressUtil.getLocalHostNameSafe();
     }
 
+    public static String fromRouteId(Exchange exchange) {
+        return exchange.getFromRouteId();
+    }
+
     public static String routeId(Exchange exchange) {
         return ExchangeHelper.getRouteId(exchange);
     }
 
+    public static String routeGroup(Exchange exchange) {
+        return ExchangeHelper.getRouteGroup(exchange);
+    }
+
     public static String stepId(Exchange exchange) {
         return exchange.getProperty(ExchangePropertyKey.STEP_ID, String.class);
+    }
+
+    public static String logExchange(Exchange exchange) {
+        ExchangeFormatter formatter = LanguageHelper.getOrCreateExchangeFormatter(exchange.getContext(), null);
+        return formatter.format(exchange);
     }
 
     public static String fileName(Message message) {
@@ -314,9 +372,7 @@ public final class CSimpleHelper {
     private static Object doDate(Exchange exchange, String commandWithOffsets, String timezone, String pattern) {
         final String command = commandWithOffsets.split("[+-]", 2)[0].trim();
         final List<Long> offsets = LanguageHelper.captureOffsets(commandWithOffsets, OFFSET_PATTERN);
-
         Date date = evalDate(exchange, command);
-
         return LanguageHelper.applyDateOffsets(date, offsets, pattern, timezone);
     }
 
@@ -422,6 +478,43 @@ public final class CSimpleHelper {
             Exception cause = new CamelExchangeException("Cannot evaluate message body as a number", exchange);
             throw RuntimeCamelException.wrapRuntimeCamelException(cause);
         }
+    }
+
+    public static String replace(Exchange exchange, String from, String to) {
+        String source = exchange.getMessage().getBody(String.class);
+        if (source != null) {
+            return source.replace(from, to);
+        } else {
+            return null;
+        }
+    }
+
+    public static Object empty(Exchange exchange, String type) {
+        if ("map".equalsIgnoreCase(type)) {
+            return new LinkedHashMap<>();
+        } else if ("string".equalsIgnoreCase(type)) {
+            return "";
+        } else if ("list".equalsIgnoreCase(type)) {
+            return new ArrayList<>();
+        }
+        throw new IllegalArgumentException("function empty(%s) has unknown type".formatted(type));
+    }
+
+    public static String substring(Exchange exchange, Object num1, Object num2) {
+        int head = exchange.getContext().getTypeConverter().tryConvertTo(int.class, exchange, num1);
+        int tail = exchange.getContext().getTypeConverter().tryConvertTo(int.class, exchange, num2);
+        if (head < 0 && tail == 0) {
+            // if there is only one value and its negative then we want to clip from tail
+            tail = head;
+            head = 0;
+        }
+        head = Math.abs(head);
+        tail = Math.abs(tail);
+        String text = exchange.getMessage().getBody(String.class);
+        if (text == null) {
+            return null;
+        }
+        return between(text, head, tail);
     }
 
     public static int random(Exchange exchange, Object min, Object max) {
@@ -617,4 +710,42 @@ public final class CSimpleHelper {
         return num;
     }
 
+    public static Object join(Exchange exchange, Object value, String separator, String prefix) {
+        Iterator<?> it = convertTo(exchange, Iterator.class, value);
+        StringBuilder sb = new StringBuilder(256);
+        while (it.hasNext()) {
+            Object o = it.next();
+            if (o != null) {
+                String s = tryConvertTo(exchange, String.class, o);
+                if (s != null) {
+                    if (!sb.isEmpty()) {
+                        sb.append(separator);
+                    }
+                    if (prefix != null) {
+                        sb.append(prefix);
+                    }
+                    sb.append(s);
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    public static Object hash(Exchange exchange, Object value, String algorithm) {
+        byte[] data = convertTo(exchange, byte[].class, value);
+        if (data != null && data.length > 0) {
+            try {
+                MessageDigest digest = MessageDigest.getInstance(algorithm);
+                byte[] bytes = digest.digest(data);
+                return StringHelper.bytesToHex(bytes);
+            } catch (Exception e) {
+                throw CamelExecutionException.wrapCamelExecutionException(exchange, e);
+            }
+        }
+        return null;
+    }
+
+    public static UuidGenerator customUuidGenerator(Exchange exchange, String generator) {
+        return CamelContextHelper.mandatoryLookup(exchange.getContext(), generator, UuidGenerator.class);
+    }
 }

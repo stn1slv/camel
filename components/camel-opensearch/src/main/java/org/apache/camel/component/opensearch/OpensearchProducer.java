@@ -35,6 +35,7 @@ import org.apache.camel.Message;
 import org.apache.camel.support.DefaultAsyncProducer;
 import org.apache.camel.support.ResourceHelper;
 import org.apache.camel.util.IOHelper;
+import org.apache.camel.util.ObjectHelper;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -82,7 +83,6 @@ class OpensearchProducer extends DefaultAsyncProducer {
     private static final Logger LOG = LoggerFactory.getLogger(OpensearchProducer.class);
 
     protected final OpensearchConfiguration configuration;
-    private final Object mutex = new Object();
     private volatile RestClient client;
     private Sniffer sniffer;
 
@@ -103,7 +103,7 @@ class OpensearchProducer extends DefaultAsyncProducer {
         // In the event we can't discover the operation from a, b or c we throw
         // an error.
         Object request = exchange.getIn().getBody();
-        if (request != null) {
+        if (ObjectHelper.isNotEmpty(request)) {
             LOG.debug("Operation request body: {}", request);
         }
 
@@ -451,16 +451,19 @@ class OpensearchProducer extends DefaultAsyncProducer {
 
     private void startClient() {
         if (client == null) {
-            synchronized (mutex) {
+            lock.lock();
+            try {
                 if (client == null) {
                     LOG.info("Connecting to the OpenSearch cluster: {}", configuration.getClusterName());
-                    if (configuration.getHostAddressesList() != null
+                    if (ObjectHelper.isNotEmpty(configuration.getHostAddressesList())
                             && !configuration.getHostAddressesList().isEmpty()) {
                         client = createClient();
                     } else {
                         LOG.warn("Incorrect ip address and port parameters settings for OpenSearch cluster");
                     }
                 }
+            } finally {
+                lock.unlock();
             }
         }
     }
@@ -470,14 +473,17 @@ class OpensearchProducer extends DefaultAsyncProducer {
 
         builder.setRequestConfigCallback(requestConfigBuilder -> requestConfigBuilder
                 .setConnectTimeout(configuration.getConnectionTimeout()).setSocketTimeout(configuration.getSocketTimeout()));
-        if (configuration.getUser() != null && configuration.getPassword() != null) {
+        if (ObjectHelper.isNotEmpty(configuration.getUser()) && ObjectHelper.isNotEmpty(configuration.getPassword())) {
             final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(AuthScope.ANY,
                     new UsernamePasswordCredentials(configuration.getUser(), configuration.getPassword()));
             builder.setHttpClientConfigCallback(httpClientBuilder -> {
                 httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
-                if (configuration.getCertificatePath() != null) {
+                if (ObjectHelper.isNotEmpty(configuration.getCertificatePath())) {
                     httpClientBuilder.setSSLContext(createSslContextFromCa());
+                }
+                if (ObjectHelper.isNotEmpty(configuration.getHostnameVerifier())) {
+                    httpClientBuilder.setSSLHostnameVerifier(configuration.getHostnameVerifier());
                 }
                 return httpClientBuilder;
             });

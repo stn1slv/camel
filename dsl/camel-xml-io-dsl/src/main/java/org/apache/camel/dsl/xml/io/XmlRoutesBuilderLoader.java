@@ -18,7 +18,6 @@ package org.apache.camel.dsl.xml.io;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -45,15 +44,14 @@ import org.apache.camel.model.RoutesDefinition;
 import org.apache.camel.model.TemplatedRouteDefinition;
 import org.apache.camel.model.TemplatedRoutesDefinition;
 import org.apache.camel.model.app.BeansDefinition;
+import org.apache.camel.model.dataformat.DataFormatsDefinition;
 import org.apache.camel.model.rest.RestConfigurationDefinition;
 import org.apache.camel.model.rest.RestDefinition;
 import org.apache.camel.model.rest.RestsDefinition;
 import org.apache.camel.spi.Resource;
 import org.apache.camel.spi.annotations.RoutesLoader;
 import org.apache.camel.support.CachedResource;
-import org.apache.camel.support.ObjectHelper;
 import org.apache.camel.support.scan.PackageScanHelper;
-import org.apache.camel.util.KeyValueHolder;
 import org.apache.camel.xml.io.util.XmlStreamDetector;
 import org.apache.camel.xml.io.util.XmlStreamInfo;
 import org.slf4j.Logger;
@@ -72,7 +70,6 @@ public class XmlRoutesBuilderLoader extends RouteBuilderLoaderSupport {
     private final Map<String, XmlStreamInfo> xmlInfoCache = new ConcurrentHashMap<>();
     private final Map<String, BeansDefinition> camelAppCache = new ConcurrentHashMap<>();
     private final List<BeanFactoryDefinition<?>> delayedRegistrations = new ArrayList<>();
-    private final Map<String, KeyValueHolder<Object, String>> beansToDestroy = new LinkedHashMap<>();
 
     private final AtomicInteger counter = new AtomicInteger(0);
 
@@ -120,51 +117,70 @@ public class XmlRoutesBuilderLoader extends RouteBuilderLoaderSupport {
             @Override
             public void configure() throws Exception {
                 String resourceLocation = input.getLocation();
-                switch (xmlInfo.getRootElementName()) {
-                    case "beans", "blueprint", "camel" -> {
-                        BeansDefinition def = camelAppCache.get(resourceLocation);
-                        if (def != null) {
-                            configureCamel(def);
-                        } else {
+                try {
+                    switch (xmlInfo.getRootElementName()) {
+                        case "beans", "blueprint", "camel" -> {
+                            BeansDefinition def = camelAppCache.get(resourceLocation);
+                            if (def != null) {
+                                configureCamel(def);
+                            } else {
+                                new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
+                                        .parseBeansDefinition()
+                                        .ifPresent(this::configureCamel);
+                            }
+                        }
+                        case "dataFormats", "dataFormat" -> new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
+                                .parseDataFormatsDefinition()
+                                .ifPresent(this::addDataFormats);
+                        case "routeTemplate", "routeTemplates" ->
                             new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
-                                    .parseBeansDefinition()
-                                    .ifPresent(this::configureCamel);
+                                    .parseRouteTemplatesDefinition()
+                                    .ifPresent(this::setRouteTemplateCollection);
+                        case "templatedRoutes", "templatedRoute" ->
+                            new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
+                                    .parseTemplatedRoutesDefinition()
+                                    .ifPresent(this::setTemplatedRouteCollection);
+                        case "rests", "rest" -> new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
+                                .parseRestsDefinition()
+                                .ifPresent(this::setRestCollection);
+                        case "routes", "route" -> new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
+                                .parseRoutesDefinition()
+                                .ifPresent(this::addRoutes);
+                        default -> {
                         }
                     }
-                    case "routeTemplate", "routeTemplates" ->
-                        new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
-                                .parseRouteTemplatesDefinition()
-                                .ifPresent(this::setRouteTemplateCollection);
-                    case "templatedRoutes", "templatedRoute" ->
-                        new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
-                                .parseTemplatedRoutesDefinition()
-                                .ifPresent(this::setTemplatedRouteCollection);
-                    case "rests", "rest" -> new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
-                            .parseRestsDefinition()
-                            .ifPresent(this::setRestCollection);
-                    case "routes", "route" -> new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
-                            .parseRoutesDefinition()
-                            .ifPresent(this::addRoutes);
-                    default -> {
-                    }
+                } finally {
+                    // knowing this is the last time an XML may have been parsed, we can clear the cache
+                    // (route may get reloaded later)
+                    resourceCache.remove(resourceLocation);
+                    xmlInfoCache.remove(resourceLocation);
+                    camelAppCache.remove(resourceLocation);
+                    preparseDone.remove(resourceLocation);
                 }
-
-                // knowing this is the last time an XML may have been parsed, we can clear the cache
-                // (route may get reloaded later)
-                resourceCache.remove(resourceLocation);
-                xmlInfoCache.remove(resourceLocation);
-                camelAppCache.remove(resourceLocation);
-                preparseDone.remove(resourceLocation);
             }
 
             @Override
             public void configuration() throws Exception {
                 switch (xmlInfo.getRootElementName()) {
-                    case "routeConfigurations", "routeConfiguration" ->
+                    // load any route configuration before that may be nested under camel/spring/blueprint root tag
+                    case "beans", "blueprint", "camel", "routeConfigurations", "routeConfiguration": {
+                        BeansDefinition bp = camelAppCache.get(input.getLocation());
+                        if (bp != null) {
+                            bp.getRouteConfigurations().forEach(rc -> {
+                                rc.setResource(getResource());
+                                List<RouteConfigurationDefinition> list = new ArrayList<>();
+                                list.add(rc);
+                                RouteConfigurationsDefinition def = new RouteConfigurationsDefinition();
+                                def.setResource(getResource());
+                                def.setRouteConfigurations(list);
+                                addConfigurations(def);
+                            });
+                            // remove the configurations we have added
+                            bp.getRouteConfigurations().clear();
+                        }
                         new XmlModelParser(resource, xmlInfo.getRootElementNamespace())
                                 .parseRouteConfigurationsDefinition()
                                 .ifPresent(this::addConfigurations);
-                    default -> {
                     }
                 }
             }
@@ -194,6 +210,12 @@ public class XmlRoutesBuilderLoader extends RouteBuilderLoaderSupport {
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
+                }
+
+                if (app.getDataFormats() != null) {
+                    DataFormatsDefinition list = new DataFormatsDefinition();
+                    list.setDataFormats(app.getDataFormats());
+                    addDataFormats(list);
                 }
 
                 app.getRests().forEach(r -> {
@@ -265,6 +287,12 @@ public class XmlRoutesBuilderLoader extends RouteBuilderLoaderSupport {
                 for (RouteConfigurationDefinition config : configurations.getRouteConfigurations()) {
                     getRouteConfigurationCollection().routeConfiguration(config);
                 }
+            }
+
+            private void addDataFormats(DataFormatsDefinition dataFormats) {
+                Model model = getCamelContext().getCamelContextExtension().getContextPlugin(Model.class);
+                dataFormats.getDataFormats().forEach(d -> d.setResource(getResource()));
+                model.setDataFormats(dataFormats.asMap());
             }
         };
     }
@@ -348,50 +376,13 @@ public class XmlRoutesBuilderLoader extends RouteBuilderLoaderSupport {
     }
 
     protected void bindBean(BeanFactoryDefinition<?> def, String name, Object target) throws Exception {
-        // destroy and unbind any existing bean
-        destroyBean(name, true);
+        // unbind in case we reload
         getCamelContext().getRegistry().unbind(name);
-
-        // invoke init method and register bean
-        String initMethod = def.getInitMethod();
-        if (initMethod != null) {
-            ObjectHelper.invokeMethodSafe(initMethod, target);
-        }
-        getCamelContext().getRegistry().bind(name, target);
-
-        // remember to destroy bean on shutdown
-        if (def.getDestroyMethod() != null) {
-            beansToDestroy.put(name, new KeyValueHolder<>(target, def.getDestroyMethod()));
-        }
+        getCamelContext().getRegistry().bind(name, target, def.getInitMethod(), def.getDestroyMethod());
 
         // register bean in model
         Model model = getCamelContext().getCamelContextExtension().getContextPlugin(Model.class);
         model.addCustomBean(def);
-    }
-
-    protected void destroyBean(String name, boolean remove) {
-        var holder = remove ? beansToDestroy.remove(name) : beansToDestroy.get(name);
-        if (holder != null) {
-            String destroyMethod = holder.getValue();
-            Object target = holder.getKey();
-            try {
-                ObjectHelper.invokeMethodSafe(destroyMethod, target);
-            } catch (Exception e) {
-                LOG.warn("Error invoking destroy method: {} on bean: {} due to: {}. This exception is ignored.",
-                        destroyMethod, target, e.getMessage(), e);
-            }
-        }
-    }
-
-    @Override
-    protected void doStop() throws Exception {
-        super.doStop();
-
-        // beans should trigger destroy methods on shutdown
-        for (String name : beansToDestroy.keySet()) {
-            destroyBean(name, false);
-        }
-        beansToDestroy.clear();
     }
 
 }

@@ -48,7 +48,7 @@ import org.fusesource.jansi.AnsiConsole;
 import picocli.CommandLine;
 
 @CommandLine.Command(name = "log",
-                     description = "Tail logs from running Camel integrations", sortOptions = false)
+                     description = "Tail logs from running Camel integrations", sortOptions = false, showDefaultValues = true)
 public class CamelLogAction extends ActionBaseCommand {
 
     private static final int NAME_MAX_WIDTH = 25;
@@ -80,6 +80,10 @@ public class CamelLogAction extends ActionBaseCommand {
     @CommandLine.Option(names = { "--follow" }, defaultValue = "true",
                         description = "Keep following and outputting new log lines (use ctrl + c to exit).")
     boolean follow = true;
+
+    @CommandLine.Option(names = { "--startup" }, defaultValue = "false",
+                        description = "Only shows logs from the starting phase to make it quick to look at how Camel was started.")
+    boolean startup;
 
     @CommandLine.Option(names = { "--prefix" }, defaultValue = "auto", completionCandidates = PrefixCompletionCandidates.class,
                         description = "Print prefix with running Camel integration name. auto=only prefix when running multiple integrations. true=always prefix. false=prefix off.")
@@ -147,7 +151,12 @@ public class CamelLogAction extends ActionBaseCommand {
                 }
                 limit = new Date(System.currentTimeMillis() - millis);
             }
-            if (tail != 0) {
+            if (startup) {
+                follow = false;
+                // only log startup logs until Camel was started
+                tailStartupLogFiles(rows);
+                dumpLogFiles(rows, 0);
+            } else if (tail != 0) {
                 // dump existing log lines
                 tailLogFiles(rows, tail, limit);
                 dumpLogFiles(rows, tail);
@@ -383,8 +392,13 @@ public class CamelLogAction extends ActionBaseCommand {
             }
         }
         if (find != null || grep != null) {
-            String before = StringHelper.before(line, "---");
-            String after = StringHelper.after(line, "---");
+            boolean dashes = line.contains(" --- ");
+            String before = null;
+            String after = line;
+            if (dashes) {
+                before = StringHelper.before(line, "---");
+                after = StringHelper.after(line, "---", line);
+            }
             if (find != null) {
                 for (String f : find) {
                     after = after.replaceAll("(?i)" + f, findAnsi);
@@ -395,7 +409,7 @@ public class CamelLogAction extends ActionBaseCommand {
                     after = after.replaceAll("(?i)" + g, findAnsi);
                 }
             }
-            line = before + "---" + after;
+            line = before != null ? before + "---" + after : after;
         }
         if (loggingColor) {
             AnsiConsole.out().println(line);
@@ -407,6 +421,28 @@ public class CamelLogAction extends ActionBaseCommand {
     private static File logFile(String pid) {
         String name = pid + ".log";
         return new File(CommandLineHelper.getCamelDir(), name);
+    }
+
+    private void tailStartupLogFiles(Map<Long, Row> rows) throws Exception {
+        for (Row row : rows.values()) {
+            File log = logFile(row.pid);
+            if (log.exists()) {
+                row.fifo = new ArrayDeque<>();
+                row.reader = new LineNumberReader(new FileReader(log));
+                String line;
+                do {
+                    line = row.reader.readLine();
+                    if (line != null) {
+                        row.fifo.offer(line);
+                        boolean found = line.contains("AbstractCamelContext") && line.contains("Apache Camel ")
+                                && line.contains(" started in ") && line.contains("(build:");
+                        if (found) {
+                            line = null;
+                        }
+                    }
+                } while (line != null);
+            }
+        }
     }
 
     private void tailLogFiles(Map<Long, Row> rows, int tail, Date limit) throws Exception {
@@ -463,13 +499,14 @@ public class CamelLogAction extends ActionBaseCommand {
         // the log can be in color or not so we need to unescape always
         line = unescapeAnsi(line);
         String ts = StringHelper.before(line, "  ");
-
-        SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMP_MAIN);
-        try {
-            Date row = sdf.parse(ts);
-            return row.compareTo(limit) >= 0;
-        } catch (ParseException e) {
-            // ignore
+        if (ts != null && !ts.isBlank()) {
+            SimpleDateFormat sdf = new SimpleDateFormat(TIMESTAMP_MAIN);
+            try {
+                Date row = sdf.parse(ts);
+                return row.compareTo(limit) >= 0;
+            } catch (ParseException e) {
+                // ignore
+            }
         }
         return false;
     }
@@ -480,7 +517,7 @@ public class CamelLogAction extends ActionBaseCommand {
         }
         // the log can be in color or not so we need to unescape always
         line = unescapeAnsi(line);
-        String after = StringHelper.after(line, "---");
+        String after = StringHelper.after(line, "---", line);
         for (String g : grep) {
             boolean m = Pattern.compile("(?i)" + g).matcher(after).find();
             if (m) {

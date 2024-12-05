@@ -360,6 +360,21 @@ public interface GoogleCloudStorageEndpointBuilderFactory {
             return this;
         }
         /**
+         * The prefix which is used in the BlobListOptions to only consume
+         * objects we are interested in.
+         * 
+         * The option is a: <code>java.lang.String</code> type.
+         * 
+         * Group: consumer
+         * 
+         * @param prefix the value to set
+         * @return the dsl builder
+         */
+        default GoogleCloudStorageEndpointConsumerBuilder prefix(String prefix) {
+            doSetProperty("prefix", prefix);
+            return this;
+        }
+        /**
          * If the polling consumer did not poll any files, you can enable this
          * option to send an empty message (no body) instead.
          * 
@@ -1502,6 +1517,18 @@ public interface GoogleCloudStorageEndpointBuilderFactory {
          */
         public String googleCloudStorageObjectName() {
             return "CamelGoogleCloudStorageObjectName";
+        }
+        /**
+         * The prefix to be used in List Objects operation.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: producer
+         * 
+         * @return the name of the header {@code GoogleCloudStoragePrefixName}.
+         */
+        public String googleCloudStoragePrefixName() {
+            return "CamelGoogleCloudStoragePrefixName";
         }
         /**
          * The object Destination Name which will be used for the current

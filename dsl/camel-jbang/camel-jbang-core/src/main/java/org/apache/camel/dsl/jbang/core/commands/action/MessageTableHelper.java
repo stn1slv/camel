@@ -16,8 +16,10 @@
  */
 package org.apache.camel.dsl.jbang.core.commands.action;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -27,6 +29,7 @@ import com.github.freva.asciitable.Column;
 import com.github.freva.asciitable.HorizontalAlign;
 import com.github.freva.asciitable.OverflowBehaviour;
 import org.apache.camel.dsl.jbang.core.common.CamelCommandHelper;
+import org.apache.camel.util.TimeUtils;
 import org.apache.camel.util.json.JsonArray;
 import org.apache.camel.util.json.JsonObject;
 import org.apache.camel.util.json.Jsoner;
@@ -137,16 +140,19 @@ public class MessageTableHelper {
         }
 
         if (root != null) {
-            eRow = new TableRow("Exchange", root.getString("exchangeType"), exchangePattern, exchangeId);
-            tab1 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(eRow), Arrays.asList(
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10).with(TableRow::kindAsString),
-                    new Column().dataAlign(HorizontalAlign.LEFT).with(TableRow::typeAsString)));
-            tab1b = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(eRow), Arrays.asList(
-                    new Column().dataAlign(HorizontalAlign.CENTER)
-                            .minWidth(18).maxWidth(18).with(TableRow::mepAsKey),
-                    new Column().dataAlign(HorizontalAlign.RIGHT)
-                            .maxWidth(80).with(TableRow::exchangeIdAsValue)));
+            if (exchangeId != null) {
+                eRow = new TableRow("Exchange", root.getString("exchangeType"), exchangePattern, exchangeId);
+                tab1 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(eRow), Arrays.asList(
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10)
+                                .with(TableRow::kindAsString),
+                        new Column().dataAlign(HorizontalAlign.LEFT).with(TableRow::typeAsString)));
+                tab1b = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(eRow), Arrays.asList(
+                        new Column().dataAlign(HorizontalAlign.CENTER)
+                                .minWidth(18).maxWidth(18).with(TableRow::mepAsKey),
+                        new Column().dataAlign(HorizontalAlign.RIGHT)
+                                .maxWidth(80).with(TableRow::exchangeIdAsValue)));
+            }
             // exchange variables
             JsonArray arr = root.getCollection("exchangeVariables");
             if (arr != null) {
@@ -171,40 +177,66 @@ public class MessageTableHelper {
                     rows.add(new TableRow("Property", jo.getString("type"), jo.getString("key"), jo.get("value")));
                 }
             }
-            tab2 = AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10).with(TableRow::kindAsString),
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .minWidth(25).maxWidth(50, OverflowBehaviour.CLIP_LEFT).with(TableRow::typeAsString),
-                    new Column().dataAlign(HorizontalAlign.RIGHT)
-                            .minWidth(25).maxWidth(40, OverflowBehaviour.NEWLINE).with(TableRow::keyAsString),
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .maxWidth(80, OverflowBehaviour.NEWLINE).with(TableRow::valueAsString)));
+            if (!rows.isEmpty()) {
+                tab2 = AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10)
+                                .with(TableRow::kindAsString),
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .minWidth(25).maxWidth(50, OverflowBehaviour.CLIP_LEFT).with(TableRow::typeAsString),
+                        new Column().dataAlign(HorizontalAlign.RIGHT)
+                                .minWidth(25).maxWidth(40, OverflowBehaviour.NEWLINE).with(TableRow::keyAsString),
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .maxWidth(80, OverflowBehaviour.NEWLINE).with(TableRow::valueAsString)));
+            }
             rows.clear();
 
             // message type before headers
-            TableRow msgRow = new TableRow("Message", root.getString("messageType"), null, null);
-            tab3 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(msgRow), Arrays.asList(
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10).with(TableRow::kindAsString),
-                    new Column().dataAlign(HorizontalAlign.LEFT).with(TableRow::typeAsString)));
+            if (root.getString("messageType") != null) {
+                TableRow msgRow = new TableRow("Message", root.getString("messageType"), null, null);
+                tab3 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(msgRow), Arrays.asList(
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10)
+                                .with(TableRow::kindAsString),
+                        new Column().dataAlign(HorizontalAlign.LEFT).with(TableRow::typeAsString)));
+            }
             arr = root.getCollection("headers");
             if (arr != null) {
                 for (Object o : arr) {
                     JsonObject jo = (JsonObject) o;
-                    rows.add(new TableRow("Header", jo.getString("type"), jo.getString("key"), jo.get("value")));
+                    String key = jo.getString("key");
+                    Object value = jo.get("value");
+                    if ("CamelMessageTimestamp".equals(key)) {
+                        long val = jo.getLongOrDefault("value", 0);
+                        if (val > 0) {
+                            String df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(val);
+                            String since = TimeUtils.printSince(val);
+                            value = "(" + df + " / " + since + " ago)";
+                            if (loggingColor) {
+                                value = val + " " + Ansi.ansi().fgBrightDefault().a(Ansi.Attribute.INTENSITY_FAINT).a(value)
+                                        .reset().toString();
+                            } else {
+                                value = val + " " + value;
+                            }
+                        }
+                    }
+                    rows.add(new TableRow("Header", jo.getString("type"), key, value));
                 }
             }
-            // headers
-            tab4 = AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10).with(TableRow::kindAsString),
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .minWidth(25).maxWidth(50, OverflowBehaviour.CLIP_LEFT).with(TableRow::typeAsString),
-                    new Column().dataAlign(HorizontalAlign.RIGHT)
-                            .minWidth(25).maxWidth(40, OverflowBehaviour.NEWLINE).with(TableRow::keyAsString),
-                    new Column().dataAlign(HorizontalAlign.LEFT)
-                            .maxWidth(80, OverflowBehaviour.NEWLINE).with(TableRow::valueAsString)));
+            if (!rows.isEmpty()) {
+                // headers
+                tab4 = AsciiTable.getTable(AsciiTable.NO_BORDERS, rows, Arrays.asList(
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .minWidth(showExchangeProperties || showExchangeVariables ? 12 : 10)
+                                .with(TableRow::kindAsString),
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .minWidth(25).maxWidth(50, OverflowBehaviour.CLIP_LEFT).with(TableRow::typeAsString),
+                        new Column().dataAlign(HorizontalAlign.RIGHT)
+                                .minWidth(25).maxWidth(40, OverflowBehaviour.NEWLINE).with(TableRow::keyAsString),
+                        new Column().dataAlign(HorizontalAlign.LEFT)
+                                .maxWidth(80, OverflowBehaviour.NEWLINE).with(TableRow::valueAsString)));
+            }
+            rows.clear();
 
             // body and type
             JsonObject jo = root.getMap("body");
@@ -218,7 +250,7 @@ public class MessageTableHelper {
                         new Column().dataAlign(HorizontalAlign.LEFT).with(TableRow::typeAndLengthAsString)));
                 // body value only (span)
                 if (bodyRow.value != null) {
-                    tab6 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(bodyRow), Arrays.asList(
+                    tab6 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(bodyRow), Collections.singletonList(
                             new Column().dataAlign(HorizontalAlign.LEFT).maxWidth(160, OverflowBehaviour.NEWLINE)
                                     .with(b -> pretty ? bodyRow.valueAsStringPretty() : bodyRow.valueAsString())));
                 }
@@ -241,11 +273,13 @@ public class MessageTableHelper {
         String tab8 = null;
         if (cause != null) {
             String value = cause.getString("stackTrace");
-            value = Jsoner.unescape(value);
-            eRow = new TableRow("Stacktrace", null, null, value);
-            tab8 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(eRow), Arrays.asList(
-                    new Column().dataAlign(HorizontalAlign.LEFT).maxWidth(160, OverflowBehaviour.NEWLINE)
-                            .with(TableRow::valueAsStringRed)));
+            if (value != null) {
+                value = Jsoner.unescape(value);
+                eRow = new TableRow("Stacktrace", null, null, value);
+                tab8 = AsciiTable.getTable(AsciiTable.NO_BORDERS, List.of(eRow), Collections.singletonList(
+                        new Column().dataAlign(HorizontalAlign.LEFT).maxWidth(160, OverflowBehaviour.NEWLINE)
+                                .with(TableRow::valueAsStringRed)));
+            }
         }
         String answer = "";
         if (tab0 != null && !tab0.isEmpty()) {
@@ -303,7 +337,14 @@ public class MessageTableHelper {
         }
 
         String valueAsString() {
-            return value != null ? value.toString() : "null";
+            if (value == null || "null".equals(value)) {
+                if (loggingColor) {
+                    value = Ansi.ansi().fgBrightDefault().a(Ansi.Attribute.INTENSITY_FAINT).a(value).reset().toString();
+                } else {
+                    value = "null";
+                }
+            }
+            return value.toString();
         }
 
         String valueAsStringPretty() {

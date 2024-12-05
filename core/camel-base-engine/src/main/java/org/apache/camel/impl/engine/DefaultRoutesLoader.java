@@ -143,9 +143,8 @@ public class DefaultRoutesLoader extends ServiceSupport implements RoutesLoader,
         // then pre-parse routes
         for (Map.Entry<RoutesBuilderLoader, List<Resource>> entry : groups.entrySet()) {
             RoutesBuilderLoader loader = entry.getKey();
-            if (loader instanceof ExtendedRoutesBuilderLoader) {
-                // extended loader can load all resources ine one unit
-                ExtendedRoutesBuilderLoader extLoader = (ExtendedRoutesBuilderLoader) loader;
+            // the extended loader can load all resources in one unit
+            if (loader instanceof ExtendedRoutesBuilderLoader extLoader) {
                 // pre-parse before loading
                 List<Resource> files = entry.getValue();
                 try {
@@ -176,9 +175,8 @@ public class DefaultRoutesLoader extends ServiceSupport implements RoutesLoader,
         // now load all the same resources for each loader
         for (Map.Entry<RoutesBuilderLoader, List<Resource>> entry : groups.entrySet()) {
             RoutesBuilderLoader loader = entry.getKey();
-            if (loader instanceof ExtendedRoutesBuilderLoader) {
-                // extended loader can load all resources ine one unit
-                ExtendedRoutesBuilderLoader extLoader = (ExtendedRoutesBuilderLoader) loader;
+            // the extended loader can load all resources in one unit
+            if (loader instanceof ExtendedRoutesBuilderLoader extLoader) {
                 List<Resource> files = entry.getValue();
                 try {
                     Collection<RoutesBuilder> builders = extLoader.loadRoutesBuilders(files);
@@ -294,8 +292,7 @@ public class DefaultRoutesLoader extends ServiceSupport implements RoutesLoader,
         Collection<RoutesBuilder> builders = findRoutesBuilders(resources);
         for (RoutesBuilder builder : builders) {
             // update any existing route configurations first
-            if (builder instanceof RouteConfigurationsBuilder) {
-                RouteConfigurationsBuilder rcb = (RouteConfigurationsBuilder) builder;
+            if (builder instanceof RouteConfigurationsBuilder rcb) {
                 rcb.updateRouteConfigurationsToCamelContext(getCamelContext());
             }
         }
@@ -309,20 +306,19 @@ public class DefaultRoutesLoader extends ServiceSupport implements RoutesLoader,
     }
 
     protected RoutesBuilderLoader resolveRoutesBuilderLoader(Resource resource, boolean optional) throws Exception {
+        RoutesBuilderLoader answer = null;
+
         // the loader to use is derived from the file extension
         final String extension = FileUtil.onlyExt(resource.getLocation(), false);
 
-        if (ObjectHelper.isEmpty(extension)) {
-            throw new IllegalArgumentException(
-                    "Unable to determine file extension for resource: " + resource.getLocation());
+        if (extension != null) {
+            answer = getRoutesLoader(extension);
         }
-
-        RoutesBuilderLoader loader = getRoutesLoader(extension);
-        if (!optional && loader == null) {
+        if (!optional && answer == null) {
             throw new IllegalArgumentException(
                     "Cannot find RoutesBuilderLoader in classpath supporting file extension: " + extension);
         }
-        return loader;
+        return answer;
     }
 
 }

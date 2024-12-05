@@ -17,6 +17,7 @@
 package org.apache.camel.component.kafka;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -137,8 +138,8 @@ public class KafkaConsumer extends DefaultConsumer
 
         // is the offset repository already started?
         StateRepository<String, String> repo = endpoint.getConfiguration().getOffsetRepository();
-        if (repo instanceof ServiceSupport) {
-            boolean started = ((ServiceSupport) repo).isStarted();
+        if (repo instanceof ServiceSupport serviceSupport) {
+            boolean started = serviceSupport.isStarted();
             // if not already started then we would do that and also stop it
             if (!started) {
                 stopOffsetRepo = true;
@@ -254,6 +255,10 @@ public class KafkaConsumer extends DefaultConsumer
     @ManagedAttribute(description = "Whether the Kafka client is currently paused")
     public boolean isKafkaPaused() {
         return tasks.stream().allMatch(KafkaFetchRecords::isPaused);
+    }
+
+    protected List<KafkaFetchRecords> tasks() {
+        return Collections.unmodifiableList(tasks);
     }
 
     @Override

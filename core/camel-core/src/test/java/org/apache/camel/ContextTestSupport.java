@@ -29,6 +29,7 @@ import javax.naming.Context;
 
 import org.apache.camel.builder.AdviceWith;
 import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.builder.LanguageBuilderFactory;
 import org.apache.camel.builder.NotifyBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.InterceptSendToMockEndpointStrategy;
@@ -289,6 +290,19 @@ public abstract class ContextTestSupport extends TestSupport
     }
 
     /**
+     * A utility method allowing to build any language using a fluent syntax as shown in the next example:
+     *
+     * <pre>
+     *  var exp = expression().tokenize().token("\n").end()
+     * </pre>
+     *
+     * @return an entry point to the builder of all supported languages.
+     */
+    public LanguageBuilderFactory expression() {
+        return new LanguageBuilderFactory();
+    }
+
+    /**
      * Allows a service to be registered a separate lifecycle service to start and stop the context; such as for Spring
      * when the ApplicationContext is started and stopped, rather than directly stopping the CamelContext
      */
@@ -456,9 +470,9 @@ public abstract class ContextTestSupport extends TestSupport
             RoutesBuilder[] builders = createRouteBuilders();
             // add configuration before routes
             for (RoutesBuilder builder : builders) {
-                if (builder instanceof RouteConfigurationsBuilder) {
+                if (builder instanceof RouteConfigurationsBuilder routeConfigurationsBuilder) {
                     log.debug("Using created route configuration: {}", builder);
-                    context.addRoutesConfigurations((RouteConfigurationsBuilder) builder);
+                    context.addRoutesConfigurations(routeConfigurationsBuilder);
                 }
             }
             for (RoutesBuilder builder : builders) {
@@ -677,8 +691,7 @@ public abstract class ContextTestSupport extends TestSupport
         if (camelContextService != null) {
             camelContextService.start();
         } else {
-            if (context instanceof DefaultCamelContext) {
-                DefaultCamelContext defaultCamelContext = (DefaultCamelContext) context;
+            if (context instanceof DefaultCamelContext defaultCamelContext) {
                 if (!defaultCamelContext.isStarted()) {
                     defaultCamelContext.start();
                 }

@@ -26,6 +26,8 @@ import java.util.StringJoiner;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
+
 import org.apache.camel.tooling.model.ComponentModel;
 import org.apache.camel.tooling.model.DataFormatModel;
 import org.apache.camel.tooling.model.JsonMapper;
@@ -38,6 +40,8 @@ import org.apache.camel.util.json.Jsoner;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProjectHelper;
+import org.codehaus.plexus.build.BuildContext;
 
 import static org.apache.camel.tooling.util.PackageHelper.findCamelDirectory;
 
@@ -55,13 +59,18 @@ public class UpdateSensitizeHelper extends AbstractGeneratorMojo {
     // extra keys that are regarded as secret which may not yet been in any component
     // they MUST be in lowercase and without a dash
     private static final String[] EXTRA_KEYS
-            = new String[] { "apipassword", "apiuser", "apiusername", "api_key", "api_secret", "secret" };
+            = new String[] { "apipassword", "apiuser", "apiusername", "api_key", "api_secret", "secret", "keystorePassword" };
 
     @Parameter(defaultValue = "${project.basedir}/src/generated/resources/org/apache/camel/catalog/")
     protected File jsonDir;
 
     @Parameter(defaultValue = "${project.basedir}/")
     protected File baseDir;
+
+    @Inject
+    public UpdateSensitizeHelper(MavenProjectHelper projectHelper, BuildContext buildContext) {
+        super(projectHelper, buildContext);
+    }
 
     /**
      * Execute goal.
@@ -205,7 +214,7 @@ public class UpdateSensitizeHelper extends AbstractGeneratorMojo {
         StringJoiner sb = new StringJoiner("\n");
         boolean first = true;
         for (String name : secrets) {
-            StringBuilder line = new StringBuilder();
+            StringBuilder line = new StringBuilder(name.length() + 32);
             line.append(spaces52);
             line.append("+ \"");
             if (!first) {

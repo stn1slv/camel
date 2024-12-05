@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-jbang-parent</artifactId>
-        <version>4.7.0-SNAPSHOT</version>
+        <version>4.10.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -34,7 +34,7 @@
     <description>Camel JBang Generate Plugin</description>
 
     <properties>
-        <firstVersion>4.7.0</firstVersion>
+        <firstVersion>4.8.0</firstVersion>
         <label>jbang</label>
         <supportLevel>Preview</supportLevel>
         <camel-prepare-component>false</camel-prepare-component>
@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.openapitools</groupId>
             <artifactId>openapi-generator</artifactId>
-            <version>${openapi-generator}</version>
+            <version>${openapi-generator-version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

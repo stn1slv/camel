@@ -34,6 +34,8 @@ import org.apache.camel.dsl.jbang.core.commands.CamelCommand;
 import org.apache.camel.dsl.jbang.core.commands.CamelJBangMain;
 import org.apache.camel.dsl.jbang.core.common.CatalogLoader;
 import org.apache.camel.dsl.jbang.core.common.RuntimeCompletionCandidates;
+import org.apache.camel.dsl.jbang.core.common.RuntimeType;
+import org.apache.camel.dsl.jbang.core.common.RuntimeTypeConverter;
 import org.apache.camel.main.util.SuggestSimilarHelper;
 import org.apache.camel.tooling.maven.MavenGav;
 import org.apache.camel.tooling.model.BaseOptionModel;
@@ -48,7 +50,8 @@ import picocli.CommandLine;
 import static org.apache.camel.dsl.jbang.core.commands.catalog.CatalogBaseCommand.findComponentNames;
 
 @CommandLine.Command(name = "doc",
-                     description = "Shows documentation for kamelet, component, and other Camel resources", sortOptions = false)
+                     description = "Shows documentation for kamelet, component, and other Camel resources", sortOptions = false,
+                     showDefaultValues = true)
 public class CatalogDoc extends CamelCommand {
 
     @CommandLine.Parameters(description = "Name of kamelet, component, dataformat, or other Camel resource",
@@ -59,12 +62,14 @@ public class CatalogDoc extends CamelCommand {
                         description = "To use a different Camel version than the default version")
     String camelVersion;
 
-    @CommandLine.Option(names = { "--runtime" }, completionCandidates = RuntimeCompletionCandidates.class,
+    @CommandLine.Option(names = { "--runtime" },
+                        completionCandidates = RuntimeCompletionCandidates.class,
+                        converter = RuntimeTypeConverter.class,
                         description = "Runtime (${COMPLETION-CANDIDATES})")
-    String runtime;
+    RuntimeType runtime;
 
     @CommandLine.Option(names = { "--quarkus-version" }, description = "Quarkus Platform version",
-                        defaultValue = "3.11.1")
+                        defaultValue = RuntimeType.QUARKUS_VERSION)
     String quarkusVersion;
 
     @CommandLine.Option(names = { "--quarkus-group-id" }, description = "Quarkus Platform Maven groupId",
@@ -94,7 +99,7 @@ public class CatalogDoc extends CamelCommand {
     boolean headers;
 
     @CommandLine.Option(names = {
-            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "4.6.0")
+            "--kamelets-version" }, description = "Apache Camel Kamelets version", defaultValue = "4.8.1")
     String kameletsVersion;
 
     CamelCatalog catalog;
@@ -104,9 +109,9 @@ public class CatalogDoc extends CamelCommand {
     }
 
     CamelCatalog loadCatalog() throws Exception {
-        if ("spring-boot".equals(runtime)) {
+        if (RuntimeType.springBoot == runtime) {
             return CatalogLoader.loadSpringBootCatalog(repos, camelVersion);
-        } else if ("quarkus".equals(runtime)) {
+        } else if (RuntimeType.quarkus == runtime) {
             return CatalogLoader.loadQuarkusCatalog(repos, quarkusVersion, quarkusGroupId);
         }
         if (camelVersion == null) {

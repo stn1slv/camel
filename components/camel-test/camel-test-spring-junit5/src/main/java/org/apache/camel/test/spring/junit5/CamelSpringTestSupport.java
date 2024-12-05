@@ -20,7 +20,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,7 +40,6 @@ import org.apache.camel.test.junit5.CamelTestSupport;
 import org.apache.camel.test.junit5.util.CamelContextTestHelper;
 import org.apache.camel.util.IOHelper;
 import org.apache.camel.util.ObjectHelper;
-import org.junit.jupiter.api.AfterEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -77,7 +75,7 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
     protected abstract AbstractApplicationContext createApplicationContext();
 
     @Override
-    public void postProcessTest() throws Exception {
+    protected final void postProcessTest() throws Exception {
         if (testConfiguration().isCreateCamelContextPerClass()) {
             applicationContext = THREAD_APP_CONTEXT.get();
         }
@@ -85,7 +83,7 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
     }
 
     @Override
-    public void doPreSetup() throws Exception {
+    protected final void doPreSetup() throws Exception {
         boolean skip = CamelContextTestHelper.isSkipAutoStartContext(testConfiguration());
         if (!skip) {
             // tell camel-spring it should not trigger starting CamelContext, since we do that later
@@ -134,18 +132,12 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
     }
 
     @Override
-    @AfterEach
-    public void tearDown() throws Exception {
-        super.tearDown();
-
+    public void doPostTearDown() throws Exception {
         if (!testConfiguration().isCreateCamelContextPerClass()) {
             IOHelper.close(applicationContext);
             applicationContext = null;
         }
-    }
 
-    @Override
-    public void doPostTearDown() throws Exception {
         if (THREAD_APP_CONTEXT.get() != null) {
             IOHelper.close(THREAD_APP_CONTEXT.get());
             THREAD_APP_CONTEXT.remove();
@@ -318,15 +310,7 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
         @Override
         public InputStream getInputStream() throws IOException {
             if (!properties.isEmpty()) {
-                StringWriter sw = new StringWriter();
-                try (InputStreamReader r = new InputStreamReader(delegate.getInputStream(), StandardCharsets.UTF_8)) {
-                    char[] buf = new char[32768];
-                    int l;
-                    while ((l = r.read(buf)) > 0) {
-                        sw.write(buf, 0, l);
-                    }
-                }
-                String before = sw.toString();
+                final String before = readBefore();
                 String p = properties.keySet().stream().map(Pattern::quote)
                         .collect(Collectors.joining("|", Pattern.quote("{{") + "(", ")" + Pattern.quote("}}")));
                 Matcher m = Pattern.compile(p).matcher(before);
@@ -340,6 +324,18 @@ public abstract class CamelSpringTestSupport extends CamelTestSupport {
             } else {
                 return delegate.getInputStream();
             }
+        }
+
+        private String readBefore() throws IOException {
+            StringBuilder sb = new StringBuilder(32768);
+            try (InputStreamReader r = new InputStreamReader(delegate.getInputStream(), StandardCharsets.UTF_8)) {
+                char[] buf = new char[32768];
+                int l;
+                while ((l = r.read(buf)) > 0) {
+                    sb.append(buf, 0, l);
+                }
+            }
+            return sb.toString();
         }
     }
 }

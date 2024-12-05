@@ -126,6 +126,40 @@ public interface AWS2S3EndpointBuilderFactory {
             return this;
         }
         /**
+         * If it is true, the S3 Object Body will be ignored completely if it is
+         * set to false, the S3 Object will be put in the body. Setting this to
+         * true will override any behavior defined by includeBody option.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: common
+         * 
+         * @param ignoreBody the value to set
+         * @return the dsl builder
+         */
+        default AWS2S3EndpointConsumerBuilder ignoreBody(boolean ignoreBody) {
+            doSetProperty("ignoreBody", ignoreBody);
+            return this;
+        }
+        /**
+         * If it is true, the S3 Object Body will be ignored completely if it is
+         * set to false, the S3 Object will be put in the body. Setting this to
+         * true will override any behavior defined by includeBody option.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: common
+         * 
+         * @param ignoreBody the value to set
+         * @return the dsl builder
+         */
+        default AWS2S3EndpointConsumerBuilder ignoreBody(String ignoreBody) {
+            doSetProperty("ignoreBody", ignoreBody);
+            return this;
+        }
+        /**
          * Set the need for overriding the endpoint. This option needs to be
          * used in combination with the uriEndpointOverride option.
          * 
@@ -365,40 +399,6 @@ public interface AWS2S3EndpointBuilderFactory {
          */
         default AWS2S3EndpointConsumerBuilder fileName(String fileName) {
             doSetProperty("fileName", fileName);
-            return this;
-        }
-        /**
-         * If it is true, the S3 Object Body will be ignored completely if it is
-         * set to false, the S3 Object will be put in the body. Setting this to
-         * true will override any behavior defined by includeBody option.
-         * 
-         * The option is a: <code>boolean</code> type.
-         * 
-         * Default: false
-         * Group: consumer
-         * 
-         * @param ignoreBody the value to set
-         * @return the dsl builder
-         */
-        default AWS2S3EndpointConsumerBuilder ignoreBody(boolean ignoreBody) {
-            doSetProperty("ignoreBody", ignoreBody);
-            return this;
-        }
-        /**
-         * If it is true, the S3 Object Body will be ignored completely if it is
-         * set to false, the S3 Object will be put in the body. Setting this to
-         * true will override any behavior defined by includeBody option.
-         * 
-         * The option will be converted to a <code>boolean</code> type.
-         * 
-         * Default: false
-         * Group: consumer
-         * 
-         * @param ignoreBody the value to set
-         * @return the dsl builder
-         */
-        default AWS2S3EndpointConsumerBuilder ignoreBody(String ignoreBody) {
-            doSetProperty("ignoreBody", ignoreBody);
             return this;
         }
         /**
@@ -1549,6 +1549,42 @@ public interface AWS2S3EndpointBuilderFactory {
             return this;
         }
         /**
+         * A pluggable in-progress repository
+         * org.apache.camel.spi.IdempotentRepository. The in-progress repository
+         * is used to account the current in progress files being consumed. By
+         * default a memory based repository is used.
+         * 
+         * The option is a:
+         * <code>org.apache.camel.spi.IdempotentRepository</code> type.
+         * 
+         * Group: consumer (advanced)
+         * 
+         * @param inProgressRepository the value to set
+         * @return the dsl builder
+         */
+        default AdvancedAWS2S3EndpointConsumerBuilder inProgressRepository(org.apache.camel.spi.IdempotentRepository inProgressRepository) {
+            doSetProperty("inProgressRepository", inProgressRepository);
+            return this;
+        }
+        /**
+         * A pluggable in-progress repository
+         * org.apache.camel.spi.IdempotentRepository. The in-progress repository
+         * is used to account the current in progress files being consumed. By
+         * default a memory based repository is used.
+         * 
+         * The option will be converted to a
+         * <code>org.apache.camel.spi.IdempotentRepository</code> type.
+         * 
+         * Group: consumer (advanced)
+         * 
+         * @param inProgressRepository the value to set
+         * @return the dsl builder
+         */
+        default AdvancedAWS2S3EndpointConsumerBuilder inProgressRepository(String inProgressRepository) {
+            doSetProperty("inProgressRepository", inProgressRepository);
+            return this;
+        }
+        /**
          * A pluggable org.apache.camel.PollingConsumerPollingStrategy allowing
          * you to provide your custom implementation to control error handling
          * usually occurred during the poll operation before an Exchange have
@@ -1740,6 +1776,40 @@ public interface AWS2S3EndpointBuilderFactory {
          */
         default AWS2S3EndpointProducerBuilder forcePathStyle(String forcePathStyle) {
             doSetProperty("forcePathStyle", forcePathStyle);
+            return this;
+        }
+        /**
+         * If it is true, the S3 Object Body will be ignored completely if it is
+         * set to false, the S3 Object will be put in the body. Setting this to
+         * true will override any behavior defined by includeBody option.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: common
+         * 
+         * @param ignoreBody the value to set
+         * @return the dsl builder
+         */
+        default AWS2S3EndpointProducerBuilder ignoreBody(boolean ignoreBody) {
+            doSetProperty("ignoreBody", ignoreBody);
+            return this;
+        }
+        /**
+         * If it is true, the S3 Object Body will be ignored completely if it is
+         * set to false, the S3 Object will be put in the body. Setting this to
+         * true will override any behavior defined by includeBody option.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: common
+         * 
+         * @param ignoreBody the value to set
+         * @return the dsl builder
+         */
+        default AWS2S3EndpointProducerBuilder ignoreBody(String ignoreBody) {
+            doSetProperty("ignoreBody", ignoreBody);
             return this;
         }
         /**
@@ -2580,6 +2650,38 @@ public interface AWS2S3EndpointBuilderFactory {
             return this;
         }
         /**
+         * Uploads the object only if the object key name does not already exist
+         * in the bucket specified.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: producer (advanced)
+         * 
+         * @param conditionalWritesEnabled the value to set
+         * @return the dsl builder
+         */
+        default AdvancedAWS2S3EndpointProducerBuilder conditionalWritesEnabled(boolean conditionalWritesEnabled) {
+            doSetProperty("conditionalWritesEnabled", conditionalWritesEnabled);
+            return this;
+        }
+        /**
+         * Uploads the object only if the object key name does not already exist
+         * in the bucket specified.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: producer (advanced)
+         * 
+         * @param conditionalWritesEnabled the value to set
+         * @return the dsl builder
+         */
+        default AdvancedAWS2S3EndpointProducerBuilder conditionalWritesEnabled(String conditionalWritesEnabled) {
+            doSetProperty("conditionalWritesEnabled", conditionalWritesEnabled);
+            return this;
+        }
+        /**
          * Whether the producer should be started lazy (on the first message).
          * By starting lazy you can use this to allow CamelContext and routes to
          * startup in situations where a producer may otherwise fail during
@@ -2872,6 +2974,40 @@ public interface AWS2S3EndpointBuilderFactory {
          */
         default AWS2S3EndpointBuilder forcePathStyle(String forcePathStyle) {
             doSetProperty("forcePathStyle", forcePathStyle);
+            return this;
+        }
+        /**
+         * If it is true, the S3 Object Body will be ignored completely if it is
+         * set to false, the S3 Object will be put in the body. Setting this to
+         * true will override any behavior defined by includeBody option.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: common
+         * 
+         * @param ignoreBody the value to set
+         * @return the dsl builder
+         */
+        default AWS2S3EndpointBuilder ignoreBody(boolean ignoreBody) {
+            doSetProperty("ignoreBody", ignoreBody);
+            return this;
+        }
+        /**
+         * If it is true, the S3 Object Body will be ignored completely if it is
+         * set to false, the S3 Object will be put in the body. Setting this to
+         * true will override any behavior defined by includeBody option.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: common
+         * 
+         * @param ignoreBody the value to set
+         * @return the dsl builder
+         */
+        default AWS2S3EndpointBuilder ignoreBody(String ignoreBody) {
+            doSetProperty("ignoreBody", ignoreBody);
             return this;
         }
         /**
@@ -3451,8 +3587,9 @@ public interface AWS2S3EndpointBuilderFactory {
         private static final AWS2S3HeaderNameBuilder INSTANCE = new AWS2S3HeaderNameBuilder();
 
         /**
-         * The bucket Name which this object will be stored or which will be
-         * used for the current operation or in which this object is contained.
+         * The bucket Name (can be dynamic using the simple language in the
+         * producer) which this object will be stored or which will be used for
+         * the current operation or in which this object is contained.
          * 
          * The option is a: {@code String} type.
          * 
@@ -3462,6 +3599,19 @@ public interface AWS2S3EndpointBuilderFactory {
          */
         public String awsS3BucketName() {
             return "CamelAwsS3BucketName";
+        }
+        /**
+         * The computed bucket name that was used by the producer such as to get
+         * or put an s3 object.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: producer
+         * 
+         * @return the name of the header {@code AwsS3ProducedBucketName}.
+         */
+        public String awsS3ProducedBucketName() {
+            return "CamelAwsS3ProducedBucketName";
         }
         /**
          * The bucket Destination Name which will be used for the current
@@ -3475,6 +3625,18 @@ public interface AWS2S3EndpointBuilderFactory {
          */
         public String awsS3BucketDestinationName() {
             return "CamelAwsS3BucketDestinationName";
+        }
+        /**
+         * Whether the bucket exists when using the headBucket operation.
+         * 
+         * The option is a: {@code boolean} type.
+         * 
+         * Group: common
+         * 
+         * @return the name of the header {@code AwsS3BucketExists}.
+         */
+        public String awsS3BucketExists() {
+            return "CamelAwsS3BucketExists";
         }
         /**
          * The optional Cache-Control HTTP header which allows the user to
@@ -3577,8 +3739,9 @@ public interface AWS2S3EndpointBuilderFactory {
             return "CamelAwsS3ETag";
         }
         /**
-         * The key under which this object is stored or will be stored or which
-         * will be used for the current operation.
+         * The key (can be dynamic using the simple language in the producer)
+         * under which this object is stored or will be stored or which will be
+         * used for the current operation.
          * 
          * The option is a: {@code String} type.
          * 
@@ -3588,6 +3751,18 @@ public interface AWS2S3EndpointBuilderFactory {
          */
         public String awsS3Key() {
             return "CamelAwsS3Key";
+        }
+        /**
+         * The computed key that was used for retrieving this object.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: producer
+         * 
+         * @return the name of the header {@code AwsS3ProducedKey}.
+         */
+        public String awsS3ProducedKey() {
+            return "CamelAwsS3ProducedKey";
         }
         /**
          * The Destination key which will be used for the current operation.
@@ -3853,6 +4028,59 @@ public interface AWS2S3EndpointBuilderFactory {
          */
         public String awsS3Delimiter() {
             return "CamelAwsS3Delimiter";
+        }
+        /**
+         * Return/copy the object only if its entity tag (ETag) is the same as
+         * the one specified in this header.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: common
+         * 
+         * @return the name of the header {@code AwsS3IfMatchCondition}.
+         */
+        public String awsS3IfMatchCondition() {
+            return "CamelAwsS3IfMatchCondition";
+        }
+        /**
+         * Return/copy the object only if it has been modified since the
+         * specified time; otherwise, return a 304 Not Modified error.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: common
+         * 
+         * @return the name of the header {@code AwsS3IfModifiedSinceCondition}.
+         */
+        public String awsS3IfModifiedSinceCondition() {
+            return "CamelAwsS3IfModifiedSinceCondition";
+        }
+        /**
+         * Return/copy the object only if its entity tag (ETag) is different
+         * from the one specified in this header.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: common
+         * 
+         * @return the name of the header {@code AwsS3IfNoneMatchCondition}.
+         */
+        public String awsS3IfNoneMatchCondition() {
+            return "CamelAwsS3IfNoneMatchCondition";
+        }
+        /**
+         * Return/copy the object only if it has not been modified since the
+         * specified time.
+         * 
+         * The option is a: {@code String} type.
+         * 
+         * Group: common
+         * 
+         * @return the name of the header {@code
+         * AwsS3IfUnmodifiedSinceCondition}.
+         */
+        public String awsS3IfUnmodifiedSinceCondition() {
+            return "CamelAwsS3IfUnmodifiedSinceCondition";
         }
     }
     static AWS2S3EndpointBuilder endpointBuilder(String componentName, String path) {

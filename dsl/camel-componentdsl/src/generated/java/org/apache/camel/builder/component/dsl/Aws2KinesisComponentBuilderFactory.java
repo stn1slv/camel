@@ -217,11 +217,11 @@ public interface Aws2KinesisComponentBuilderFactory {
         
         /**
          * Define what will be the behavior in case of shard closed. Possible
-         * value are ignore, silent and fail. In case of ignore a message will
-         * be logged and the consumer will restart from the beginning,in case of
-         * silent there will be no logging and the consumer will start from the
-         * beginning,in case of fail a ReachedClosedStateException will be
-         * raised.
+         * value are ignore, silent and fail. In case of ignore a WARN message
+         * will be logged once and the consumer will not process new messages
+         * until restarted,in case of silent there will be no logging and the
+         * consumer will not process new messages until restarted,in case of
+         * fail a ReachedClosedStateException will be thrown.
          * 
          * The option is a:
          * &lt;code&gt;org.apache.camel.component.aws2.kinesis.Kinesis2ShardClosedStrategyEnum&lt;/code&gt; type.
@@ -346,6 +346,75 @@ public interface Aws2KinesisComponentBuilderFactory {
          */
         default Aws2KinesisComponentBuilder autowiredEnabled(boolean autowiredEnabled) {
             doSetProperty("autowiredEnabled", autowiredEnabled);
+            return this;
+        }
+    
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * CloudWatchAsyncClient.
+         * 
+         * The option is a:
+         * &lt;code&gt;software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient&lt;/code&gt; type.
+         * 
+         * Group: advanced
+         * 
+         * @param cloudWatchAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default Aws2KinesisComponentBuilder cloudWatchAsyncClient(software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient cloudWatchAsyncClient) {
+            doSetProperty("cloudWatchAsyncClient", cloudWatchAsyncClient);
+            return this;
+        }
+    
+        /**
+         * If we want to a KCL Consumer, we can pass an instance of
+         * DynamoDbAsyncClient.
+         * 
+         * The option is a:
+         * &lt;code&gt;software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient&lt;/code&gt; type.
+         * 
+         * Group: advanced
+         * 
+         * @param dynamoDbAsyncClient the value to set
+         * @return the dsl builder
+         */
+        default Aws2KinesisComponentBuilder dynamoDbAsyncClient(software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient dynamoDbAsyncClient) {
+            doSetProperty("dynamoDbAsyncClient", dynamoDbAsyncClient);
+            return this;
+        }
+    
+        
+        /**
+         * If we want to use a KCL Consumer and disable the CloudWatch Metrics
+         * Export.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param kclDisableCloudwatchMetricsExport the value to set
+         * @return the dsl builder
+         */
+        default Aws2KinesisComponentBuilder kclDisableCloudwatchMetricsExport(boolean kclDisableCloudwatchMetricsExport) {
+            doSetProperty("kclDisableCloudwatchMetricsExport", kclDisableCloudwatchMetricsExport);
+            return this;
+        }
+    
+        
+        /**
+         * If we want to a KCL Consumer set it to true.
+         * 
+         * The option is a: &lt;code&gt;boolean&lt;/code&gt; type.
+         * 
+         * Default: false
+         * Group: advanced
+         * 
+         * @param useKclConsumers the value to set
+         * @return the dsl builder
+         */
+        default Aws2KinesisComponentBuilder useKclConsumers(boolean useKclConsumers) {
+            doSetProperty("useKclConsumers", useKclConsumers);
             return this;
         }
     
@@ -607,6 +676,10 @@ public interface Aws2KinesisComponentBuilderFactory {
             case "amazonKinesisClient": getOrCreateConfiguration((Kinesis2Component) component).setAmazonKinesisClient((software.amazon.awssdk.services.kinesis.KinesisClient) value); return true;
             case "asyncClient": getOrCreateConfiguration((Kinesis2Component) component).setAsyncClient((boolean) value); return true;
             case "autowiredEnabled": ((Kinesis2Component) component).setAutowiredEnabled((boolean) value); return true;
+            case "cloudWatchAsyncClient": getOrCreateConfiguration((Kinesis2Component) component).setCloudWatchAsyncClient((software.amazon.awssdk.services.cloudwatch.CloudWatchAsyncClient) value); return true;
+            case "dynamoDbAsyncClient": getOrCreateConfiguration((Kinesis2Component) component).setDynamoDbAsyncClient((software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient) value); return true;
+            case "kclDisableCloudwatchMetricsExport": getOrCreateConfiguration((Kinesis2Component) component).setKclDisableCloudwatchMetricsExport((boolean) value); return true;
+            case "useKclConsumers": getOrCreateConfiguration((Kinesis2Component) component).setUseKclConsumers((boolean) value); return true;
             case "healthCheckConsumerEnabled": ((Kinesis2Component) component).setHealthCheckConsumerEnabled((boolean) value); return true;
             case "healthCheckProducerEnabled": ((Kinesis2Component) component).setHealthCheckProducerEnabled((boolean) value); return true;
             case "proxyHost": getOrCreateConfiguration((Kinesis2Component) component).setProxyHost((java.lang.String) value); return true;

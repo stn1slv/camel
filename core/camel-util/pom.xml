@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.camel</groupId>
         <artifactId>core</artifactId>
-        <version>4.7.0-SNAPSHOT</version>
+        <version>4.10.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>camel-util</artifactId>
@@ -54,7 +54,6 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>${assertj-version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -266,6 +265,7 @@
                             <environmentVariables>
                                 <FOO_SERVICE_HOST>myserver</FOO_SERVICE_HOST>
                                 <FOO_SERVICE_PORT>8081</FOO_SERVICE_PORT>
+                                <CAMEL_KAMELET_AWS_S3_SOURCE_BUCKET_NAME_OR_ARN>mys3arn</CAMEL_KAMELET_AWS_S3_SOURCE_BUCKET_NAME_OR_ARN>
                             </environmentVariables>
                         </configuration>
                     </plugin>

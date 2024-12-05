@@ -562,8 +562,8 @@ public final class CamelContextHelper {
         while (parent != null && parent.getParent() != null) {
             parent = parent.getParent();
         }
-        if (parent instanceof NamedRoute) {
-            return (NamedRoute) parent;
+        if (parent instanceof NamedRoute namedRoute) {
+            return namedRoute;
         }
         return null;
     }
@@ -652,7 +652,7 @@ public final class CamelContextHelper {
     public static String getUptime(CamelContext context) {
         long delta = context.getUptime().toMillis();
         if (delta == 0) {
-            return "";
+            return "0ms";
         }
 
         return TimeUtils.printDuration(delta);

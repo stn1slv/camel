@@ -21,7 +21,7 @@ import javax.annotation.processing.Generated;
 import org.apache.camel.Component;
 import org.apache.camel.builder.component.AbstractComponentBuilder;
 import org.apache.camel.builder.component.ComponentBuilder;
-import org.apache.camel.component.debezium.DebeziumSqlserverComponent;
+import org.apache.camel.component.debezium.sqlserver.DebeziumSqlserverComponent;
 
 /**
  * Capture changes from an SQL Server database.
@@ -103,14 +103,14 @@ public interface DebeziumSqlserverComponentBuilderFactory {
          * Allow pre-configured Configurations to be set.
          * 
          * The option is a:
-         * &lt;code&gt;org.apache.camel.component.debezium.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration&lt;/code&gt; type.
+         * &lt;code&gt;org.apache.camel.component.debezium.sqlserver.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration&lt;/code&gt; type.
          * 
          * Group: consumer
          * 
          * @param configuration the value to set
          * @return the dsl builder
          */
-        default DebeziumSqlserverComponentBuilder configuration(org.apache.camel.component.debezium.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration configuration) {
+        default DebeziumSqlserverComponentBuilder configuration(org.apache.camel.component.debezium.sqlserver.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration configuration) {
             doSetProperty("configuration", configuration);
             return this;
         }
@@ -496,6 +496,24 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             return this;
         }
     
+        
+        /**
+         * Time to wait for a query to execute, given in milliseconds. Defaults
+         * to 600 seconds (600,000 ms); zero means there is no limit.
+         * 
+         * The option is a: &lt;code&gt;int&lt;/code&gt; type.
+         * 
+         * Default: 10m
+         * Group: sqlserver
+         * 
+         * @param databaseQueryTimeoutMs the value to set
+         * @return the dsl builder
+         */
+        default DebeziumSqlserverComponentBuilder databaseQueryTimeoutMs(int databaseQueryTimeoutMs) {
+            doSetProperty("databaseQueryTimeoutMs", databaseQueryTimeoutMs);
+            return this;
+        }
+    
         /**
          * Name of the database user to be used when connecting to the database.
          * 
@@ -809,6 +827,7 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             return this;
         }
     
+        
         /**
          * This property can be used to reduce the connector memory usage
          * footprint when changes are streamed from multiple tables per
@@ -816,6 +835,7 @@ public interface DebeziumSqlserverComponentBuilderFactory {
          * 
          * The option is a: &lt;code&gt;int&lt;/code&gt; type.
          * 
+         * Default: 500
          * Group: sqlserver
          * 
          * @param maxIterationTransactions the value to set
@@ -1507,6 +1527,24 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             return this;
         }
     
+        
+        /**
+         * A delay period after the snapshot is completed and the streaming
+         * begins, given in milliseconds. Defaults to 0 ms.
+         * 
+         * The option is a: &lt;code&gt;long&lt;/code&gt; type.
+         * 
+         * Default: 0ms
+         * Group: sqlserver
+         * 
+         * @param streamingDelayMs the value to set
+         * @return the dsl builder
+         */
+        default DebeziumSqlserverComponentBuilder streamingDelayMs(long streamingDelayMs) {
+            doSetProperty("streamingDelayMs", streamingDelayMs);
+            return this;
+        }
+    
         /**
          * A comma-separated list of regular expressions that match the
          * fully-qualified names of tables to be excluded from monitoring.
@@ -1638,6 +1676,24 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             doSetProperty("topicPrefix", topicPrefix);
             return this;
         }
+    
+        
+        /**
+         * Class to make transaction context &amp; transaction struct/schemas.
+         * 
+         * The option is a: &lt;code&gt;java.lang.String&lt;/code&gt; type.
+         * 
+         * Default:
+         * io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory
+         * Group: sqlserver
+         * 
+         * @param transactionMetadataFactory the value to set
+         * @return the dsl builder
+         */
+        default DebeziumSqlserverComponentBuilder transactionMetadataFactory(java.lang.String transactionMetadataFactory) {
+            doSetProperty("transactionMetadataFactory", transactionMetadataFactory);
+            return this;
+        }
     }
 
     class DebeziumSqlserverComponentBuilderImpl
@@ -1647,9 +1703,9 @@ public interface DebeziumSqlserverComponentBuilderFactory {
         protected DebeziumSqlserverComponent buildConcreteComponent() {
             return new DebeziumSqlserverComponent();
         }
-        private org.apache.camel.component.debezium.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration getOrCreateConfiguration(DebeziumSqlserverComponent component) {
+        private org.apache.camel.component.debezium.sqlserver.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration getOrCreateConfiguration(DebeziumSqlserverComponent component) {
             if (component.getConfiguration() == null) {
-                component.setConfiguration(new org.apache.camel.component.debezium.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration());
+                component.setConfiguration(new org.apache.camel.component.debezium.sqlserver.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration());
             }
             return component.getConfiguration();
         }
@@ -1661,7 +1717,7 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             switch (name) {
             case "additionalProperties": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setAdditionalProperties((java.util.Map) value); return true;
             case "bridgeErrorHandler": ((DebeziumSqlserverComponent) component).setBridgeErrorHandler((boolean) value); return true;
-            case "configuration": ((DebeziumSqlserverComponent) component).setConfiguration((org.apache.camel.component.debezium.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration) value); return true;
+            case "configuration": ((DebeziumSqlserverComponent) component).setConfiguration((org.apache.camel.component.debezium.sqlserver.configuration.SqlServerConnectorEmbeddedDebeziumConfiguration) value); return true;
             case "internalKeyConverter": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setInternalKeyConverter((java.lang.String) value); return true;
             case "internalValueConverter": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setInternalValueConverter((java.lang.String) value); return true;
             case "offsetCommitPolicy": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setOffsetCommitPolicy((java.lang.String) value); return true;
@@ -1684,6 +1740,7 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             case "databaseNames": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setDatabaseNames((java.lang.String) value); return true;
             case "databasePassword": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setDatabasePassword((java.lang.String) value); return true;
             case "databasePort": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setDatabasePort((int) value); return true;
+            case "databaseQueryTimeoutMs": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setDatabaseQueryTimeoutMs((int) value); return true;
             case "databaseUser": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setDatabaseUser((java.lang.String) value); return true;
             case "dataQueryMode": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setDataQueryMode((java.lang.String) value); return true;
             case "datatypePropagateSourceType": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setDatatypePropagateSourceType((java.lang.String) value); return true;
@@ -1736,6 +1793,7 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             case "snapshotSelectStatementOverrides": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setSnapshotSelectStatementOverrides((java.lang.String) value); return true;
             case "snapshotTablesOrderByRowCount": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setSnapshotTablesOrderByRowCount((java.lang.String) value); return true;
             case "sourceinfoStructMaker": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setSourceinfoStructMaker((java.lang.String) value); return true;
+            case "streamingDelayMs": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setStreamingDelayMs((long) value); return true;
             case "tableExcludeList": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setTableExcludeList((java.lang.String) value); return true;
             case "tableIgnoreBuiltin": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setTableIgnoreBuiltin((boolean) value); return true;
             case "tableIncludeList": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setTableIncludeList((java.lang.String) value); return true;
@@ -1743,6 +1801,7 @@ public interface DebeziumSqlserverComponentBuilderFactory {
             case "tombstonesOnDelete": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setTombstonesOnDelete((boolean) value); return true;
             case "topicNamingStrategy": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setTopicNamingStrategy((java.lang.String) value); return true;
             case "topicPrefix": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setTopicPrefix((java.lang.String) value); return true;
+            case "transactionMetadataFactory": getOrCreateConfiguration((DebeziumSqlserverComponent) component).setTransactionMetadataFactory((java.lang.String) value); return true;
             default: return false;
             }
         }

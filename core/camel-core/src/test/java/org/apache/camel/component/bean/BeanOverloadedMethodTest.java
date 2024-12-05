@@ -23,7 +23,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  *
@@ -156,13 +156,12 @@ public class BeanOverloadedMethodTest extends ContextTestSupport {
         });
         context.start();
 
-        try {
-            template.sendBodyAndHeader("direct:start", "Claus", "country", "Denmark");
-            fail("Should have thrown an exception");
-        } catch (CamelExecutionException e) {
-            AmbiguousMethodCallException cause = assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
-            assertEquals(2, cause.getMethods().size());
-        }
+        CamelExecutionException e = assertThrows(CamelExecutionException.class,
+                () -> template.sendBodyAndHeader("direct:start", "Claus", "country", "Denmark"),
+                "Should have thrown an exception");
+
+        AmbiguousMethodCallException cause = assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
+        assertEquals(2, cause.getMethods().size());
     }
 
     @Test
@@ -176,13 +175,12 @@ public class BeanOverloadedMethodTest extends ContextTestSupport {
         });
         context.start();
 
-        try {
-            template.sendBodyAndHeader("direct:start", "Claus", "country", "Denmark");
-            fail("Should have thrown an exception");
-        } catch (CamelExecutionException e) {
-            AmbiguousMethodCallException cause = assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
-            assertEquals(2, cause.getMethods().size());
-        }
+        CamelExecutionException e = assertThrows(CamelExecutionException.class,
+                () -> template.sendBodyAndHeader("direct:start", "Claus", "country", "Denmark"),
+                "Should have thrown an exception");
+
+        AmbiguousMethodCallException cause = assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
+        assertEquals(2, cause.getMethods().size());
     }
 
     @Test
@@ -196,13 +194,12 @@ public class BeanOverloadedMethodTest extends ContextTestSupport {
         });
         context.start();
 
-        try {
-            template.sendBodyAndHeader("direct:start", "Claus", "country", "Denmark");
-            fail("Should have thrown an exception");
-        } catch (CamelExecutionException e) {
-            AmbiguousMethodCallException cause = assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
-            assertEquals(2, cause.getMethods().size());
-        }
+        CamelExecutionException e = assertThrows(CamelExecutionException.class,
+                () -> template.sendBodyAndHeader("direct:start", "Claus", "country", "Denmark"),
+                "Should have thrown an exception");
+
+        AmbiguousMethodCallException cause = assertIsInstanceOf(AmbiguousMethodCallException.class, e.getCause());
+        assertEquals(2, cause.getMethods().size());
     }
 
     @Test
@@ -237,6 +234,27 @@ public class BeanOverloadedMethodTest extends ContextTestSupport {
         getMockEndpoint("mock:result").expectedBodiesReceived("ABC,ABC,ABC");
 
         template.sendBodyAndHeader("direct:start", "ABC".getBytes(), "times", "3");
+
+        assertMockEndpointsSatisfied();
+    }
+
+    @Test
+    public void testPropertyPlaceholder() throws Exception {
+        context.getPropertiesComponent().addInitialProperty("myDestination", "Mars");
+
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() {
+                from("direct:start").bean(MyBean.class, "sendMsg(String.class ${body}, String.class {{myDestination}})")
+                        .to("mock:result");
+
+            }
+        });
+        context.start();
+
+        getMockEndpoint("mock:result").expectedBodiesReceived("Sending rockets to Mars");
+
+        template.sendBody("direct:start", "rockets");
 
         assertMockEndpointsSatisfied();
     }
@@ -281,6 +299,10 @@ public class BeanOverloadedMethodTest extends ContextTestSupport {
                 }
             }
             return sb.toString();
+        }
+
+        public String sendMsg(String message, String destination) {
+            return "Sending " + message + " to " + destination;
         }
 
     }

@@ -20,14 +20,17 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
-import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Node;
 
@@ -36,10 +39,14 @@ import org.xml.sax.SAXException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.camel.Exchange;
+import org.apache.camel.InvalidPayloadException;
 import org.apache.camel.Message;
 import org.apache.camel.Processor;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.WrappedFile;
+import org.apache.camel.support.ExchangeHelper;
 import org.apache.camel.support.ResourceHelper;
+import org.apache.camel.support.builder.OutputStreamBuilder;
 import org.apache.camel.support.service.ServiceSupport;
 import org.apache.camel.util.IOHelper;
 import org.slf4j.Logger;
@@ -47,27 +54,36 @@ import org.slf4j.LoggerFactory;
 import org.smooks.Smooks;
 import org.smooks.SmooksFactory;
 import org.smooks.api.ExecutionContext;
+import org.smooks.api.NotAppContextScoped;
 import org.smooks.api.SmooksException;
 import org.smooks.api.TypedKey;
 import org.smooks.api.delivery.VisitorAppender;
+import org.smooks.api.io.Sink;
+import org.smooks.api.io.Source;
 import org.smooks.api.resource.visitor.Visitor;
 import org.smooks.engine.lookup.ExportsLookup;
 import org.smooks.engine.report.HtmlReportGenerator;
 import org.smooks.io.payload.Exports;
+import org.smooks.io.sink.StreamSink;
+import org.smooks.io.source.ByteSource;
+import org.smooks.io.source.DOMSource;
+import org.smooks.io.source.ReaderSource;
+import org.smooks.io.source.StreamSource;
+import org.smooks.io.source.URLSource;
 
 /**
  * Smooks {@link Processor} for Camel.
  */
 public class SmooksProcessor extends ServiceSupport implements Processor, CamelContextAware {
 
-    public static final String SMOOKS_EXECUTION_CONTEXT = "CamelSmooksExecutionContext";
-
     private static final TypedKey<Exchange> EXCHANGE_TYPED_KEY = TypedKey.of();
     private static final Logger LOG = LoggerFactory.getLogger(SmooksProcessor.class);
 
+    private SmooksFactory smooksFactory;
     private Smooks smooks;
     private String configUri;
     private String reportPath;
+    private Boolean allowExecutionContextFromHeader = false;
 
     private final Set<VisitorAppender> visitorAppender = new HashSet<>();
     private final Map<String, Visitor> selectorVisitorMap = new HashMap<>();
@@ -95,34 +111,55 @@ public class SmooksProcessor extends ServiceSupport implements Processor, CamelC
         return camelContext;
     }
 
+    public Boolean getAllowExecutionContextFromHeader() {
+        return allowExecutionContextFromHeader;
+    }
+
+    public void setAllowExecutionContextFromHeader(Boolean allowExecutionContextFromHeader) {
+        this.allowExecutionContextFromHeader = allowExecutionContextFromHeader;
+    }
+
     public void process(final Exchange exchange) {
-        final ExecutionContext executionContext = smooks.createExecutionContext();
+        ExecutionContext executionContext = null;
+        if (allowExecutionContextFromHeader) {
+            executionContext
+                    = exchange.getMessage().getHeader(SmooksConstants.SMOOKS_EXECUTION_CONTEXT, ExecutionContext.class);
+        }
+        if (executionContext == null) {
+            executionContext = smooks.createExecutionContext();
+            Charset charset = ExchangeHelper.getCharset(exchange, false);
+            if (charset != null) {
+                // if provided use the same character encoding
+                executionContext.setContentEncoding(charset.name());
+            }
+        }
+
         try {
             executionContext.put(EXCHANGE_TYPED_KEY, exchange);
-            String charsetName = (String) exchange.getProperty(Exchange.CHARSET_NAME);
-            if (charsetName != null) {
-                // if provided use the came character encoding
-                executionContext.setContentEncoding(charsetName);
-            }
-            exchange.getIn().setHeader(SMOOKS_EXECUTION_CONTEXT, executionContext);
-            setupSmooksReporting(executionContext);
+            exchange.getIn().setHeader(SmooksConstants.SMOOKS_EXECUTION_CONTEXT, executionContext);
+            setUpSmooksReporting(executionContext);
 
             final Exports exports = smooks.getApplicationContext().getRegistry().lookup(new ExportsLookup());
             if (exports.hasExports()) {
-                final Result[] results = exports.createResults();
-                smooks.filterSource(executionContext, getSource(exchange), results);
-                setResultOnBody(exports, results, exchange);
+                final Sink[] sinks = exports.createSinks();
+                smooks.filterSource(executionContext, getSource(exchange), sinks);
+                setResultOnBody(exports, sinks, exchange);
             } else {
-                smooks.filterSource(executionContext, getSource(exchange));
+                final OutputStreamBuilder outputStreamBuilder = OutputStreamBuilder.withExchange(exchange);
+                smooks.filterSource(executionContext, getSource(exchange),
+                        new StreamSink<>(outputStreamBuilder));
+                exchange.getMessage().setBody(outputStreamBuilder.build());
             }
+        } catch (IOException | InvalidPayloadException e) {
+            throw new RuntimeCamelException(e);
         } finally {
             executionContext.remove(EXCHANGE_TYPED_KEY);
         }
     }
 
-    protected void setResultOnBody(final Exports exports, final Result[] results, final Exchange exchange) {
+    protected void setResultOnBody(final Exports exports, final Sink[] sinks, final Exchange exchange) {
         final Message message = exchange.getMessage();
-        final List<Object> objects = Exports.extractResults(results, exports);
+        final List<Object> objects = Exports.extractSinks(sinks, exports);
         if (objects.size() == 1) {
             Object value = objects.get(0);
             message.setBody(value);
@@ -131,28 +168,27 @@ public class SmooksProcessor extends ServiceSupport implements Processor, CamelC
         }
     }
 
-    private void setupSmooksReporting(final ExecutionContext executionContext) {
+    private void setUpSmooksReporting(final ExecutionContext executionContext) {
         if (reportPath != null) {
             try {
                 executionContext.getContentDeliveryRuntime().addExecutionEventListener(
                         new HtmlReportGenerator(reportPath, executionContext.getApplicationContext()));
             } catch (final IOException e) {
-                LOG.warn("Cannot generate Smooks Report. The reportPath specified was [" + reportPath
-                         + "]. This exception is ignored.",
-                        e);
+                LOG.warn("Cannot generate Smooks Report. The reportPath specified was [{}]. This exception is ignored.",
+                        reportPath, e);
             }
         }
     }
 
-    private Source getSource(final Exchange exchange) {
-        Object payload = exchange.getIn().getBody();
-
-        if (payload instanceof SAXSource) {
-            return new StreamSource((Reader) ((SAXSource) payload).getXMLReader());
-        }
+    private Source getSource(final Exchange exchange) throws InvalidPayloadException {
+        final Object payload = exchange.getIn().getBody();
 
         if (payload instanceof Source) {
             return (Source) payload;
+        }
+
+        if (payload instanceof byte[]) {
+            return new ByteSource((byte[]) payload);
         }
 
         if (payload instanceof Node) {
@@ -160,18 +196,29 @@ public class SmooksProcessor extends ServiceSupport implements Processor, CamelC
         }
 
         if (payload instanceof InputStream) {
-            return new StreamSource((InputStream) payload);
+            return new StreamSource<>((InputStream) payload);
         }
 
         if (payload instanceof Reader) {
-            return new StreamSource((Reader) payload);
+            return new ReaderSource<>((Reader) payload);
         }
 
         if (payload instanceof WrappedFile) {
-            return new StreamSource((File) exchange.getIn().getBody(WrappedFile.class).getFile());
+            final String systemId
+                    = new javax.xml.transform.stream.StreamSource((File) exchange.getIn().getBody(WrappedFile.class).getFile())
+                            .getSystemId();
+            try {
+                return new URLSource(new URL(systemId));
+            } catch (MalformedURLException e) {
+                throw new SmooksException(e);
+            }
         }
 
-        return exchange.getIn().getBody(Source.class);
+        if (payload instanceof SAXSource) {
+            return new ReaderSource<>((Reader) ((SAXSource) payload).getXMLReader());
+        }
+
+        return exchange.getIn().getMandatoryBody(Source.class);
     }
 
     public String getSmooksConfig() {
@@ -209,9 +256,15 @@ public class SmooksProcessor extends ServiceSupport implements Processor, CamelC
         this.reportPath = reportPath;
     }
 
+    public SmooksFactory getSmooksFactory() {
+        return smooksFactory;
+    }
+
+    public void setSmooksFactory(SmooksFactory smooksFactory) {
+        this.smooksFactory = smooksFactory;
+    }
+
     private Smooks createSmooks() {
-        final SmooksFactory smooksFactory
-                = (SmooksFactory) camelContext.getRegistry().lookupByName(SmooksFactory.class.getName());
         return smooksFactory != null ? smooksFactory.createInstance() : new Smooks();
     }
 
@@ -226,7 +279,7 @@ public class SmooksProcessor extends ServiceSupport implements Processor, CamelC
     }
 
     @Override
-    protected void doStart() throws Exception {
+    protected void doStart() {
         try {
             if (smooks == null) {
                 smooks = createSmooks();
@@ -234,7 +287,8 @@ public class SmooksProcessor extends ServiceSupport implements Processor, CamelC
                     InputStream is = ResourceHelper.resolveMandatoryResourceAsInputStream(camelContext, configUri);
                     smooks.addResourceConfigs(is);
                 }
-                smooks.getApplicationContext().getRegistry().registerObject(CamelContext.class, camelContext);
+                smooks.getApplicationContext().getRegistry().registerObject(CamelContext.class,
+                        (NotAppContextScoped.Ref<CamelContext>) () -> camelContext);
             }
 
             addAppender(smooks, visitorAppender);
@@ -246,7 +300,7 @@ public class SmooksProcessor extends ServiceSupport implements Processor, CamelC
     }
 
     @Override
-    protected void doStop() throws Exception {
+    protected void doStop() {
         if (smooks != null) {
             IOHelper.close(smooks);
             smooks = null;

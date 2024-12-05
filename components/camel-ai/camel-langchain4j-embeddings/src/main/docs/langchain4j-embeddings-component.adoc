@@ -8,17 +8,17 @@
 :tabs-sync-option:
 :component-header: Only producer is supported
 //Manually maintained attributes
+:group: AI
 :camel-spring-boot-name: langchain4j-embeddings
 
 *Since Camel {since}*
 
 *{component-header}*
 
-The LangChain4j embeddings component provides support to compute embeddings using https://docs.langchain4j.dev/[LangChain4j] embeddings.
+The LangChain4j embeddings component provides support for compute embeddings using https://docs.langchain4j.dev/[LangChain4j] embeddings.
 
 == URI format
 
-[source]
 ----
 langchain4j-embeddings:embeddingId[?options]
 ----
@@ -38,5 +38,9 @@ include::partial$component-endpoint-options.adoc[]
 // endpoint options: START
 
 // endpoint options: END
+
+// component headers: START
+include::partial$component-endpoint-headers.adoc[]
+// component headers: END
 
 include::spring-boot:partial$starter.adoc[]

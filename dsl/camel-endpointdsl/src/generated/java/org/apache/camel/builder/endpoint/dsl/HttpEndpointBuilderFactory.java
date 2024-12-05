@@ -45,22 +45,22 @@ public interface HttpEndpointBuilderFactory {
         }
 
         /**
-         * Determines whether or not the raw input stream from Servlet is cached
-         * or not (Camel will read the stream into a in memory/overflow to file,
-         * Stream caching) cache. By default Camel will cache the Servlet input
-         * stream to support reading it multiple times to ensure it Camel can
-         * retrieve all data from the stream. However you can set this option to
-         * true when you for example need to access the raw stream, such as
-         * streaming it directly to a file or other persistent store.
-         * DefaultHttpBinding will copy the request input stream into a stream
-         * cache and put it into message body if this option is false to support
-         * reading the stream multiple times. If you use Servlet to bridge/proxy
-         * an endpoint then consider enabling this option to improve
-         * performance, in case you do not need to read the message payload
-         * multiple times. The http producer will by default cache the response
-         * body stream. If setting this option to true, then the producers will
-         * not cache the response body stream but use the response stream as-is
-         * as the message body.
+         * Determines whether or not the raw input stream is cached or not. The
+         * Camel consumer (camel-servlet, camel-jetty etc.) will by default
+         * cache the input stream to support reading it multiple times to ensure
+         * it Camel can retrieve all data from the stream. However you can set
+         * this option to true when you for example need to access the raw
+         * stream, such as streaming it directly to a file or other persistent
+         * store. DefaultHttpBinding will copy the request input stream into a
+         * stream cache and put it into message body if this option is false to
+         * support reading the stream multiple times. If you use Servlet to
+         * bridge/proxy an endpoint then consider enabling this option to
+         * improve performance, in case you do not need to read the message
+         * payload multiple times. The producer (camel-http) will by default
+         * cache the response body stream. If setting this option to true, then
+         * the producers will not cache the response body stream but use the
+         * response stream as-is (the stream can only be read once) as the
+         * message body.
          * 
          * The option is a: <code>boolean</code> type.
          * 
@@ -75,22 +75,22 @@ public interface HttpEndpointBuilderFactory {
             return this;
         }
         /**
-         * Determines whether or not the raw input stream from Servlet is cached
-         * or not (Camel will read the stream into a in memory/overflow to file,
-         * Stream caching) cache. By default Camel will cache the Servlet input
-         * stream to support reading it multiple times to ensure it Camel can
-         * retrieve all data from the stream. However you can set this option to
-         * true when you for example need to access the raw stream, such as
-         * streaming it directly to a file or other persistent store.
-         * DefaultHttpBinding will copy the request input stream into a stream
-         * cache and put it into message body if this option is false to support
-         * reading the stream multiple times. If you use Servlet to bridge/proxy
-         * an endpoint then consider enabling this option to improve
-         * performance, in case you do not need to read the message payload
-         * multiple times. The http producer will by default cache the response
-         * body stream. If setting this option to true, then the producers will
-         * not cache the response body stream but use the response stream as-is
-         * as the message body.
+         * Determines whether or not the raw input stream is cached or not. The
+         * Camel consumer (camel-servlet, camel-jetty etc.) will by default
+         * cache the input stream to support reading it multiple times to ensure
+         * it Camel can retrieve all data from the stream. However you can set
+         * this option to true when you for example need to access the raw
+         * stream, such as streaming it directly to a file or other persistent
+         * store. DefaultHttpBinding will copy the request input stream into a
+         * stream cache and put it into message body if this option is false to
+         * support reading the stream multiple times. If you use Servlet to
+         * bridge/proxy an endpoint then consider enabling this option to
+         * improve performance, in case you do not need to read the message
+         * payload multiple times. The producer (camel-http) will by default
+         * cache the response body stream. If setting this option to true, then
+         * the producers will not cache the response body stream but use the
+         * response stream as-is (the stream can only be read once) as the
+         * message body.
          * 
          * The option will be converted to a <code>boolean</code> type.
          * 
@@ -597,6 +597,112 @@ public interface HttpEndpointBuilderFactory {
             return this;
         }
         /**
+         * Default expiration time for cached OAuth2 tokens, in seconds. Used if
+         * token response does not contain 'expires_in' field.
+         * 
+         * The option is a: <code>long</code> type.
+         * 
+         * Default: 3600
+         * Group: security
+         * 
+         * @param oauth2CachedTokensDefaultExpirySeconds the value to set
+         * @return the dsl builder
+         */
+        default HttpEndpointBuilder oauth2CachedTokensDefaultExpirySeconds(long oauth2CachedTokensDefaultExpirySeconds) {
+            doSetProperty("oauth2CachedTokensDefaultExpirySeconds", oauth2CachedTokensDefaultExpirySeconds);
+            return this;
+        }
+        /**
+         * Default expiration time for cached OAuth2 tokens, in seconds. Used if
+         * token response does not contain 'expires_in' field.
+         * 
+         * The option will be converted to a <code>long</code> type.
+         * 
+         * Default: 3600
+         * Group: security
+         * 
+         * @param oauth2CachedTokensDefaultExpirySeconds the value to set
+         * @return the dsl builder
+         */
+        default HttpEndpointBuilder oauth2CachedTokensDefaultExpirySeconds(String oauth2CachedTokensDefaultExpirySeconds) {
+            doSetProperty("oauth2CachedTokensDefaultExpirySeconds", oauth2CachedTokensDefaultExpirySeconds);
+            return this;
+        }
+        /**
+         * Amount of time which is deducted from OAuth2 tokens expiry time to
+         * compensate for the time it takes OAuth2 Token Endpoint to send the
+         * token over http, in seconds. Set this parameter to high value if you
+         * OAuth2 Token Endpoint answers slowly or you tokens expire quickly. If
+         * you set this parameter to too small value, you can get 4xx http
+         * errors because camel will think that the received token is still
+         * valid, while in reality the token is expired for the Authentication
+         * server.
+         * 
+         * The option is a: <code>long</code> type.
+         * 
+         * Default: 5
+         * Group: security
+         * 
+         * @param oauth2CachedTokensExpirationMarginSeconds the value to set
+         * @return the dsl builder
+         */
+        default HttpEndpointBuilder oauth2CachedTokensExpirationMarginSeconds(long oauth2CachedTokensExpirationMarginSeconds) {
+            doSetProperty("oauth2CachedTokensExpirationMarginSeconds", oauth2CachedTokensExpirationMarginSeconds);
+            return this;
+        }
+        /**
+         * Amount of time which is deducted from OAuth2 tokens expiry time to
+         * compensate for the time it takes OAuth2 Token Endpoint to send the
+         * token over http, in seconds. Set this parameter to high value if you
+         * OAuth2 Token Endpoint answers slowly or you tokens expire quickly. If
+         * you set this parameter to too small value, you can get 4xx http
+         * errors because camel will think that the received token is still
+         * valid, while in reality the token is expired for the Authentication
+         * server.
+         * 
+         * The option will be converted to a <code>long</code> type.
+         * 
+         * Default: 5
+         * Group: security
+         * 
+         * @param oauth2CachedTokensExpirationMarginSeconds the value to set
+         * @return the dsl builder
+         */
+        default HttpEndpointBuilder oauth2CachedTokensExpirationMarginSeconds(String oauth2CachedTokensExpirationMarginSeconds) {
+            doSetProperty("oauth2CachedTokensExpirationMarginSeconds", oauth2CachedTokensExpirationMarginSeconds);
+            return this;
+        }
+        /**
+         * Whether to cache OAuth2 client tokens.
+         * 
+         * The option is a: <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: security
+         * 
+         * @param oauth2CacheTokens the value to set
+         * @return the dsl builder
+         */
+        default HttpEndpointBuilder oauth2CacheTokens(boolean oauth2CacheTokens) {
+            doSetProperty("oauth2CacheTokens", oauth2CacheTokens);
+            return this;
+        }
+        /**
+         * Whether to cache OAuth2 client tokens.
+         * 
+         * The option will be converted to a <code>boolean</code> type.
+         * 
+         * Default: false
+         * Group: security
+         * 
+         * @param oauth2CacheTokens the value to set
+         * @return the dsl builder
+         */
+        default HttpEndpointBuilder oauth2CacheTokens(String oauth2CacheTokens) {
+            doSetProperty("oauth2CacheTokens", oauth2CacheTokens);
+            return this;
+        }
+        /**
          * OAuth2 client id.
          * 
          * The option is a: <code>java.lang.String</code> type.
@@ -622,6 +728,20 @@ public interface HttpEndpointBuilderFactory {
          */
         default HttpEndpointBuilder oauth2ClientSecret(String oauth2ClientSecret) {
             doSetProperty("oauth2ClientSecret", oauth2ClientSecret);
+            return this;
+        }
+        /**
+         * OAuth2 scope.
+         * 
+         * The option is a: <code>java.lang.String</code> type.
+         * 
+         * Group: security
+         * 
+         * @param oauth2Scope the value to set
+         * @return the dsl builder
+         */
+        default HttpEndpointBuilder oauth2Scope(String oauth2Scope) {
+            doSetProperty("oauth2Scope", oauth2Scope);
             return this;
         }
         /**

@@ -77,8 +77,7 @@ public abstract class CamelCommand implements Callable<Integer> {
                 var provider = spec.defaultValueProvider();
                 String defaultValue = provider != null ? provider.defaultValue(argSpec) : null;
                 if (defaultValue != null &&
-                        argSpec instanceof CommandLine.Model.OptionSpec) {
-                    CommandLine.Model.OptionSpec optionSpec = (CommandLine.Model.OptionSpec) argSpec;
+                        argSpec instanceof CommandLine.Model.OptionSpec optionSpec) {
                     for (String name : optionSpec.names()) {
                         String placeholder = "#" + StringHelper.after(name, "--");
                         Object v = argSpec.getValue();
@@ -110,29 +109,41 @@ public abstract class CamelCommand implements Callable<Integer> {
         return new File(CommandLineHelper.getCamelDir(), pid + "-trace.json");
     }
 
+    public File getReceiveFile(String pid) {
+        return new File(CommandLineHelper.getCamelDir(), pid + "-receive.json");
+    }
+
     public File getDebugFile(String pid) {
         return new File(CommandLineHelper.getCamelDir(), pid + "-debug.json");
     }
 
+    public File getRunBackgroundLogFile(String uuid) {
+        return new File(CommandLineHelper.getCamelDir(), uuid + "-run.log");
+    }
+
     protected Printer printer() {
-        return getMain().getOut();
+        var out = getMain().getOut();
+        CommandHelper.SetPrinter(out);
+        return out;
     }
 
     protected void printConfigurationValues(String header) {
-        final Properties configProperties = new Properties();
-        CommandLineHelper.loadProperties(configProperties::putAll);
-        List<String> lines = new ArrayList<>();
-        spec.options().forEach(opt -> {
-            if (Arrays.stream(opt.names()).anyMatch(name ->
-            // name starts with --
-            configProperties.containsKey(name.substring(2)))) {
-                lines.add(String.format("    %s=%s",
-                        opt.longestName(), opt.getValue().toString()));
+        if (spec != null) {
+            final Properties configProperties = new Properties();
+            CommandLineHelper.loadProperties(configProperties::putAll);
+            List<String> lines = new ArrayList<>();
+            spec.options().forEach(opt -> {
+                if (Arrays.stream(opt.names()).anyMatch(name ->
+                // name starts with --
+                configProperties.containsKey(name.substring(2)))) {
+                    lines.add(String.format("    %s=%s",
+                            opt.longestName(), opt.getValue().toString()));
+                }
+            });
+            if (!lines.isEmpty()) {
+                printer().println(header);
+                lines.forEach(printer()::println);
             }
-        });
-        if (!lines.isEmpty()) {
-            printer().println(header);
-            lines.forEach(printer()::println);
         }
     }
 

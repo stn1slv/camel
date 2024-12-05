@@ -33,6 +33,7 @@ import org.apache.camel.model.ModelCamelContext;
 import org.apache.camel.support.PluginHelper;
 import org.apache.camel.test.junit5.util.CamelContextTestHelper;
 import org.apache.camel.test.junit5.util.ExtensionHelper;
+import org.apache.camel.test.junit5.util.RouteCoverageDumperExtension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,25 +116,11 @@ public class LegacyCamelContextManager implements CamelContextManager {
     }
 
     private void initialize(Object test) throws Exception {
-        LOG.debug("Initializing a new CamelContext");
-
-        // jmx is enabled if we have configured to use it, if dump route coverage is enabled (it requires JMX) or if
-        // the component camel-debug is in the classpath
-        if (testConfigurationBuilder.isJmxEnabled() || testConfigurationBuilder.isRouteCoverageEnabled()
-                || isCamelDebugPresent()) {
-            enableJMX();
-        } else {
-            disableJMX();
+        if (context != null) {
+            return;
         }
 
-        context = (ModelCamelContext) camelContextConfiguration.camelContextSupplier().createCamelContext();
-        assert context != null : "No context found!";
-
-        THREAD_CAMEL_CONTEXT.set(context);
-
-        // TODO: fixme (some tests try to access the context before it's set on the test)
-        final Method setContextMethod = test.getClass().getMethod("setContext", ModelCamelContext.class);
-        setContextMethod.invoke(test, context);
+        doCreateContext(test);
 
         // add custom beans
         camelContextConfiguration.registryBinder().bindToRegistry(context.getRegistry());
@@ -170,6 +157,28 @@ public class LegacyCamelContextManager implements CamelContextManager {
             LOG.debug("Using route builder from the created context: {}", context);
         }
         LOG.debug("Routing Rules are: {}", context.getRoutes());
+    }
+
+    private void doCreateContext(Object test) throws Exception {
+        LOG.debug("Initializing a new CamelContext");
+
+        // jmx is enabled if we have configured to use it, if dump route coverage is enabled (it requires JMX) or if
+        // the component camel-debug is in the classpath
+        if (testConfigurationBuilder.isJmxEnabled() || testConfigurationBuilder.isRouteCoverageEnabled()
+                || isCamelDebugPresent()) {
+            enableJMX();
+        } else {
+            disableJMX();
+        }
+
+        context = (ModelCamelContext) camelContextConfiguration.camelContextSupplier().createCamelContext();
+        assert context != null : "No context found!";
+
+        THREAD_CAMEL_CONTEXT.set(context);
+
+        // TODO: fixme (some tests try to access the context before it's set on the test)
+        final Method setContextMethod = test.getClass().getMethod("setContext", ModelCamelContext.class);
+        setContextMethod.invoke(test, context);
     }
 
     private void setupTemplates() {
@@ -272,6 +281,11 @@ public class LegacyCamelContextManager implements CamelContextManager {
 
     @Override
     public void stop() {
+        // NO-OP
+    }
+
+    @Override
+    public void close() {
         LegacyCamelContextManager support = INSTANCE.get();
         if (support != null && testConfigurationBuilder.isCreateCamelContextPerClass()) {
             try {
@@ -350,5 +364,13 @@ public class LegacyCamelContextManager implements CamelContextManager {
     @Override
     public void setGlobalStore(ExtensionContext.Store globalStore) {
         this.globalStore = globalStore;
+    }
+
+    @Override
+    public void dumpRouteCoverage(Class<?> clazz, String currentTestName, long time) throws Exception {
+        if (testConfigurationBuilder.isRouteCoverageEnabled()) {
+            final RouteCoverageDumperExtension routeCoverageWrapper = new RouteCoverageDumperExtension(context);
+            routeCoverageWrapper.dumpRouteCoverage(clazz, currentTestName, time);
+        }
     }
 }

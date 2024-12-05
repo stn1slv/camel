@@ -30,7 +30,8 @@ import org.apache.camel.util.json.Jsoner;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "source", description = "List top processors (source) in a running Camel integration", sortOptions = false)
+@Command(name = "source", description = "List top processors (source) in a running Camel integration", sortOptions = false,
+         showDefaultValues = true)
 public class CamelSourceTop extends ActionWatchCommand {
 
     @CommandLine.Parameters(description = "Name or pid of running Camel integration", arity = "0..1")
@@ -174,13 +175,7 @@ public class CamelSourceTop extends ActionWatchCommand {
         // sort for highest mean value as we want the slowest in the top
         long m1 = o1.mean != null ? Long.parseLong(o1.mean) : 0;
         long m2 = o2.mean != null ? Long.parseLong(o2.mean) : 0;
-        if (m1 < m2) {
-            return 1;
-        } else if (m1 > m2) {
-            return -1;
-        } else {
-            return 0;
-        }
+        return Long.compare(m2, m1);
     }
 
     private static class Row {

@@ -30,7 +30,8 @@ import org.apache.camel.util.StopWatch;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
-@Command(name = "route", description = "Transform Camel routes to XML or YAML format", sortOptions = false)
+@Command(name = "route", description = "Transform Camel routes to XML or YAML format", sortOptions = false,
+         showDefaultValues = true)
 public class TransformRoute extends CamelCommand {
 
     @CommandLine.Parameters(description = "The Camel file(s) to run. If no files specified then application.properties is used as source for which files to run.",
@@ -45,9 +46,8 @@ public class TransformRoute extends CamelCommand {
     private String output;
 
     @CommandLine.Option(names = { "--format" },
-                        description = "Output format (xml or yaml), if only yaml files are provided, the format defaults to xml and vice versa",
-                        defaultValue = "yaml")
-    String format = "yaml";
+                        description = "Output format (xml or yaml), if only yaml files are provided, the format defaults to xml and vice versa")
+    String format;
 
     @CommandLine.Option(names = { "--resolve-placeholders" }, defaultValue = "false",
                         description = "Whether to resolve property placeholders in the dumped output")
@@ -68,11 +68,13 @@ public class TransformRoute extends CamelCommand {
 
     @Override
     public Integer doCall() throws Exception {
-        // Automatically transform to xml if all files are yaml
-        if (files.stream().allMatch(file -> file.endsWith(".yaml"))) {
-            format = "xml";
-        } else {
-            format = "yaml";
+        if (format == null) {
+            // Automatically transform to xml if all files are yaml
+            if (files.stream().allMatch(file -> file.endsWith(".yaml"))) {
+                format = "xml";
+            } else {
+                format = "yaml";
+            }
         }
 
         String dump = output;
@@ -86,7 +88,7 @@ public class TransformRoute extends CamelCommand {
             @Override
             protected void doAddInitialProperty(KameletMain main) {
                 main.addInitialProperty("camel.main.dumpRoutes", format);
-                main.addInitialProperty("camel.main.dumpRoutesInclude", "routes,rests,routeConfigurations,beans");
+                main.addInitialProperty("camel.main.dumpRoutesInclude", "routes,rests,routeConfigurations,beans,dataFormats");
                 main.addInitialProperty("camel.main.dumpRoutesLog", "false");
                 main.addInitialProperty("camel.main.dumpRoutesResolvePlaceholders", Boolean.toString(resolvePlaceholders));
                 main.addInitialProperty("camel.main.dumpRoutesUriAsParameters", Boolean.toString(uriAsParameters));
